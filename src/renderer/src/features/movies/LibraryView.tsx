@@ -332,19 +332,6 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
         </div>
       </div>
 
-      {loading && (
-        <div style={{ color: 'var(--color-neutral-500)', paddingRight: 28 }}>불러오는 중...</div>
-      )}
-      {error && <div style={{ color: '#e08a8a', paddingRight: 28 }}>{error}</div>}
-
-      {!loading && !error && filtered.length === 0 && (
-        <div style={{ color: 'var(--color-neutral-500)', paddingRight: 28 }}>
-          {movies.length === 0
-            ? '아직 등록된 영화가 없어요. 사이드바의 "검색 · 추가"에서 첫 영화를 등록해보세요.'
-            : '조건에 맞는 영화가 없어요.'}
-        </div>
-      )}
-
       <div
         ref={gridRef}
         style={{
@@ -356,7 +343,49 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
           marginRight: gutter
         }}
       >
-        {view === 'grid' ? (
+        {loading ? (
+          <div
+            style={{
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--color-neutral-500)',
+              paddingRight: gutter
+            }}
+          >
+            불러오는 중...
+          </div>
+        ) : error ? (
+          <div
+            style={{
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#e08a8a',
+              paddingRight: gutter
+            }}
+          >
+            {error}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div
+            style={{
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              color: 'var(--color-neutral-500)',
+              paddingRight: gutter
+            }}
+          >
+            {movies.length === 0
+              ? '아직 보관된 영화가 없어요. 사이드바의 "검색 · 추가"에서 첫 영화를 보관해보세요.'
+              : '조건에 맞는 영화가 없어요.'}
+          </div>
+        ) : view === 'grid' ? (
           <div
             style={{
               display: 'grid',
