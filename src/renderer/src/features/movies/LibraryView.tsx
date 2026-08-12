@@ -411,8 +411,8 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
               <tr>
                 <th></th>
                 <th>제목</th>
-                <th style={{ width: 120 }}>장르</th>
-                <th style={{ width: 70 }}>길이</th>
+                <th>장르</th>
+                <th>길이</th>
                 <th>나의 평점</th>
                 <th>상태</th>
                 <th>마지막 관람</th>
@@ -450,16 +450,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                       {item.metadata.releaseYear ?? '—'}
                     </div>
                   </td>
-                  <td
-                    style={{
-                      color: 'var(--color-neutral-400)',
-                      maxWidth: 120,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                    title={item.metadata.genres.join(', ')}
-                  >
+                  <td style={{ color: 'var(--color-neutral-400)' }}>
                     {item.metadata.genres.join(', ') || '—'}
                   </td>
                   <td style={{ color: 'var(--color-neutral-400)' }}>
