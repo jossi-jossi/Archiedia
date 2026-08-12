@@ -11,14 +11,16 @@ interface Props {
   refreshKey: number
 }
 
-type SortKey = 'year_desc' | 'year_asc' | 'rating_desc' | 'rating_asc' | 'watched_desc'
+type SortKey =
+  'added_desc' | 'added_asc' | 'rating_desc' | 'rating_asc' | 'watched_desc' | 'watch_count_desc'
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: 'year_desc', label: '개봉연도 최신순' },
-  { value: 'year_asc', label: '개봉연도 오래된순' },
+  { value: 'added_desc', label: '보관 최신순' },
+  { value: 'added_asc', label: '보관 오래된순' },
   { value: 'rating_desc', label: '나의 평점 높은순' },
   { value: 'rating_asc', label: '나의 평점 낮은순' },
-  { value: 'watched_desc', label: '최근 관람순' }
+  { value: 'watched_desc', label: '최근 관람순' },
+  { value: 'watch_count_desc', label: '관람 횟수 높은순' }
 ]
 
 function StarRating({ rating }: { rating: number | null }): React.JSX.Element {
@@ -99,7 +101,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   const [genreFilter, setGenreFilter] = useState<string[]>([])
   const [tagFilter, setTagFilter] = useState<string[]>([])
   const [mediumFilter, setMediumFilter] = useState<string[]>([])
-  const [sort, setSort] = useState<SortKey>('year_desc')
+  const [sort, setSort] = useState<SortKey>('added_desc')
   const [gridRef, columns] = useGridColumns(POSTER_WIDTH)
 
   useEffect(() => {
@@ -158,32 +160,22 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
       )
     }
 
-    const sorted = [...result]
-    switch (sort) {
-      case 'year_desc':
-        sorted.sort(
-          (a, b) => (b.item.metadata.releaseYear ?? 0) - (a.item.metadata.releaseYear ?? 0)
-        )
-        break
-      case 'year_asc':
-        sorted.sort(
-          (a, b) => (a.item.metadata.releaseYear ?? 0) - (b.item.metadata.releaseYear ?? 0)
-        )
-        break
-      case 'rating_desc':
-        sorted.sort((a, b) => (b.record?.myRating ?? 0) - (a.record?.myRating ?? 0))
-        break
-      case 'rating_asc':
-        sorted.sort((a, b) => (a.record?.myRating ?? 0) - (b.record?.myRating ?? 0))
-        break
-      case 'watched_desc':
-        sorted.sort(
-          (a, b) =>
-            (b.record?.lastWatchedAt ? Date.parse(b.record.lastWatchedAt) : 0) -
-            (a.record?.lastWatchedAt ? Date.parse(a.record.lastWatchedAt) : 0)
-        )
-        break
+    const primaryCompare: Record<SortKey, (a: MovieListItem, b: MovieListItem) => number> = {
+      added_desc: (a, b) => Date.parse(b.item.createdAt) - Date.parse(a.item.createdAt),
+      added_asc: (a, b) => Date.parse(a.item.createdAt) - Date.parse(b.item.createdAt),
+      rating_desc: (a, b) => (b.record?.myRating ?? 0) - (a.record?.myRating ?? 0),
+      rating_asc: (a, b) => (a.record?.myRating ?? 0) - (b.record?.myRating ?? 0),
+      watched_desc: (a, b) =>
+        (b.record?.lastWatchedAt ? Date.parse(b.record.lastWatchedAt) : 0) -
+        (a.record?.lastWatchedAt ? Date.parse(a.record.lastWatchedAt) : 0),
+      watch_count_desc: (a, b) => (b.record?.watchCount ?? 0) - (a.record?.watchCount ?? 0)
     }
+
+    const sorted = [...result].sort((a, b) => {
+      const primary = primaryCompare[sort](a, b)
+      if (primary !== 0) return primary
+      return a.item.title.localeCompare(b.item.title, 'ko')
+    })
     return sorted
   }, [movies, query, genreFilter, tagFilter, mediumFilter, sort])
 

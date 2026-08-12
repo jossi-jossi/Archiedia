@@ -67,6 +67,23 @@ export interface TmdbMovieDetails {
   metadata: MovieMetadata
 }
 
+function findTrailerKey(videos: { site: string; type: string; key: string }[]): string | null {
+  return videos.find((v) => v.site === 'YouTube' && v.type === 'Trailer')?.key ?? null
+}
+
+// TMDB의 videos는 요청 language에 태깅된 영상만 돌려준다 (한국어 예고편이 없으면 빈 배열).
+// 영어 예고편이 국적 상관없이 가장 커버리지가 넓어서, ko-KR에 없으면 en-US로 한 번 더 조회한다.
+async function fetchFallbackTrailerKey(id: number): Promise<string | null> {
+  const url = new URL(`${API_BASE}/movie/${id}/videos`)
+  url.searchParams.set('api_key', apiKey())
+  url.searchParams.set('language', 'en-US')
+
+  const res = await fetch(url)
+  if (!res.ok) return null
+  const data: { results: { site: string; type: string; key: string }[] } = await res.json()
+  return findTrailerKey(data.results)
+}
+
 export async function getMovieDetails(id: number): Promise<TmdbMovieDetails> {
   const url = new URL(`${API_BASE}/movie/${id}`)
   url.searchParams.set('api_key', apiKey())
@@ -78,7 +95,7 @@ export async function getMovieDetails(id: number): Promise<TmdbMovieDetails> {
   const data: TmdbMovieDetail = await res.json()
 
   const director = data.credits.crew.find((c) => c.job === 'Director')?.name ?? null
-  const trailer = data.videos.results.find((v) => v.site === 'YouTube' && v.type === 'Trailer')
+  const trailerKey = findTrailerKey(data.videos.results) ?? (await fetchFallbackTrailerKey(id))
 
   return {
     title: data.title,
@@ -91,7 +108,7 @@ export async function getMovieDetails(id: number): Promise<TmdbMovieDetails> {
       actors: data.credits.cast.slice(0, 5).map((c) => c.name),
       runtimeMinutes: data.runtime,
       country: data.production_countries[0]?.name ?? null,
-      trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null,
+      trailerUrl: trailerKey ? `https://www.youtube.com/watch?v=${trailerKey}` : null,
       relatedContentItemIds: []
     }
   }

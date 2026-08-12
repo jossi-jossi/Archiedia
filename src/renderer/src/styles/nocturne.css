@@ -476,6 +476,8 @@ textarea.input {
   place-items: center;
   padding: var(--space-4);
   background: color-mix(in srgb, var(--color-neutral-900) 50%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 .dialog {
   width: min(440px, 100%);
