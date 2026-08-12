@@ -278,20 +278,49 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          size={18}
-                          weight={i < (record.myRating ?? 0) ? 'fill' : 'regular'}
-                          color={
-                            i < (record.myRating ?? 0)
-                              ? 'var(--color-accent)'
-                              : 'var(--color-neutral-700)'
-                          }
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => save({ myRating: i + 1 })}
-                        />
-                      ))}
+                      {Array.from({ length: 5 }).map((_, i) => {
+                        const fill = Math.max(0, Math.min(1, (record.myRating ?? 0) - i))
+                        return (
+                          <div
+                            key={i}
+                            style={{
+                              position: 'relative',
+                              width: 18,
+                              height: 18,
+                              cursor: 'pointer'
+                            }}
+                            onClick={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect()
+                              const half = e.clientX - rect.left < rect.width / 2
+                              save({ myRating: i + (half ? 0.5 : 1) })
+                            }}
+                          >
+                            <Star
+                              size={18}
+                              weight="fill"
+                              color="var(--color-neutral-700)"
+                              style={{ position: 'absolute', top: 0, left: 0 }}
+                            />
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                height: 18,
+                                overflow: 'hidden',
+                                width: fill * 18
+                              }}
+                            >
+                              <Star
+                                size={18}
+                                weight="fill"
+                                color="var(--color-accent)"
+                                style={{ position: 'absolute', top: 0, left: 0 }}
+                              />
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -301,6 +330,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                           className="input"
                           type="number"
                           min={0}
+                          style={{ MozAppearance: 'textfield' }}
                           value={record.watchCount}
                           onChange={(e) =>
                             setRecord({ ...record, watchCount: Number(e.target.value) })
@@ -312,9 +342,13 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                         <label>마지막 관람일</label>
                         <input
                           className="input"
-                          type="date"
+                          type="text"
+                          placeholder="YYYY-MM-DD"
                           value={record.lastWatchedAt ?? ''}
-                          onChange={(e) => save({ lastWatchedAt: e.target.value || null })}
+                          onChange={(e) =>
+                            setRecord({ ...record, lastWatchedAt: e.target.value || null })
+                          }
+                          onBlur={() => save({ lastWatchedAt: record.lastWatchedAt })}
                         />
                       </div>
                       <div className="field">

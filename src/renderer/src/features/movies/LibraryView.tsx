@@ -25,17 +25,39 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 ]
 
 function StarRating({ rating }: { rating: number | null }): React.JSX.Element {
-  const filled = rating ?? 0
+  const value = rating ?? 0
   return (
     <div style={{ display: 'flex', gap: 1 }}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          size={12}
-          weight={i < filled ? 'fill' : 'regular'}
-          color={i < filled ? 'var(--color-accent)' : 'var(--color-neutral-700)'}
-        />
-      ))}
+      {Array.from({ length: 5 }).map((_, i) => {
+        const fill = Math.max(0, Math.min(1, value - i))
+        return (
+          <div key={i} style={{ position: 'relative', width: 12, height: 12 }}>
+            <Star
+              size={12}
+              weight="fill"
+              color="var(--color-neutral-700)"
+              style={{ position: 'absolute', top: 0, left: 0 }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                height: 12,
+                overflow: 'hidden',
+                width: fill * 12
+              }}
+            >
+              <Star
+                size={12}
+                weight="fill"
+                color="var(--color-accent)"
+                style={{ position: 'absolute', top: 0, left: 0 }}
+              />
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -425,7 +447,16 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                   >
                     {item.title}
                   </div>
-                  <div style={{ fontSize: 11.5, color: 'var(--color-neutral-500)', marginTop: 2 }}>
+                  <div
+                    style={{
+                      fontSize: 11.5,
+                      color: 'var(--color-neutral-500)',
+                      marginTop: 2,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
                     {item.metadata.releaseYear ?? '—'} · {item.metadata.genres.join(', ') || '—'}
                   </div>
                   <div
@@ -508,7 +539,16 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                       {item.metadata.releaseYear ?? '—'}
                     </div>
                   </td>
-                  <td style={{ color: 'var(--color-neutral-400)' }}>
+                  <td
+                    style={{
+                      color: 'var(--color-neutral-400)',
+                      maxWidth: 0,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                    title={item.metadata.genres.join(', ') || undefined}
+                  >
                     {item.metadata.genres.join(', ') || '—'}
                   </td>
                   <td style={{ color: 'var(--color-neutral-400)', padding: 0 }}>

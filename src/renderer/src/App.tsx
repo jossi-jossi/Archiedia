@@ -49,7 +49,10 @@ function App(): React.JSX.Element {
       {selectedId && (
         <MovieDetail
           movieId={selectedId}
-          onClose={() => setSelectedId(null)}
+          onClose={() => {
+            setSelectedId(null)
+            setRefreshKey((k) => k + 1)
+          }}
           onDeleted={() => {
             setSelectedId(null)
             setRefreshKey((k) => k + 1)
