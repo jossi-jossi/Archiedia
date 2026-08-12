@@ -64,9 +64,10 @@ export function MovieDetail({ movieId, onBack }: Props): React.JSX.Element {
         <ArrowLeft />
         라이브러리로
       </button>
-      <div style={{ display: 'flex', gap: 32, alignItems: 'stretch' }}>
+      <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start' }}>
         <div
           style={{
+            width: 280,
             aspectRatio: '2 / 3',
             flex: 'none',
             borderRadius: 'var(--radius-lg)',
