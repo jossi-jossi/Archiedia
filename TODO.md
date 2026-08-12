@@ -45,7 +45,7 @@
 - [x] 제목으로 TMDB 검색 → 후보 목록 표시 (`features/movies/TmdbSearch.tsx`)
 - [x] 후보 선택 시 감독/장르/배우/러닝타임/포스터/원제/개봉연도/제작국가 자동 채움 (`lib/tmdb.ts`의 `getMovieDetails`)
 - [x] 예고편 URL 자동 연결 (TMDB videos 엔드포인트, YouTube 트레일러 우선)
-- [x] 자동 입력 후 사용자가 직접 수정 가능하도록 폼 유지 — `AddMovieForm`이 `initial` prop으로 프리필되지만 제출 전까지 자유롭게 수정 가능 (`AddMovieScreen.tsx`가 TMDB/수동 탭 전환 담당)
+- [x] 자동 입력 후 사용자가 직접 수정 가능하도록 폼 유지 — `AddMovieForm`이 `initial` prop으로 프리필되지만 제출 전까지 자유롭게 수정 가능 (수동 입력 탭은 제거, TMDB 검색만으로 추가하는 흐름으로 단순화)
 
 ## Phase 6 — 라이브러리 뷰 완성
 

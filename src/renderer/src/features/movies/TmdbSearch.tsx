@@ -1,33 +1,40 @@
-import { MagnifyingGlass, Plus } from '@phosphor-icons/react'
-import { FormEvent, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { errorMessage } from '../../lib/errors'
 import { getMovieDetails, searchMovies, TmdbSearchResult } from '../../lib/tmdb'
 import type { AddMovieInitial } from './AddMovieForm'
 
 interface Props {
+  query: string
   onPick: (initial: AddMovieInitial) => void
 }
 
-export function TmdbSearch({ onPick }: Props): React.JSX.Element {
-  const [query, setQuery] = useState('')
+const SEARCH_DEBOUNCE_MS = 350
+
+export function TmdbSearch({ query, onPick }: Props): React.JSX.Element {
   const [results, setResults] = useState<TmdbSearchResult[]>([])
   const [searching, setSearching] = useState(false)
   const [loadingId, setLoadingId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleSearch(e: FormEvent): Promise<void> {
-    e.preventDefault()
-    if (!query.trim()) return
-    setError(null)
-    setSearching(true)
-    try {
-      setResults(await searchMovies(query.trim()))
-    } catch (err) {
-      setError(errorMessage(err))
-    } finally {
-      setSearching(false)
+  useEffect(() => {
+    const trimmed = query.trim()
+    if (!trimmed) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing results when the search box is emptied
+      setResults([])
+      return
     }
-  }
+
+    setSearching(true)
+    setError(null)
+    const timer = setTimeout(() => {
+      searchMovies(trimmed)
+        .then(setResults)
+        .catch((err) => setError(errorMessage(err)))
+        .finally(() => setSearching(false))
+    }, SEARCH_DEBOUNCE_MS)
+
+    return () => clearTimeout(timer)
+  }, [query])
 
   async function handlePick(result: TmdbSearchResult): Promise<void> {
     setError(null)
@@ -48,48 +55,34 @@ export function TmdbSearch({ onPick }: Props): React.JSX.Element {
 
   return (
     <div>
-      <form
-        onSubmit={handleSearch}
-        style={{ position: 'relative', maxWidth: 520, marginBottom: 18 }}
+      {error && <div style={{ fontSize: 13, color: '#e08a8a', marginBottom: 12 }}>{error}</div>}
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 16
+        }}
       >
-        <MagnifyingGlass
-          size={14}
-          style={{
-            position: 'absolute',
-            left: 10,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: 'var(--color-neutral-500)'
-          }}
-        />
-        <input
-          className="input"
-          style={{ paddingLeft: 30 }}
-          placeholder="TMDB에서 영화 검색"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </form>
-
-      {searching && <div style={{ color: 'var(--color-neutral-500)' }}>검색 중...</div>}
-      {error && <div style={{ fontSize: 13, color: '#e08a8a' }}>{error}</div>}
-
-      <div style={{ display: 'flex', flexDirection: 'column', maxWidth: 640 }}>
         {results.map((r) => (
           <div
             key={r.id}
+            onClick={() => (loadingId ? undefined : handlePick(r))}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 14,
-              padding: '12px 4px',
-              borderBottom: '1px solid var(--color-divider)'
+              padding: 10,
+              borderRadius: 'var(--radius-md)',
+              cursor: loadingId ? 'default' : 'pointer',
+              opacity: loadingId && loadingId !== r.id ? 0.5 : 1,
+              background: 'color-mix(in srgb, var(--color-text) 3%, transparent)'
             }}
           >
             <div
               style={{
-                width: 38,
-                height: 54,
+                width: 46,
+                height: 66,
                 flex: 'none',
                 borderRadius: 4,
                 background: r.posterUrl
@@ -102,20 +95,19 @@ export function TmdbSearch({ onPick }: Props): React.JSX.Element {
               <div style={{ fontSize: 12, color: 'var(--color-neutral-500)' }}>
                 {r.originalTitle} · {r.year ?? '—'}
               </div>
+              {loadingId === r.id && (
+                <div style={{ fontSize: 11, color: 'var(--color-accent)', marginTop: 2 }}>
+                  불러오는 중...
+                </div>
+              )}
             </div>
-            <span className="tag tag-outline">TMDB</span>
-            <button
-              className="btn btn-ghost"
-              type="button"
-              disabled={loadingId === r.id}
-              onClick={() => handlePick(r)}
-            >
-              <Plus />
-              {loadingId === r.id ? '불러오는 중...' : '선택'}
-            </button>
           </div>
         ))}
       </div>
+
+      {!searching && query.trim() && results.length === 0 && (
+        <div style={{ color: 'var(--color-neutral-500)', marginTop: 8 }}>검색 결과가 없어요.</div>
+      )}
     </div>
   )
 }
