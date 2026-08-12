@@ -1,7 +1,7 @@
 import { FilmStrip, MagnifyingGlass, SignOut, SquaresFour } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase'
 
-export type Screen = 'library' | 'add' | 'detail'
+export type Screen = 'library' | 'add'
 
 interface Props {
   screen: Screen
@@ -49,7 +49,7 @@ export function Sidebar({ screen, movieCount, onNavigate }: Props): React.JSX.El
             borderRadius: 'var(--radius-md)',
             fontSize: 14,
             cursor: 'pointer',
-            ...navItemStyle(screen === 'library' || screen === 'detail')
+            ...navItemStyle(screen === 'library')
           }}
         >
           <SquaresFour size={17} />

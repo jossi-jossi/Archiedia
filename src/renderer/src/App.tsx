@@ -6,7 +6,7 @@ import { AddMovieScreen } from './features/movies/AddMovieScreen'
 import { LibraryView } from './features/movies/LibraryView'
 import { MovieDetail } from './features/movies/MovieDetail'
 
-type Screen = 'library' | 'add' | 'detail'
+type Screen = 'library' | 'add'
 
 function App(): React.JSX.Element {
   const { session, loading } = useSession()
@@ -41,10 +41,7 @@ function App(): React.JSX.Element {
           <LibraryView
             refreshKey={refreshKey}
             onCountChange={setMovieCount}
-            onSelect={(id) => {
-              setSelectedId(id)
-              setScreen('detail')
-            }}
+            onSelect={(id) => setSelectedId(id)}
           />
         )}
         {screen === 'add' && (
@@ -52,14 +49,12 @@ function App(): React.JSX.Element {
             onCreated={(id) => {
               setSelectedId(id)
               setRefreshKey((k) => k + 1)
-              setScreen('detail')
+              setScreen('library')
             }}
           />
         )}
-        {screen === 'detail' && selectedId && (
-          <MovieDetail movieId={selectedId} onBack={() => setScreen('library')} />
-        )}
       </div>
+      {selectedId && <MovieDetail movieId={selectedId} onClose={() => setSelectedId(null)} />}
     </div>
   )
 }
