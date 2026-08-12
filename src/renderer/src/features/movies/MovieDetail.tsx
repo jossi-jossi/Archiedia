@@ -9,10 +9,8 @@ interface Props {
   onClose: () => void
 }
 
-const DIALOG_WIDTH = 720
+const DIALOG_WIDTH = 860
 const DIALOG_HEIGHT = 600
-const POSTER_WIDTH = 200
-const POSTER_HEIGHT = 300
 
 function splitTags(value: string): string[] {
   return value
@@ -74,7 +72,8 @@ export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
           width: DIALOG_WIDTH,
           maxWidth: 'none',
           height: DIALOG_HEIGHT,
-          position: 'relative'
+          position: 'relative',
+          boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65)'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -115,8 +114,8 @@ export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
           <div style={{ display: 'flex', gap: 24, height: '100%', minHeight: 0 }}>
             <div
               style={{
-                width: POSTER_WIDTH,
-                height: POSTER_HEIGHT,
+                height: '100%',
+                aspectRatio: '2 / 3',
                 flex: 'none',
                 borderRadius: 'var(--radius-md)',
                 overflow: 'hidden',
