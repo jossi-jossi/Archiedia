@@ -55,9 +55,9 @@
   --color-section-glow: #353b80;
   --color-section-ghost: #4c5397;
 
-  --font-heading: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Pretendard Variable', 'Pretendard', 'Inter', system-ui, sans-serif;
   --font-heading-weight: 500;
-  --font-body: 'Inter', system-ui, sans-serif;
+  --font-body: 'Pretendard Variable', 'Pretendard', 'Inter', system-ui, sans-serif;
 
   --space-1: 2.8px;
   --space-2: 5.6px;

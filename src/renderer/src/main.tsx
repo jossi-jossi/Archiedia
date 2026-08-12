@@ -1,3 +1,4 @@
+import 'pretendard/dist/web/variable/pretendardvariable.css'
 import './styles/nocturne.css'
 import './styles/accent-override.css'
 import './styles/app.css'
