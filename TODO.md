@@ -16,12 +16,12 @@
 
 ## Phase 2 — Supabase 설정
 
-- [ ] Supabase 프로젝트 생성
-- [ ] `content_items` 테이블 생성 (id, type, title, source, external_id, poster_url, metadata jsonb)
-- [ ] `user_records` 테이블 생성 (content_item_id, my_rating, my_review, watch_count, last_watched_at, watch_medium, tags)
-- [ ] 인증 방식 결정 (개인용 1인 사용이므로 단순 이메일 로그인 or Supabase anon key + RLS로 충분한지 확인)
-- [ ] 환경변수(.env) 관리 방식 정리 (Supabase URL/키를 Electron 앱에 안전하게 주입하는 방법)
-- [ ] 앱 실행 시 헬스체크 핑 — 7일 비활성 자동 정지 방지용
+- [x] Supabase 프로젝트 생성
+- [x] `content_items` 테이블 생성 (id, user_id, type, title, source, external_id, poster_url, metadata jsonb)
+- [x] `user_records` 테이블 생성 (id, user_id, content_item_id, my_rating, my_review, watch_count, last_watched_at, watch_medium, tags)
+- [x] 인증 방식 결정 — Supabase Auth(이메일/비밀번호) + RLS로 사용자별 데이터 격리 (로그인 UI 구현은 Phase 4에서)
+- [x] 환경변수(.env) 관리 방식 정리 — `.env`(gitignore) + `VITE_` 프리픽스로 렌더러에 주입, `.env.example` 제공
+- [x] 앱 실행 시 헬스체크 핑 — `src/renderer/src/lib/supabase.ts`의 `pingSupabase()`, 7일 비활성 자동 정지 방지용
 
 ## Phase 3 — 공용 스키마/도메인 모델
 

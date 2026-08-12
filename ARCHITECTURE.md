@@ -46,6 +46,7 @@
 | 필드 | 설명 |
 |---|---|
 | id | PK |
+| user_id | FK (auth.users) — RLS로 본인 데이터만 접근 |
 | type | movie / book / webtoon / drama … |
 | title | 제목 |
 | source | 데이터 출처 (watcha / tmdb / manual …) |
@@ -71,6 +72,7 @@
 ### `user_records` (사용자별 개인 기록, content_item과 1:1 또는 1:N)
 | 필드 | 설명 |
 |---|---|
+| user_id | FK (auth.users) — RLS로 본인 데이터만 접근 |
 | content_item_id | FK |
 | my_rating | 나의 평점 |
 | my_review | 나의 후기 |
@@ -107,6 +109,7 @@ archiedia/
 - 크롤링: Electron 메인 프로세스에서 Playwright로 로컬 실행
 - 데이터 모델: 공통 테이블 + jsonb 메타데이터 방식
 - 저장소 구조: 단일 저장소 + `packages/schema` 공용 패키지만 우선 분리 (모노레포 전환은 모바일 착수 시점으로 유예)
+- 인증: Supabase Auth (이메일/비밀번호) 적용, RLS로 사용자별 데이터 격리 — 추후 모바일 앱에서 동일 계정으로 데이터 공유 목적
 
 ## 8. 미결정/추후 논의 사항
 
