@@ -421,7 +421,13 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
               <div
                 key={item.id}
                 onClick={() => onSelect(item.id)}
-                style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8 }}
+                style={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                  minWidth: 0
+                }}
               >
                 <div style={poster(item.posterUrl)}>
                   {record && isWishlisted(record.tags) && (
