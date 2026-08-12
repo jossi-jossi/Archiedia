@@ -230,7 +230,14 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
         </select>
         <div style={{ flex: 1, minWidth: 12 }} />
         <div className="seg" style={{ flex: 'none' }}>
-          <label className="seg-opt" style={{ padding: '10px 14px' }}>
+          <label
+            className="seg-opt"
+            style={{
+              padding: '10px 14px',
+              boxShadow: 'none',
+              border: `1px solid ${view === 'grid' ? 'var(--color-accent)' : 'transparent'}`
+            }}
+          >
             <input
               type="radio"
               name="view"
@@ -239,7 +246,14 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             />
             <SquaresFour size={16} />
           </label>
-          <label className="seg-opt" style={{ padding: '10px 14px' }}>
+          <label
+            className="seg-opt"
+            style={{
+              padding: '10px 14px',
+              boxShadow: 'none',
+              border: `1px solid ${view === 'list' ? 'var(--color-accent)' : 'transparent'}`
+            }}
+          >
             <input
               type="radio"
               name="view"
