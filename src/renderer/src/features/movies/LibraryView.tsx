@@ -265,7 +265,13 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <select
             className="input"
-            style={{ width: 'auto', flex: 'none', minHeight: 28, padding: '3px 10px' }}
+            style={{
+              width: 'auto',
+              flex: 'none',
+              minHeight: 28,
+              padding: '3px 10px',
+              fontSize: 12
+            }}
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
           >
