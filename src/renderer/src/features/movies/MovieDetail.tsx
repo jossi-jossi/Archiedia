@@ -1,5 +1,5 @@
 import { ArrowLeft, PlayCircle, Star } from '@phosphor-icons/react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getMovie, Movie, updateUserRecord } from './api'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
@@ -13,18 +13,20 @@ const POSTER_FALLBACK_HEIGHT = 420
 
 // 오른쪽 정보 컬럼의 실제 렌더링 높이를 측정해서 포스터 높이를 거기에 맞춘다.
 // (align-items:stretch + aspect-ratio만으로는 크기가 0으로 붕괴하는 문제가 있어 JS로 측정)
-function useElementHeight(): [React.RefObject<HTMLDivElement | null>, number] {
-  const ref = useRef<HTMLDivElement>(null)
+// 콜백 ref를 쓰는 이유: 로딩 중엔 이 div 자체가 렌더링되지 않아서, 마운트 시점에 한 번만
+// 도는 일반 useEffect + useRef 조합으로는 로딩이 끝나고 실제로 div가 나타나는 순간을 놓친다.
+function useElementHeight(): [(el: HTMLDivElement | null) => void, number] {
   const [height, setHeight] = useState(0)
+  const observerRef = useRef<ResizeObserver | null>(null)
 
-  useEffect(() => {
-    const el = ref.current
+  const ref = useCallback((el: HTMLDivElement | null) => {
+    observerRef.current?.disconnect()
     if (!el) return
 
+    setHeight(el.clientHeight)
     const observer = new ResizeObserver(() => setHeight(el.clientHeight))
     observer.observe(el)
-    setHeight(el.clientHeight)
-    return () => observer.disconnect()
+    observerRef.current = observer
   }, [])
 
   return [ref, height]
