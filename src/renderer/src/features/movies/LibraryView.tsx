@@ -6,7 +6,7 @@ import {
   SquaresFour,
   Star
 } from '@phosphor-icons/react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { listMovies, MovieListItem } from './api'
 import { FilterDropdown } from './FilterDropdown'
 import { StatusQuickEdit } from './StatusQuickEdit'
@@ -61,10 +61,36 @@ function unique(values: (string | null | undefined)[]): string[] {
 const POSTER_WIDTH_KEY = 'archiedia:posterCardWidth'
 const POSTER_WIDTH_MIN = 140
 const POSTER_WIDTH_MAX = 260
+const GRID_GAP = 18
 
 function loadPosterWidth(): number {
   const stored = Number(localStorage.getItem(POSTER_WIDTH_KEY))
   return stored >= POSTER_WIDTH_MIN && stored <= POSTER_WIDTH_MAX ? stored : 180
+}
+
+// 컨테이너 폭을 실측해서 cardWidth를 "목표 크기"로 삼아 정확히 들어가는 열 수를 계산한다.
+// auto-fill + 고정폭 방식은 열이 하나 늘어나기 직전 스크롤바 앞에 카드 한 칸만큼의 공백이 생기는데,
+// 열 수를 직접 계산해 1fr로 분배하면 그 공백이 카드 사이로 흩어져 사라진다.
+function useGridColumns(targetWidth: number): [React.RefObject<HTMLDivElement | null>, number] {
+  const ref = useRef<HTMLDivElement>(null)
+  const [columns, setColumns] = useState(1)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    function recompute(): void {
+      const width = el!.clientWidth
+      setColumns(Math.max(1, Math.floor((width + GRID_GAP) / (targetWidth + GRID_GAP))))
+    }
+
+    recompute()
+    const observer = new ResizeObserver(recompute)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [targetWidth])
+
+  return [ref, columns]
 }
 
 export function LibraryView({
@@ -83,6 +109,7 @@ export function LibraryView({
   const [mediumFilter, setMediumFilter] = useState<string[]>([])
   const [sort, setSort] = useState<SortKey>('year_desc')
   const [cardWidth, setCardWidth] = useState<number>(loadPosterWidth)
+  const [gridRef, columns] = useGridColumns(cardWidth)
 
   useEffect(() => {
     localStorage.setItem(POSTER_WIDTH_KEY, String(cardWidth))
@@ -299,12 +326,15 @@ export function LibraryView({
         </div>
       )}
 
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0, minWidth: 0 }}>
+      <div
+        ref={gridRef}
+        style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0, minWidth: 0 }}
+      >
         {view === 'grid' ? (
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: `repeat(auto-fill, ${cardWidth}px)`,
+              gridTemplateColumns: `repeat(${columns}, 1fr)`,
               gap: 18,
               paddingBottom: 12
             }}
