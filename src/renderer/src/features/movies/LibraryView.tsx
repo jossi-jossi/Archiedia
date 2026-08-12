@@ -20,8 +20,8 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'added_asc', label: '보관 오래된순' },
   { value: 'rating_desc', label: '나의 평점 높은순' },
   { value: 'rating_asc', label: '나의 평점 낮은순' },
-  { value: 'watched_desc', label: '최근 관람순' },
-  { value: 'watch_count_desc', label: '관람 횟수 높은순' }
+  { value: 'watched_desc', label: '최근 시청순' },
+  { value: 'watch_count_desc', label: '시청 횟수 높은순' }
 ]
 
 function StarRating({ rating }: { rating: number | null }): React.JSX.Element {
@@ -515,7 +515,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                 </th>
                 <th>나의 평점</th>
                 <th>상태</th>
-                <th>마지막 관람</th>
+                <th>마지막 시청</th>
                 <th></th>
               </tr>
             </thead>

@@ -11,7 +11,7 @@ interface Props {
   onDeleted: () => void
 }
 
-const DIALOG_WIDTH = 894
+const DIALOG_WIDTH = 906
 const DIALOG_HEIGHT = 600
 const POSTER_FALLBACK_HEIGHT = 400
 
@@ -198,7 +198,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
         )}
 
         {!loading && !error && movie && meta && (
-          <div style={{ display: 'flex', gap: 24, height: '100%', minHeight: 0 }}>
+          <div style={{ display: 'flex', gap: 36, height: '100%', minHeight: 0 }}>
             <div
               style={{
                 height: Math.min(contentHeight || POSTER_FALLBACK_HEIGHT, DIALOG_HEIGHT - 44),
@@ -218,7 +218,9 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                 flex: 1,
                 minWidth: 0,
                 overflowY: 'auto',
+                paddingLeft: 2,
                 paddingRight: 4,
+                marginLeft: -2,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center'
@@ -325,7 +327,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                       <div className="field">
-                        <label>본 횟수</label>
+                        <label>시청 횟수</label>
                         <input
                           className="input"
                           type="number"
@@ -339,7 +341,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                         />
                       </div>
                       <div className="field">
-                        <label>마지막 관람일</label>
+                        <label>마지막 시청일</label>
                         <input
                           className="input"
                           type="text"
@@ -352,7 +354,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                         />
                       </div>
                       <div className="field">
-                        <label>관람 매체</label>
+                        <label>시청 매체</label>
                         <input
                           className="input"
                           value={record.watchMedium ?? ''}
