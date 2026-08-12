@@ -1,7 +1,7 @@
 # TODO — 1차 목표: 데스크톱 앱 + 영화 콘텐츠 관리
 
 > 기준 문서: [ARCHITECTURE.md](./ARCHITECTURE.md)
-> 왓챠피디아 크롤링(로그인 세션 필요)은 난이도가 높아 1차 범위에서 제외. 우선 **TMDB API + 수동 입력**으로 영화 관리 MVP를 완성하고, 크롤링 연동은 2차로 미룬다.
+> 왓챠피디아는 공식 API/내보내기 기능이 없어 로그인 세션 크롤링(Playwright 등)을 1차 범위에서 제외하고, 우선 **TMDB API + 수동 입력**으로 영화 관리 MVP를 완성했다. 이후 왓챠 데이터 이전은 크롤링 대신, 커뮤니티 북마클릿 스크립트로 사용자가 직접 CSV로 내보낸 뒤 앱에서 가져오는 방식(Phase 9)으로 해결.
 
 **플랫폼 지원**: 전 항목 Win/macOS 공통 지원 목표 (Electron/Supabase/TMDB API 기반이라 OS 종속 로직 거의 없음). OS별 예외가 생기는 항목에만 개별로 표시.
 
@@ -61,6 +61,15 @@
 - [x] `createMovie`가 `source: 'tmdb'` + `external_id`를 저장하도록 변경 (예전엔 항상 `source: 'manual'`이었음)
 - [x] `AddMovieForm.tsx` 삭제 — 수동 입력/사전 수정 단계 자체가 없어짐
 
+## Phase 9 — 왓챠피디아 데이터 가져오기
+
+- [x] 왓챠피디아 공식 내보내기 기능 부재 확인 — 커뮤니티 북마클릿 스크립트([erinyskim/watchapedia-export](https://github.com/erinyskim/watchapedia-export))로 본인 프로필을 CSV로 내보내는 방식 채택 (사용자가 브라우저에서 직접 실행, 앱은 이 CSV를 가져오기만 함)
+- [x] CSV 파서 (`lib/csv.ts`) — 따옴표/콤마/줄바꿈 포함 필드 처리, UTF-8 BOM 제거
+- [x] 가져오기 화면 (`features/movies/WatchaImportScreen.tsx`, 사이드바 "왓챠 가져오기") — CSV 업로드 → `Type=MOVIE` 항목만 추출 → 제목/연도로 TMDB 검색·매칭 → 순차 보관
+- [x] 매칭된 항목은 왓챠의 평점/리뷰/시청일을 그대로 `user_records`에 반영 (`createMovie`에 `initialRecord` 옵션 추가); 시청일이 없는 항목에 찍히는 플레이스홀더(`1970-01-01`)는 null로 처리
+- [x] 이미 보관된 작품(TMDB id 기준) 자동 스킵, TMDB 매칭 실패 작품은 목록으로 표시해 수동 확인 가능
+- [x] 실사용 검증 완료 — 실제 왓챠 CSV로 가져오기 테스트 성공
+
 ## Phase 7 — 패키징
 
 - [ ] electron-builder 설정
@@ -71,7 +80,6 @@
 
 ## 2차 범위 (지금은 손대지 않음)
 
-- 왓챠피디아 로그인 세션 크롤링 연동 (Playwright 기반 `WatchaAdapter`)
 - 책/웹툰/드라마 등 타 콘텐츠 타입 확장
 - 원작-각색 콘텐츠 간 관계 모델링
 - 모바일 앱 (`apps/mobile`) 분리 및 `packages/schema` 공유

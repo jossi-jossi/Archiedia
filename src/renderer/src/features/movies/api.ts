@@ -58,6 +58,12 @@ export interface CreateMovieInput {
   posterUrl: string | null
   externalId: string
   metadata: MovieMetadata
+  initialRecord?: {
+    myRating?: number | null
+    myReview?: string | null
+    watchCount?: number
+    lastWatchedAt?: string | null
+  }
 }
 
 export async function createMovie(input: CreateMovieInput): Promise<string> {
@@ -84,7 +90,10 @@ export async function createMovie(input: CreateMovieInput): Promise<string> {
   const { error: recordError } = await supabase.from('user_records').insert({
     user_id: userId,
     content_item_id: itemRow.id,
-    watch_count: 0,
+    my_rating: input.initialRecord?.myRating ?? null,
+    my_review: input.initialRecord?.myReview ?? null,
+    watch_count: input.initialRecord?.watchCount ?? 0,
+    last_watched_at: input.initialRecord?.lastWatchedAt ?? null,
     tags: []
   })
   if (recordError) throw recordError

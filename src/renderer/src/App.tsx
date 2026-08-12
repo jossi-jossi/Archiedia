@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { Sidebar } from './components/Sidebar'
+import { Screen, Sidebar } from './components/Sidebar'
 import { LoginScreen } from './features/auth/LoginScreen'
 import { useSession } from './features/auth/useSession'
 import { AddMovieScreen } from './features/movies/AddMovieScreen'
 import { LibraryView } from './features/movies/LibraryView'
 import { MovieDetail } from './features/movies/MovieDetail'
-
-type Screen = 'library' | 'add'
+import { WatchaImportScreen } from './features/movies/WatchaImportScreen'
 
 function App(): React.JSX.Element {
   const { session, loading } = useSession()
@@ -45,6 +44,9 @@ function App(): React.JSX.Element {
           />
         )}
         {screen === 'add' && <AddMovieScreen onArchived={() => setRefreshKey((k) => k + 1)} />}
+        {screen === 'import' && (
+          <WatchaImportScreen onImported={() => setRefreshKey((k) => k + 1)} />
+        )}
       </div>
       {selectedId && (
         <MovieDetail

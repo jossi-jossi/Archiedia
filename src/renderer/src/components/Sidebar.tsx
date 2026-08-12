@@ -1,12 +1,18 @@
-import { FilmStrip, MagnifyingGlass, SignOut, SquaresFour } from '@phosphor-icons/react'
+import {
+  DownloadSimple,
+  FilmStrip,
+  MagnifyingGlass,
+  SignOut,
+  SquaresFour
+} from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase'
 
-export type Screen = 'library' | 'add'
+export type Screen = 'library' | 'add' | 'import'
 
 interface Props {
   screen: Screen
   movieCount: number
-  onNavigate: (screen: 'library' | 'add') => void
+  onNavigate: (screen: Screen) => void
 }
 
 function navItemStyle(active: boolean): React.CSSProperties {
@@ -70,6 +76,22 @@ export function Sidebar({ screen, movieCount, onNavigate }: Props): React.JSX.El
         >
           <MagnifyingGlass size={17} />
           <span>검색 · 추가</span>
+        </div>
+        <div
+          onClick={() => onNavigate('import')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '9px 12px',
+            borderRadius: 'var(--radius-md)',
+            fontSize: 14,
+            cursor: 'pointer',
+            ...navItemStyle(screen === 'import')
+          }}
+        >
+          <DownloadSimple size={17} />
+          <span>왓챠 가져오기</span>
         </div>
       </div>
       <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
