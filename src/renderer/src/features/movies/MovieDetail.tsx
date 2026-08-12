@@ -1,5 +1,5 @@
 import { Heart, PlayCircle, Star, X } from '@phosphor-icons/react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { deleteMovie, getMovie, Movie, updateUserRecord } from './api'
 import { isWishlisted, withoutStatusTags } from './wishlist'
 import type { UserRecord } from '@archiedia/schema'
@@ -11,29 +11,13 @@ interface Props {
   onDeleted: () => void
 }
 
-const DIALOG_WIDTH = 906
+// 포스터는 항상 이 고정 크기로 그린다. 콘텐츠 높이에 맞춰 유동적으로 그리면(이전 방식)
+// 측정 전/후로 크기가 바뀌며 텍스트 줄바꿈이 깜빡이거나, 짧은 콘텐츠일 때 좌우에 빈
+// 여백이 남는 문제가 있었다. 고정 크기는 두 문제 모두 원천적으로 없앤다.
+const POSTER_HEIGHT = 550
+const POSTER_WIDTH = Math.round((POSTER_HEIGHT * 2) / 3)
+const DIALOG_WIDTH = 913.2
 const DIALOG_HEIGHT = 624
-const POSTER_FALLBACK_HEIGHT = 400
-
-// 텍스트 콘텐츠의 실제 높이를 측정해서 포스터를 거기에 맞춘다. 콜백 ref를 쓰는 이유는
-// 로딩 중엔 이 div가 존재하지 않아서, 일반 useEffect(마운트 시 1회)로는 로딩이 끝나고
-// 실제 콘텐츠가 나타나는 순간을 놓치기 때문.
-function useElementHeight(): [(el: HTMLDivElement | null) => void, number] {
-  const [height, setHeight] = useState(0)
-  const observerRef = useRef<ResizeObserver | null>(null)
-
-  const ref = useCallback((el: HTMLDivElement | null) => {
-    observerRef.current?.disconnect()
-    if (!el) return
-
-    setHeight(el.clientHeight)
-    const observer = new ResizeObserver(() => setHeight(el.clientHeight))
-    observer.observe(el)
-    observerRef.current = observer
-  }, [])
-
-  return [ref, height]
-}
 
 export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.Element {
   const [movie, setMovie] = useState<Movie | null>(null)
@@ -42,7 +26,6 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [contentRef, contentHeight] = useElementHeight()
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on movieId change needs to reset the loading/error flags before the async call resolves
@@ -105,7 +88,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
           height: DIALOG_HEIGHT,
           position: 'relative',
           paddingLeft: 33.6,
-          paddingRight: 22.4,
+          paddingRight: 29.6,
           boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65)'
         }}
         onClick={(e) => e.stopPropagation()}
@@ -180,9 +163,9 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
           <div style={{ display: 'flex', gap: 36, height: '100%', minHeight: 0 }}>
             <div
               style={{
-                height: Math.min(contentHeight || POSTER_FALLBACK_HEIGHT, DIALOG_HEIGHT - 44),
+                width: POSTER_WIDTH,
+                height: POSTER_HEIGHT,
                 alignSelf: 'center',
-                aspectRatio: '2 / 3',
                 flex: 'none',
                 borderRadius: 'var(--radius-md)',
                 overflow: 'hidden',
@@ -205,7 +188,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
               }}
             >
               <div style={{ flex: 1, minHeight: 0 }} />
-              <div ref={contentRef}>
+              <div>
                 <h2 style={{ margin: 0, paddingRight: 24 }}>{movie.title}</h2>
                 <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
                   {meta.originalTitle ?? movie.title} · {meta.releaseYear ?? '—'}
@@ -312,9 +295,10 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                           type="number"
                           min={0}
                           style={{ MozAppearance: 'textfield' }}
-                          value={record.watchCount}
+                          value={record.watchCount === 0 ? '' : record.watchCount}
+                          placeholder="0"
                           onChange={(e) =>
-                            setRecord({ ...record, watchCount: Number(e.target.value) })
+                            setRecord({ ...record, watchCount: Number(e.target.value) || 0 })
                           }
                           onBlur={() => save({ watchCount: record.watchCount })}
                         />
