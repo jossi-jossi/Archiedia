@@ -223,7 +223,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             <label
               className="seg-opt"
               style={{
-                padding: '7px 14px',
+                padding: '10px 14px',
                 boxShadow: 'none',
                 color: view === 'grid' ? 'var(--color-accent)' : undefined,
                 background:
@@ -243,7 +243,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             <label
               className="seg-opt"
               style={{
-                padding: '7px 14px',
+                padding: '10px 14px',
                 boxShadow: 'none',
                 color: view === 'list' ? 'var(--color-accent)' : undefined,
                 background:
@@ -265,7 +265,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <select
             className="input"
-            style={{ width: 'auto', flex: 'none' }}
+            style={{ width: 'auto', flex: 'none', minHeight: 28, padding: '3px 10px' }}
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
           >
