@@ -20,7 +20,7 @@ create table user_records (
   my_rating numeric,
   my_review text,
   watch_count integer not null default 0,
-  last_watched_at date,
+  last_watched_at text,
   watch_medium text,
   tags text[] not null default '{}',
   updated_at timestamptz not null default now()

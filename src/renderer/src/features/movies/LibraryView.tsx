@@ -72,6 +72,12 @@ const poster = (url: string | null): React.CSSProperties => ({
     : 'repeating-linear-gradient(45deg, var(--color-neutral-800), var(--color-neutral-800) 8px, var(--color-neutral-900) 8px, var(--color-neutral-900) 16px)'
 })
 
+function parseWatchedAt(value: string | null | undefined): number {
+  if (!value) return 0
+  const parsed = Date.parse(value)
+  return Number.isNaN(parsed) ? 0 : parsed
+}
+
 function unique(values: (string | null | undefined)[]): string[] {
   return Array.from(new Set(values.filter((v): v is string => Boolean(v)))).sort()
 }
@@ -193,8 +199,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
       rating_desc: (a, b) => (b.record?.myRating ?? 0) - (a.record?.myRating ?? 0),
       rating_asc: (a, b) => (a.record?.myRating ?? 0) - (b.record?.myRating ?? 0),
       watched_desc: (a, b) =>
-        (b.record?.lastWatchedAt ? Date.parse(b.record.lastWatchedAt) : 0) -
-        (a.record?.lastWatchedAt ? Date.parse(a.record.lastWatchedAt) : 0),
+        parseWatchedAt(b.record?.lastWatchedAt) - parseWatchedAt(a.record?.lastWatchedAt),
       watch_count_desc: (a, b) => (b.record?.watchCount ?? 0) - (a.record?.watchCount ?? 0)
     }
 
@@ -365,7 +370,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
           marginRight: gutter
         }}
       >
-        {loading ? (
+        {loading && movies.length === 0 ? (
           <div
             style={{
               height: '100%',
