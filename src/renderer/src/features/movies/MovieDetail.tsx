@@ -180,7 +180,7 @@ export function MovieDetail({ movieId, onBack }: Props): React.JSX.Element {
                     value={tagsInput}
                     onChange={(e) => setTagsInput(e.target.value)}
                     onBlur={() => save({ tags: splitTags(tagsInput) })}
-                    placeholder="보고싶음, 1번 봄"
+                    placeholder="보고 싶음, 1번 봄"
                   />
                 </div>
               </div>

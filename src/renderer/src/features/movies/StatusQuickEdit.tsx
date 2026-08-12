@@ -8,17 +8,17 @@ interface Props {
 }
 
 function withoutStatusTags(tags: string[]): string[] {
-  return tags.filter((t) => t !== '보고싶음' && !/^\d+번 봄$/.test(t))
+  return tags.filter((t) => t !== '보고 싶음' && t !== '보고싶음' && !/^\d+번 봄$/.test(t))
 }
 
 export function StatusQuickEdit({ record, onChange }: Props): React.JSX.Element {
-  const isWishlist = record.tags.includes('보고싶음')
+  const isWishlist = record.tags.includes('보고 싶음') || record.tags.includes('보고싶음')
 
   async function toggleWishlist(e: React.MouseEvent): Promise<void> {
     e.stopPropagation()
     const tags = isWishlist
       ? withoutStatusTags(record.tags)
-      : [...withoutStatusTags(record.tags), '보고싶음']
+      : [...withoutStatusTags(record.tags), '보고 싶음']
     await updateUserRecord(record.id, { tags })
     onChange({ ...record, tags })
   }

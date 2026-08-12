@@ -349,12 +349,12 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                 style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8 }}
               >
                 <div style={poster(item.posterUrl)}>
-                  {record?.tags.includes('보고싶음') && (
+                  {(record?.tags.includes('보고 싶음') || record?.tags.includes('보고싶음')) && (
                     <div
                       className="tag tag-accent-2"
                       style={{ position: 'absolute', top: 8, left: 8 }}
                     >
-                      보고싶음
+                      보고 싶음
                     </div>
                   )}
                 </div>
