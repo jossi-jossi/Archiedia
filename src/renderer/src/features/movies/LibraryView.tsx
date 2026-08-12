@@ -272,8 +272,15 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
               paddingTop: 3,
               paddingBottom: 3,
               paddingLeft: 6,
-              paddingRight: 26,
-              fontSize: 12
+              paddingRight: 12,
+              fontSize: 12,
+              appearance: 'none',
+              WebkitAppearance: 'none',
+              backgroundImage:
+                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%239397ab' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 8l5 5 5-5'/%3E%3C/svg%3E\")",
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 2px center',
+              backgroundSize: '8px 8px'
             }}
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
