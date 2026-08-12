@@ -440,6 +440,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                         width: 32,
                         height: 45,
                         borderRadius: 4,
+                        margin: '0 auto',
                         ...poster(item.posterUrl),
                         aspectRatio: undefined
                       }}
