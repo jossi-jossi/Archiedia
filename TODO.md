@@ -25,9 +25,9 @@
 
 ## Phase 3 — 공용 스키마/도메인 모델
 
-- [ ] Supabase 스키마 기반 TS 타입 생성 (`packages/schema`)
-- [ ] `ContentItem`, `UserRecord` 도메인 타입 정의 (discriminated union으로 영화 metadata 타입 안정성 확보)
-- [ ] 영화 metadata 타입 정의: 제목/원제/개봉연도/포스터/감독/장르/배우/러닝타임/제작국가/예고편/시리즈연결
+- [x] Supabase 스키마 기반 TS 타입 생성 (`packages/schema/src/types/database.ts` — `schema.sql` 기준 수동 작성)
+- [x] `ContentItem`, `UserRecord` 도메인 타입 정의 (`types/content.ts`, discriminated union으로 영화 metadata 타입 안정성 확보) + DB row ↔ 도메인 타입 매퍼(`mappers.ts`)
+- [x] 영화 metadata 타입 정의: 원제/개봉연도/감독/장르/배우/러닝타임/제작국가/예고편/시리즈연결 (`MovieMetadata`, 제목·포스터는 `content_items` 공통 컬럼)
 
 ## Phase 4 — 영화 수동 등록 (MVP 우선순위)
 
