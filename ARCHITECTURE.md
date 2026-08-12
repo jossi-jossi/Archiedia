@@ -7,13 +7,13 @@
 
 ## 2. 기술 스택
 
-| 영역 | 선택 | 이유 |
-|---|---|---|
-| 데스크톱 프레임워크 | Electron + React + TypeScript | Windows/macOS 동시 지원, 추후 React Native 모바일 앱과 도메인 로직·타입 공유 가능 |
-| 스크래핑 실행 위치 | Electron 메인 프로세스 (Playwright) | 왓챠피디아처럼 로그인 세션이 필요한 소스는 사용자 로컬 브라우저 세션 기반으로 수집 (서버에 로그인 쿠키 보관 지양) |
-| 백엔드 | Supabase (PostgreSQL + Auth + Storage) | 무료 티어로 개인 아카이브 규모 충분, 인증 내장, 추후 모바일 확장 시 동일 백엔드 재사용 |
-| 공식 API 소스 | TMDB API 등 | 영화 메타데이터 보완용 |
-| 타입 공유 | Supabase 자동 생성 TS 타입 + 공용 스키마 패키지 | 데스크톱/모바일 간 도메인 모델 불일치 방지 |
+| 영역                | 선택                                            | 이유                                                                                                              |
+| ------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 데스크톱 프레임워크 | Electron + React + TypeScript                   | Windows/macOS 동시 지원, 추후 React Native 모바일 앱과 도메인 로직·타입 공유 가능                                 |
+| 스크래핑 실행 위치  | Electron 메인 프로세스 (Playwright)             | 왓챠피디아처럼 로그인 세션이 필요한 소스는 사용자 로컬 브라우저 세션 기반으로 수집 (서버에 로그인 쿠키 보관 지양) |
+| 백엔드              | Supabase (PostgreSQL + Auth + Storage)          | 무료 티어로 개인 아카이브 규모 충분, 인증 내장, 추후 모바일 확장 시 동일 백엔드 재사용                            |
+| 공식 API 소스       | TMDB API 등                                     | 영화 메타데이터 보완용                                                                                            |
+| 타입 공유           | Supabase 자동 생성 TS 타입 + 공용 스키마 패키지 | 데스크톱/모바일 간 도메인 모델 불일치 방지                                                                        |
 
 > **플랫폼 지원 메모**: Electron/Playwright/Supabase 모두 Windows·macOS 양쪽에서 동작. 다만 왓챠피디아 로그인 세션 크롤링 로직은 브라우저 프로필 경로 등 OS별 차이가 생길 수 있으므로, 구현 시 OS 분기를 최소화하고 이식 가능한 방식(Playwright의 persistent context 등)을 우선 검토할 것.
 
@@ -33,6 +33,7 @@
 ```
 
 각 어댑터는 공통 인터페이스만 구현:
+
 - `fetch(query) → RawItem`
 - `normalize(RawItem) → ContentItem`
 
@@ -43,20 +44,22 @@
 콘텐츠 타입마다 테이블을 분리하지 않고, **공통 스키마 + 타입별 메타데이터(jsonb) 분리** 방식을 사용한다. 타입마다 필드가 달라도 마이그레이션 없이 대응 가능하며, 자주 쓰는 필드는 이후 정규 컬럼으로 승격할 수 있다.
 
 ### `content_items` (공통)
-| 필드 | 설명 |
-|---|---|
-| id | PK |
-| user_id | FK (auth.users) — RLS로 본인 데이터만 접근 |
-| type | movie / book / webtoon / drama … |
-| title | 제목 |
-| source | 데이터 출처 (watcha / tmdb / manual …) |
-| external_id | 소스 내 식별자 |
-| poster_url | 포스터/커버 이미지 |
-| metadata | jsonb — 타입별 고유 필드 |
+
+| 필드        | 설명                                       |
+| ----------- | ------------------------------------------ |
+| id          | PK                                         |
+| user_id     | FK (auth.users) — RLS로 본인 데이터만 접근 |
+| type        | movie / book / webtoon / drama …           |
+| title       | 제목                                       |
+| source      | 데이터 출처 (watcha / tmdb / manual …)     |
+| external_id | 소스 내 식별자                             |
+| poster_url  | 포스터/커버 이미지                         |
+| metadata    | jsonb — 타입별 고유 필드                   |
 
 ### 영화(`type = movie`)의 `metadata` 필드
 
 **메타데이터**
+
 - 영화 제목
 - 원제
 - 개봉연도
@@ -70,16 +73,17 @@
 - 시리즈/프랜차이즈 연결 (관련 `content_items` 참조)
 
 ### `user_records` (사용자별 개인 기록, content_item과 1:1 또는 1:N)
-| 필드 | 설명 |
-|---|---|
-| user_id | FK (auth.users) — RLS로 본인 데이터만 접근 |
-| content_item_id | FK |
-| my_rating | 나의 평점 |
-| my_review | 나의 후기 |
-| watch_count | 본 횟수 |
-| last_watched_at | 마지막 관람일 |
-| watch_medium | 관람 매체/경로 (극장 / OTT / 블루레이 등) |
-| tags | 보고 싶음 / 1번 봄 / n번 봄 등 |
+
+| 필드            | 설명                                       |
+| --------------- | ------------------------------------------ |
+| user_id         | FK (auth.users) — RLS로 본인 데이터만 접근 |
+| content_item_id | FK                                         |
+| my_rating       | 나의 평점                                  |
+| my_review       | 나의 후기                                  |
+| watch_count     | 본 횟수                                    |
+| last_watched_at | 마지막 관람일                              |
+| watch_medium    | 관람 매체/경로 (극장 / OTT / 블루레이 등)  |
+| tags            | 보고 싶음 / 1번 봄 / n번 봄 등             |
 
 ## 5. 트레이드오프 메모
 

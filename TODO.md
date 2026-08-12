@@ -31,11 +31,13 @@
 
 ## Phase 4 — 영화 수동 등록 (MVP 우선순위)
 
-- [ ] 영화 등록 폼 UI (메타데이터 전체 입력)
-- [ ] Supabase에 저장 (`content_items` + `user_records` insert)
-- [ ] 등록한 영화 목록 뷰 (카드/리스트)
-- [ ] 영화 상세 뷰 (포스터, 메타데이터, 개인 기록 표시)
-- [ ] 개인 기록 수정 UI (평점/후기/본 횟수/마지막 관람일/관람 매체/태그)
+- [x] 디자인 시안 기준 CSS 토큰/공용 클래스 작성 — 원본 `Nocturne` 디자인 시스템(`styles.css`)을 사용자가 추가로 업로드해줘서, 추측 없이 실제 값 그대로 `src/renderer/src/styles/nocturne.css`로 이식 + 연두색 액센트 오버라이드(`accent-override.css`). 구글 폰트 CDN import만 CSP상 제거하고 시스템 폰트로 폴백
+- [x] 로그인/회원가입 화면 (Supabase Auth 이메일/비밀번호) — `features/auth/LoginScreen.tsx`, `useSession.ts`
+- [x] 영화 등록 폼 UI (메타데이터 전체 입력) — `features/movies/AddMovieForm.tsx` (포스터는 파일 업로드 대신 URL 입력으로 단순화, Storage 버킷 미구성)
+- [x] Supabase에 저장 (`content_items` + `user_records` insert) — `features/movies/api.ts`
+- [x] 등록한 영화 목록 뷰 (카드/리스트) — `features/movies/LibraryView.tsx`
+- [x] 영화 상세 뷰 (포스터, 메타데이터, 개인 기록 표시) — `features/movies/MovieDetail.tsx`
+- [x] 개인 기록 수정 UI (평점/후기/본 횟수/마지막 관람일/관람 매체/태그) — `MovieDetail.tsx` 내 인라인 편집(별점 클릭, blur 시 자동 저장)
 
 ## Phase 5 — TMDB 연동 (메타데이터 자동 입력)
 
