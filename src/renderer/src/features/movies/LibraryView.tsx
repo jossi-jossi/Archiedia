@@ -409,13 +409,13 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
           <table className="table" style={{ tableLayout: 'fixed' }}>
             <colgroup>
               <col style={{ width: '5%' }} />
-              <col style={{ width: '25%' }} />
-              <col style={{ width: '14%' }} />
-              <col style={{ width: '8%' }} />
-              <col style={{ width: '13%' }} />
-              <col style={{ width: '13%' }} />
-              <col style={{ width: '14%' }} />
-              <col style={{ width: '8%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '7.5%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '7.5%' }} />
             </colgroup>
             <thead>
               <tr>
