@@ -53,10 +53,12 @@ function unique(values: (string | null | undefined)[]): string[] {
 
 const POSTER_WIDTH = 180
 const GRID_GAP = 18
+const GRID_RIGHT_GUTTER = 16
 
 // 컨테이너 폭을 실측해서 POSTER_WIDTH를 "목표 크기"로 삼아 정확히 들어가는 열 수를 계산한다.
 // auto-fill + 고정폭 방식은 열이 하나 늘어나기 직전 스크롤바 앞에 카드 한 칸만큼의 공백이 생기는데,
 // 열 수를 직접 계산해 1fr로 분배하면 그 공백이 카드 사이로 흩어져 사라진다.
+// GRID_RIGHT_GUTTER만큼은 항상 스크롤바 앞 여백으로 고정 확보한다 (grid 쪽 paddingRight와 짝을 맞춰야 함).
 function useGridColumns(targetWidth: number): [React.RefObject<HTMLDivElement | null>, number] {
   const ref = useRef<HTMLDivElement>(null)
   const [columns, setColumns] = useState(1)
@@ -66,7 +68,7 @@ function useGridColumns(targetWidth: number): [React.RefObject<HTMLDivElement | 
     if (!el) return
 
     function recompute(): void {
-      const width = el!.clientWidth
+      const width = el!.clientWidth - GRID_RIGHT_GUTTER
       setColumns(Math.max(1, Math.floor((width + GRID_GAP) / (targetWidth + GRID_GAP))))
     }
 
@@ -302,7 +304,8 @@ export function LibraryView({
               display: 'grid',
               gridTemplateColumns: `repeat(${columns}, 1fr)`,
               gap: 18,
-              paddingBottom: 12
+              paddingBottom: 12,
+              paddingRight: GRID_RIGHT_GUTTER
             }}
           >
             {filtered.map(({ item, record }) => (
