@@ -1,9 +1,10 @@
-import { ListBullets, MagnifyingGlass, SquaresFour, Star } from '@phosphor-icons/react'
+import { Heart, ListBullets, MagnifyingGlass, SquaresFour, Star } from '@phosphor-icons/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { listMovies, MovieListItem } from './api'
 import { errorMessage } from '../../lib/errors'
 import { FilterDropdown } from './FilterDropdown'
 import { StatusQuickEdit } from './StatusQuickEdit'
+import { displayTag, isWishlisted } from './wishlist'
 
 interface Props {
   onSelect: (id: string) => void
@@ -111,7 +112,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   const [view, setView] = useState<'grid' | 'list'>(loadView)
   const [query, setQuery] = useState('')
   const [genreFilter, setGenreFilter] = useState<string[]>([])
-  const [tagFilter, setTagFilter] = useState<string[]>([])
+  const [wishlistOnly, setWishlistOnly] = useState(false)
   const [sort, setSort] = useState<SortKey>('added_desc')
   const [gridRef, columns, gutter] = useGridColumns(POSTER_WIDTH)
 
@@ -143,7 +144,6 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     () => unique(movies.flatMap((m) => m.item.metadata.genres)),
     [movies]
   )
-  const tagOptions = useMemo(() => unique(movies.flatMap((m) => m.record?.tags ?? [])), [movies])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -161,8 +161,8 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
         item.metadata.genres.some((g) => genreFilter.includes(g))
       )
     }
-    if (tagFilter.length > 0) {
-      result = result.filter(({ record }) => record?.tags.some((t) => tagFilter.includes(t)))
+    if (wishlistOnly) {
+      result = result.filter(({ record }) => record && isWishlisted(record.tags))
     }
 
     const primaryCompare: Record<SortKey, (a: MovieListItem, b: MovieListItem) => number> = {
@@ -182,7 +182,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
       return a.item.title.localeCompare(b.item.title, 'ko')
     })
     return sorted
-  }, [movies, query, genreFilter, tagFilter, sort])
+  }, [movies, query, genreFilter, wishlistOnly, sort])
 
   return (
     <div
@@ -288,12 +288,15 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                 selected={genreFilter}
                 onChange={setGenreFilter}
               />
-              <FilterDropdown
-                label="태그"
-                options={tagOptions}
-                selected={tagFilter}
-                onChange={setTagFilter}
-              />
+              <button
+                type="button"
+                className={wishlistOnly ? 'btn btn-primary' : 'btn btn-secondary'}
+                style={{ minHeight: 28, padding: '0 12px', fontSize: 12 }}
+                onClick={() => setWishlistOnly((v) => !v)}
+              >
+                <Heart size={12} weight={wishlistOnly ? 'fill' : 'regular'} />
+                보고 싶어요
+              </button>
             </div>
           ) : (
             <div />
@@ -370,12 +373,12 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                 style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8 }}
               >
                 <div style={poster(item.posterUrl)}>
-                  {(record?.tags.includes('보고 싶음') || record?.tags.includes('보고싶음')) && (
+                  {record && isWishlisted(record.tags) && (
                     <div
                       className="tag tag-accent-2"
                       style={{ position: 'absolute', top: 8, left: 8 }}
                     >
-                      보고 싶음
+                      보고 싶어요
                     </div>
                   )}
                 </div>
@@ -490,7 +493,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                   <td>
                     {record?.tags.map((tag) => (
                       <span key={tag} className="tag tag-neutral" style={{ marginRight: 4 }}>
-                        {tag}
+                        {displayTag(tag)}
                       </span>
                     )) || '—'}
                   </td>

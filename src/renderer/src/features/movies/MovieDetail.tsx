@@ -1,6 +1,7 @@
-import { PlayCircle, Star, X } from '@phosphor-icons/react'
+import { Heart, PlayCircle, Star, X } from '@phosphor-icons/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { deleteMovie, getMovie, Movie, updateUserRecord } from './api'
+import { isWishlisted, withoutStatusTags } from './wishlist'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
 
@@ -34,22 +35,13 @@ function useElementHeight(): [(el: HTMLDivElement | null) => void, number] {
   return [ref, height]
 }
 
-function splitTags(value: string): string[] {
-  return value
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-}
-
 export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.Element {
   const [movie, setMovie] = useState<Movie | null>(null)
   const [record, setRecord] = useState<UserRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [tagsInput, setTagsInput] = useState('')
   const [contentRef, contentHeight] = useElementHeight()
 
   useEffect(() => {
@@ -60,7 +52,6 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
       .then((result) => {
         setMovie(result?.item ?? null)
         setRecord(result?.record ?? null)
-        setTagsInput(result?.record?.tags.join(', ') ?? '')
       })
       .catch((err) => setError(errorMessage(err)))
       .finally(() => setLoading(false))
@@ -81,14 +72,11 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
 
   async function save(patch: Partial<UserRecord>): Promise<void> {
     if (!record) return
-    setSaving(true)
     try {
       await updateUserRecord(record.id, patch)
       setRecord({ ...record, ...patch })
     } catch (err) {
       setError(errorMessage(err))
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -282,7 +270,13 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
 
                 <h4 style={{ marginBottom: 10 }}>나의 기록</h4>
                 {record && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 12
+                    }}
+                  >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Star
@@ -334,14 +328,24 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                         />
                       </div>
                       <div className="field">
-                        <label>태그</label>
-                        <input
-                          className="input"
-                          value={tagsInput}
-                          onChange={(e) => setTagsInput(e.target.value)}
-                          onBlur={() => save({ tags: splitTags(tagsInput) })}
-                          placeholder="보고 싶음, 1번 봄"
-                        />
+                        <label>상태</label>
+                        <button
+                          type="button"
+                          className={
+                            isWishlisted(record.tags) ? 'btn btn-primary' : 'btn btn-secondary'
+                          }
+                          style={{ width: '100%', minHeight: 36 }}
+                          onClick={() =>
+                            save({
+                              tags: isWishlisted(record.tags)
+                                ? withoutStatusTags(record.tags)
+                                : [...withoutStatusTags(record.tags), '보고 싶음']
+                            })
+                          }
+                        >
+                          <Heart weight={isWishlisted(record.tags) ? 'fill' : 'regular'} />
+                          보고 싶어요
+                        </button>
                       </div>
                     </div>
 
@@ -356,11 +360,6 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                         placeholder="이 작품에 대한 생각을 기록해보세요"
                       />
                     </div>
-                    {saving && (
-                      <div style={{ fontSize: 12, color: 'var(--color-neutral-500)' }}>
-                        저장 중...
-                      </div>
-                    )}
                   </div>
                 )}
               </div>

@@ -51,7 +51,7 @@ interface TmdbMovieDetail {
   runtime: number | null
   poster_path: string | null
   genres: { name: string }[]
-  production_countries: { name: string }[]
+  production_countries: { iso_3166_1: string; name: string }[]
   credits: {
     crew: { job: string; name: string }[]
     cast: { name: string }[]
@@ -69,6 +69,19 @@ export interface TmdbMovieDetails {
 
 function findTrailerKey(videos: { site: string; type: string; key: string }[]): string | null {
   return videos.find((v) => v.site === 'YouTube' && v.type === 'Trailer')?.key ?? null
+}
+
+// TMDB의 production_countries.name은 language 파라미터와 무관하게 항상 영어라, 국가 코드를
+// Intl.DisplayNames로 직접 한국어로 변환한다 (오프라인, 추가 API 호출 없음).
+const koreanRegionNames = new Intl.DisplayNames(['ko'], { type: 'region' })
+
+function toKoreanCountryName(iso3166: string | undefined, fallback: string | null): string | null {
+  if (!iso3166) return fallback
+  try {
+    return koreanRegionNames.of(iso3166) ?? fallback
+  } catch {
+    return fallback
+  }
 }
 
 // TMDB의 videos는 요청 language에 태깅된 영상만 돌려준다 (한국어 예고편이 없으면 빈 배열).
@@ -107,7 +120,10 @@ export async function getMovieDetails(id: number): Promise<TmdbMovieDetails> {
       genres: data.genres.map((g) => g.name),
       actors: data.credits.cast.slice(0, 5).map((c) => c.name),
       runtimeMinutes: data.runtime,
-      country: data.production_countries[0]?.name ?? null,
+      country: toKoreanCountryName(
+        data.production_countries[0]?.iso_3166_1,
+        data.production_countries[0]?.name ?? null
+      ),
       trailerUrl: trailerKey ? `https://www.youtube.com/watch?v=${trailerKey}` : null,
       relatedContentItemIds: []
     }

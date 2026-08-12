@@ -1,18 +1,15 @@
 import { Heart } from '@phosphor-icons/react'
 import { UserRecord } from '@archiedia/schema'
 import { updateUserRecord } from './api'
+import { isWishlisted, withoutStatusTags } from './wishlist'
 
 interface Props {
   record: UserRecord
   onChange: (updated: UserRecord) => void
 }
 
-function withoutStatusTags(tags: string[]): string[] {
-  return tags.filter((t) => t !== '보고 싶음' && t !== '보고싶음' && !/^\d+번 봄$/.test(t))
-}
-
 export function StatusQuickEdit({ record, onChange }: Props): React.JSX.Element {
-  const isWishlist = record.tags.includes('보고 싶음') || record.tags.includes('보고싶음')
+  const isWishlist = isWishlisted(record.tags)
 
   async function toggleWishlist(e: React.MouseEvent): Promise<void> {
     e.stopPropagation()
