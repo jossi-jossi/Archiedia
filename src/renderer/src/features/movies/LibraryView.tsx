@@ -50,7 +50,7 @@ function unique(values: (string | null | undefined)[]): string[] {
   return Array.from(new Set(values.filter((v): v is string => Boolean(v)))).sort()
 }
 
-const POSTER_WIDTH = 180
+const POSTER_WIDTH = 150
 const GRID_GAP = 18
 const GRID_RIGHT_GUTTER = 16
 
