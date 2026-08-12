@@ -189,89 +189,92 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
         overflow: 'hidden'
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 14,
-          marginBottom: 14,
-          flexWrap: 'wrap'
-        }}
-      >
-        <h2 style={{ margin: 0, flex: 'none', whiteSpace: 'nowrap' }}>라이브러리</h2>
-        <div style={{ position: 'relative', width: 240, flex: 'none' }}>
-          <MagnifyingGlass
-            size={14}
-            style={{
-              position: 'absolute',
-              left: 10,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--color-neutral-500)'
-            }}
-          />
-          <input
-            className="input"
-            style={{ paddingLeft: 30 }}
-            placeholder="보관된 콘텐츠 검색"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
-        <select
-          className="input"
-          style={{ width: 'auto', flex: 'none' }}
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            flexWrap: 'wrap'
+          }}
         >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <div style={{ flex: 1, minWidth: 12 }} />
-        <div className="seg" style={{ flex: 'none' }}>
-          <label
-            className="seg-opt"
-            style={{
-              padding: '10px 14px',
-              boxShadow: 'none',
-              color: view === 'grid' ? 'var(--color-accent)' : undefined,
-              background:
-                view === 'grid'
-                  ? 'color-mix(in srgb, var(--color-accent) 15%, transparent)'
-                  : undefined
-            }}
-          >
-            <input
-              type="radio"
-              name="view"
-              checked={view === 'grid'}
-              onChange={() => setView('grid')}
+          <h2 style={{ margin: 0, flex: 'none', whiteSpace: 'nowrap' }}>라이브러리</h2>
+          <div style={{ position: 'relative', width: 240, flex: 'none' }}>
+            <MagnifyingGlass
+              size={14}
+              style={{
+                position: 'absolute',
+                left: 10,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'var(--color-neutral-500)'
+              }}
             />
-            <SquaresFour size={16} />
-          </label>
-          <label
-            className="seg-opt"
-            style={{
-              padding: '10px 14px',
-              boxShadow: 'none',
-              color: view === 'list' ? 'var(--color-accent)' : undefined,
-              background:
-                view === 'list'
-                  ? 'color-mix(in srgb, var(--color-accent) 15%, transparent)'
-                  : undefined
-            }}
-          >
             <input
-              type="radio"
-              name="view"
-              checked={view === 'list'}
-              onChange={() => setView('list')}
+              className="input"
+              style={{ paddingLeft: 30 }}
+              placeholder="보관된 콘텐츠 검색"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
             />
-            <ListBullets size={16} />
-          </label>
+          </div>
+          <div style={{ flex: 1, minWidth: 12 }} />
+          <div className="seg" style={{ flex: 'none' }}>
+            <label
+              className="seg-opt"
+              style={{
+                padding: '10px 14px',
+                boxShadow: 'none',
+                color: view === 'grid' ? 'var(--color-accent)' : undefined,
+                background:
+                  view === 'grid'
+                    ? 'color-mix(in srgb, var(--color-accent) 15%, transparent)'
+                    : undefined
+              }}
+            >
+              <input
+                type="radio"
+                name="view"
+                checked={view === 'grid'}
+                onChange={() => setView('grid')}
+              />
+              <SquaresFour size={16} />
+            </label>
+            <label
+              className="seg-opt"
+              style={{
+                padding: '10px 14px',
+                boxShadow: 'none',
+                color: view === 'list' ? 'var(--color-accent)' : undefined,
+                background:
+                  view === 'list'
+                    ? 'color-mix(in srgb, var(--color-accent) 15%, transparent)'
+                    : undefined
+              }}
+            >
+              <input
+                type="radio"
+                name="view"
+                checked={view === 'list'}
+                onChange={() => setView('list')}
+              />
+              <ListBullets size={16} />
+            </label>
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <select
+            className="input"
+            style={{ width: 'auto', flex: 'none' }}
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
