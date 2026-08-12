@@ -9,8 +9,10 @@ interface Props {
   onClose: () => void
 }
 
-const DIALOG_WIDTH = 880
-const DIALOG_HEIGHT = 620
+const DIALOG_WIDTH = 720
+const DIALOG_HEIGHT = 600
+const POSTER_WIDTH = 200
+const POSTER_HEIGHT = 300
 
 function splitTags(value: string): string[] {
   return value
@@ -113,9 +115,9 @@ export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
           <div style={{ display: 'flex', gap: 24, height: '100%', minHeight: 0 }}>
             <div
               style={{
-                width: 220,
+                width: POSTER_WIDTH,
+                height: POSTER_HEIGHT,
                 flex: 'none',
-                aspectRatio: '2 / 3',
                 borderRadius: 'var(--radius-md)',
                 overflow: 'hidden',
                 boxShadow: 'var(--shadow-md)',
@@ -124,7 +126,15 @@ export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
                   : 'repeating-linear-gradient(45deg, var(--color-neutral-800), var(--color-neutral-800) 8px, var(--color-neutral-900) 8px, var(--color-neutral-900) 16px)'
               }}
             />
-            <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', paddingRight: 4 }}>
+            <div
+              style={{
+                flex: 1,
+                minWidth: 0,
+                overflowY: 'auto',
+                paddingRight: 4,
+                paddingTop: 20
+              }}
+            >
               <h2 style={{ margin: 0, paddingRight: 24 }}>{movie.title}</h2>
               <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
                 {meta.originalTitle ?? movie.title} · {meta.releaseYear ?? '—'}
