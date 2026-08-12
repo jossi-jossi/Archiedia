@@ -1,4 +1,4 @@
-import { Eye, Heart } from '@phosphor-icons/react'
+import { Heart } from '@phosphor-icons/react'
 import { UserRecord } from '@archiedia/schema'
 import { updateUserRecord } from './api'
 
@@ -23,35 +23,15 @@ export function StatusQuickEdit({ record, onChange }: Props): React.JSX.Element 
     onChange({ ...record, tags })
   }
 
-  async function markWatched(e: React.MouseEvent): Promise<void> {
-    e.stopPropagation()
-    const nextCount = record.watchCount + 1
-    const tags = [...withoutStatusTags(record.tags), `${nextCount}번 봄`]
-    const today = new Date().toISOString().slice(0, 10)
-    const patch = { watchCount: nextCount, tags, lastWatchedAt: today }
-    await updateUserRecord(record.id, patch)
-    onChange({ ...record, ...patch })
-  }
-
   return (
     <div style={{ display: 'flex', gap: 4 }} onClick={(e) => e.stopPropagation()}>
       <button
         type="button"
         className="btn btn-ghost"
         style={{ padding: 4 }}
-        title={isWishlist ? '보고싶음 해제' : '보고싶음으로 표시'}
         onClick={toggleWishlist}
       >
         <Heart size={14} weight={isWishlist ? 'fill' : 'regular'} />
-      </button>
-      <button
-        type="button"
-        className="btn btn-ghost"
-        style={{ padding: 4 }}
-        title="관람 기록 추가 (+1)"
-        onClick={markWatched}
-      >
-        <Eye size={14} />
       </button>
     </div>
   )
