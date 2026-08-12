@@ -9,10 +9,10 @@
 
 ## Phase 1 — 프로젝트 스캐폴딩
 
-- [ ] Electron + React + TypeScript 프로젝트 초기화 (`src/` — 데스크톱 앱 본체)
-- [ ] `packages/schema` 패키지 생성 (공용 도메인 타입 자리 — 지금은 비어있어도 됨)
-- [ ] 기본 빌드/실행 스크립트 확인 (`npm run dev` 등, Win/macOS 둘 다 로컬에서 구동 확인)
-- [ ] ESLint/Prettier 등 최소 코드 스타일 설정
+- [x] Electron + React + TypeScript 프로젝트 초기화 (`src/` — 데스크톱 앱 본체, electron-vite react-ts 템플릿, npm workspaces)
+- [x] `packages/schema` 패키지 생성 (공용 도메인 타입 자리 — 지금은 비어있어도 됨)
+- [x] 기본 빌드/실행 스크립트 확인 (`npm run dev`, `npm run typecheck` — Windows에서 정상 구동 확인. macOS는 미검증)
+- [x] ESLint/Prettier 등 최소 코드 스타일 설정 (템플릿 기본 제공)
 
 ## Phase 2 — Supabase 설정
 
