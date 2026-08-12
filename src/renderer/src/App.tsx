@@ -40,7 +40,6 @@ function App(): React.JSX.Element {
         {screen === 'library' && (
           <LibraryView
             refreshKey={refreshKey}
-            onAdd={() => setScreen('add')}
             onCountChange={setMovieCount}
             onSelect={(id) => {
               setSelectedId(id)

@@ -1,11 +1,10 @@
-import { ListBullets, MagnifyingGlass, Plus, SquaresFour, Star } from '@phosphor-icons/react'
+import { ListBullets, MagnifyingGlass, SquaresFour, Star } from '@phosphor-icons/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { listMovies, MovieListItem } from './api'
 import { FilterDropdown } from './FilterDropdown'
 import { StatusQuickEdit } from './StatusQuickEdit'
 
 interface Props {
-  onAdd: () => void
   onSelect: (id: string) => void
   onCountChange: (count: number) => void
   refreshKey: number
@@ -81,12 +80,7 @@ function useGridColumns(targetWidth: number): [React.RefObject<HTMLDivElement | 
   return [ref, columns]
 }
 
-export function LibraryView({
-  onAdd,
-  onSelect,
-  onCountChange,
-  refreshKey
-}: Props): React.JSX.Element {
+export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): React.JSX.Element {
   const [movies, setMovies] = useState<MovieListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -252,14 +246,6 @@ export function LibraryView({
             <ListBullets />
           </label>
         </div>
-        <button
-          className="btn btn-primary"
-          style={{ flex: 'none', whiteSpace: 'nowrap' }}
-          onClick={onAdd}
-        >
-          <Plus />
-          추가
-        </button>
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 18, flex: 'none', flexWrap: 'wrap' }}>
@@ -289,7 +275,7 @@ export function LibraryView({
       {!loading && !error && filtered.length === 0 && (
         <div style={{ color: 'var(--color-neutral-500)' }}>
           {movies.length === 0
-            ? '아직 등록된 영화가 없어요. "추가" 버튼으로 첫 영화를 등록해보세요.'
+            ? '아직 등록된 영화가 없어요. 사이드바의 "검색 · 추가"에서 첫 영화를 등록해보세요.'
             : '조건에 맞는 영화가 없어요.'}
         </div>
       )}
