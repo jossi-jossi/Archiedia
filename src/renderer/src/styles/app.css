@@ -4,6 +4,11 @@ body,
   height: 100%;
 }
 
+html {
+  /* 개별 컴포넌트마다 px 폰트 크기가 흩어져 있어서, 전체 UI를 균일하게 키우는 용도 */
+  zoom: 1.1;
+}
+
 body {
   overflow: hidden;
   user-select: none;
