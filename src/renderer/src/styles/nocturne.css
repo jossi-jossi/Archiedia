@@ -188,13 +188,7 @@ figcaption {
   height: 1px;
   border: 0;
   margin: var(--space-4) 0;
-  background: linear-gradient(
-    to right,
-    transparent,
-    var(--color-divider) 48px,
-    var(--color-divider) calc(100% - 48px),
-    transparent
-  );
+  background: var(--color-divider);
 }
 
 /* — buttons — */
@@ -464,49 +458,14 @@ textarea.input {
   text-transform: uppercase;
   color: color-mix(in srgb, var(--color-text) 60%, transparent);
   padding: var(--space-2);
-  border-bottom: 1px solid transparent; /* keeps layout; the row paints the fading rule */
+  border-bottom: 1px solid var(--color-divider);
 }
 .table td {
   padding: var(--space-2);
-  border-bottom: 1px solid transparent;
-}
-/* Row rules as row-level strips so the end-fade spans the row, not each cell. */
-.table thead tr {
-  background: linear-gradient(
-      to right,
-      transparent,
-      var(--color-divider) 48px,
-      var(--color-divider) calc(100% - 48px),
-      transparent
-    )
-    no-repeat bottom / 100% 1px;
-}
-.table tbody tr {
-  background: linear-gradient(
-      to right,
-      transparent,
-      color-mix(in srgb, var(--color-text) 8%, transparent) 48px,
-      color-mix(in srgb, var(--color-text) 8%, transparent) calc(100% - 48px),
-      transparent
-    )
-    no-repeat bottom / 100% 1px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent);
 }
 .table tbody tr:hover {
-  /* the hover tint layers over the row rule, which keeps painting */
-  background:
-    linear-gradient(
-        color-mix(in srgb, var(--color-text) 4%, transparent),
-        color-mix(in srgb, var(--color-text) 4%, transparent)
-      )
-      no-repeat 0 0 / 100% 100%,
-    linear-gradient(
-        to right,
-        transparent,
-        color-mix(in srgb, var(--color-text) 8%, transparent) 48px,
-        color-mix(in srgb, var(--color-text) 8%, transparent) calc(100% - 48px),
-        transparent
-      )
-      no-repeat bottom / 100% 1px;
+  background: color-mix(in srgb, var(--color-text) 4%, transparent);
 }
 
 /* — dialog — */
