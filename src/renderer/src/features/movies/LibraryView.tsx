@@ -58,6 +58,12 @@ const POSTER_WIDTH = 150
 const GRID_GAP = 18
 const GRID_RIGHT_GUTTER = 16
 
+const VIEW_KEY = 'archiedia:libraryView'
+
+function loadView(): 'grid' | 'list' {
+  return localStorage.getItem(VIEW_KEY) === 'list' ? 'list' : 'grid'
+}
+
 // 컨테이너 폭을 실측해서 POSTER_WIDTH를 "목표 크기"로 삼아 정확히 들어가는 열 수를 계산한다.
 // auto-fill + 고정폭 방식은 열이 하나 늘어나기 직전 스크롤바 앞에 카드 한 칸만큼의 공백이 생기는데,
 // 열 수를 직접 계산해 1fr로 분배하면 그 공백이 카드 사이로 흩어져 사라진다.
@@ -88,13 +94,17 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   const [movies, setMovies] = useState<MovieListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [view, setView] = useState<'grid' | 'list'>('grid')
+  const [view, setView] = useState<'grid' | 'list'>(loadView)
   const [query, setQuery] = useState('')
   const [genreFilter, setGenreFilter] = useState<string[]>([])
   const [tagFilter, setTagFilter] = useState<string[]>([])
   const [mediumFilter, setMediumFilter] = useState<string[]>([])
   const [sort, setSort] = useState<SortKey>('year_desc')
   const [gridRef, columns] = useGridColumns(POSTER_WIDTH)
+
+  useEffect(() => {
+    localStorage.setItem(VIEW_KEY, view)
+  }, [view])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on refreshKey change needs to reset the loading/error flags before the async call resolves
