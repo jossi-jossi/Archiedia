@@ -114,7 +114,8 @@ export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
           <div style={{ display: 'flex', gap: 24, height: '100%', minHeight: 0 }}>
             <div
               style={{
-                height: '100%',
+                height: '88%',
+                alignSelf: 'flex-start',
                 aspectRatio: '2 / 3',
                 flex: 'none',
                 borderRadius: 'var(--radius-md)',
