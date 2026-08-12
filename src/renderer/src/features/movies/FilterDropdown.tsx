@@ -1,5 +1,7 @@
-import { CaretDown } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
+
+const CARET_DOWN_SVG =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%239397ab' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 8l5 5 5-5'/%3E%3C/svg%3E\")"
 
 interface Props {
   label: string
@@ -31,7 +33,9 @@ export function FilterDropdown({ label, options, selected, onChange }: Props): R
         onClick={() => setOpen((o) => !o)}
         style={{
           cursor: 'pointer',
-          padding: '6px 12px',
+          padding: '0 12px',
+          minHeight: 28,
+          boxSizing: 'border-box',
           display: 'flex',
           alignItems: 'center',
           gap: 5,
@@ -40,7 +44,17 @@ export function FilterDropdown({ label, options, selected, onChange }: Props): R
       >
         {label}
         {selected.length > 0 ? ` (${selected.length})` : ''}
-        <CaretDown size={11} />
+        <span
+          style={{
+            width: 9,
+            height: 9,
+            flex: 'none',
+            backgroundImage: CARET_DOWN_SVG,
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'contain',
+            backgroundPosition: 'center'
+          }}
+        />
       </div>
       {open && (
         <div

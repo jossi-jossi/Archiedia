@@ -53,12 +53,12 @@ function unique(values: (string | null | undefined)[]): string[] {
   return Array.from(new Set(values.filter((v): v is string => Boolean(v)))).sort()
 }
 
-// 장르/태그/관람 매체 필터는 구성을 다시 고민 중이라 잠시 숨김 — 상태/로직은 그대로 두고 UI만 뺐다.
-const SHOW_FILTERS = false
+const SHOW_FILTERS = true
 
 const POSTER_WIDTH = 150
 const GRID_GAP = 18
-const GRID_RIGHT_GUTTER = 16
+// 헤더 행(제목/검색/토글, 필터/정렬)의 오른쪽 여백과 같은 값. 마지막 카드가 여기 맞춰진다.
+const HEADER_RIGHT_MARGIN = 28
 
 const VIEW_KEY = 'archiedia:libraryView'
 
@@ -69,17 +69,29 @@ function loadView(): 'grid' | 'list' {
 // 컨테이너 폭을 실측해서 POSTER_WIDTH를 "목표 크기"로 삼아 정확히 들어가는 열 수를 계산한다.
 // auto-fill + 고정폭 방식은 열이 하나 늘어나기 직전 스크롤바 앞에 카드 한 칸만큼의 공백이 생기는데,
 // 열 수를 직접 계산해 1fr로 분배하면 그 공백이 카드 사이로 흩어져 사라진다.
-// GRID_RIGHT_GUTTER만큼은 항상 스크롤바 앞 여백으로 고정 확보한다 (grid 쪽 paddingRight와 짝을 맞춰야 함).
-function useGridColumns(targetWidth: number): [React.RefObject<HTMLDivElement | null>, number] {
+//
+// gutter는 스크롤바 실제 폭(el.offsetWidth - el.clientWidth로 측정)을 감안해서
+// (HEADER_RIGHT_MARGIN - 스크롤바폭) / 2로 계산한다. 이 값을 스크롤 컨테이너 자신의
+// paddingRight와 안쪽 그리드의 paddingRight에 똑같이 적용하면, 스크롤바가 그 두 여백
+// 사이 — 즉 HEADER_RIGHT_MARGIN 폭 안의 정중앙 — 에 위치하게 되고, 카드 오른쪽 끝은
+// 정확히 헤더의 오른쪽 경계(HEADER_RIGHT_MARGIN)에 맞춰진다.
+function useGridColumns(
+  targetWidth: number
+): [React.RefObject<HTMLDivElement | null>, number, number] {
   const ref = useRef<HTMLDivElement>(null)
   const [columns, setColumns] = useState(1)
+  const [gutter, setGutter] = useState(HEADER_RIGHT_MARGIN / 2)
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
 
     function recompute(): void {
-      const width = el!.clientWidth - GRID_RIGHT_GUTTER
+      const scrollbarWidth = el!.offsetWidth - el!.clientWidth
+      const nextGutter = Math.max(0, Math.round((HEADER_RIGHT_MARGIN - scrollbarWidth) / 2))
+      setGutter(nextGutter)
+
+      const width = el!.clientWidth - nextGutter
       setColumns(Math.max(1, Math.floor((width + GRID_GAP) / (targetWidth + GRID_GAP))))
     }
 
@@ -89,7 +101,7 @@ function useGridColumns(targetWidth: number): [React.RefObject<HTMLDivElement | 
     return () => observer.disconnect()
   }, [targetWidth])
 
-  return [ref, columns]
+  return [ref, columns, gutter]
 }
 
 export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): React.JSX.Element {
@@ -100,9 +112,8 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   const [query, setQuery] = useState('')
   const [genreFilter, setGenreFilter] = useState<string[]>([])
   const [tagFilter, setTagFilter] = useState<string[]>([])
-  const [mediumFilter, setMediumFilter] = useState<string[]>([])
   const [sort, setSort] = useState<SortKey>('added_desc')
-  const [gridRef, columns] = useGridColumns(POSTER_WIDTH)
+  const [gridRef, columns, gutter] = useGridColumns(POSTER_WIDTH)
 
   useEffect(() => {
     localStorage.setItem(VIEW_KEY, view)
@@ -133,7 +144,6 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     [movies]
   )
   const tagOptions = useMemo(() => unique(movies.flatMap((m) => m.record?.tags ?? [])), [movies])
-  const mediumOptions = useMemo(() => unique(movies.map((m) => m.record?.watchMedium)), [movies])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -154,11 +164,6 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     if (tagFilter.length > 0) {
       result = result.filter(({ record }) => record?.tags.some((t) => tagFilter.includes(t)))
     }
-    if (mediumFilter.length > 0) {
-      result = result.filter(
-        ({ record }) => record?.watchMedium && mediumFilter.includes(record.watchMedium)
-      )
-    }
 
     const primaryCompare: Record<SortKey, (a: MovieListItem, b: MovieListItem) => number> = {
       added_desc: (a, b) => Date.parse(b.item.createdAt) - Date.parse(a.item.createdAt),
@@ -177,7 +182,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
       return a.item.title.localeCompare(b.item.title, 'ko')
     })
     return sorted
-  }, [movies, query, genreFilter, tagFilter, mediumFilter, sort])
+  }, [movies, query, genreFilter, tagFilter, sort])
 
   return (
     <div
@@ -187,11 +192,19 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
         minWidth: 0,
         display: 'flex',
         flexDirection: 'column',
-        padding: '24px 28px',
+        padding: '24px 0 24px 28px',
         overflow: 'hidden'
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 9 }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          marginBottom: 9,
+          paddingRight: 28
+        }}
+      >
         <div
           style={{
             display: 'flex',
@@ -264,7 +277,27 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             </label>
           </div>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}
+        >
+          {SHOW_FILTERS ? (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <FilterDropdown
+                label="장르"
+                options={genreOptions}
+                selected={genreFilter}
+                onChange={setGenreFilter}
+              />
+              <FilterDropdown
+                label="태그"
+                options={tagOptions}
+                selected={tagFilter}
+                onChange={setTagFilter}
+              />
+            </div>
+          ) : (
+            <div />
+          )}
           <select
             className="input"
             style={{
@@ -296,34 +329,13 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
         </div>
       </div>
 
-      {SHOW_FILTERS && (
-        <div style={{ display: 'flex', gap: 8, marginBottom: 18, flex: 'none', flexWrap: 'wrap' }}>
-          <FilterDropdown
-            label="장르"
-            options={genreOptions}
-            selected={genreFilter}
-            onChange={setGenreFilter}
-          />
-          <FilterDropdown
-            label="태그"
-            options={tagOptions}
-            selected={tagFilter}
-            onChange={setTagFilter}
-          />
-          <FilterDropdown
-            label="관람 매체"
-            options={mediumOptions}
-            selected={mediumFilter}
-            onChange={setMediumFilter}
-          />
-        </div>
+      {loading && (
+        <div style={{ color: 'var(--color-neutral-500)', paddingRight: 28 }}>불러오는 중...</div>
       )}
-
-      {loading && <div style={{ color: 'var(--color-neutral-500)' }}>불러오는 중...</div>}
-      {error && <div style={{ color: '#e08a8a' }}>{error}</div>}
+      {error && <div style={{ color: '#e08a8a', paddingRight: 28 }}>{error}</div>}
 
       {!loading && !error && filtered.length === 0 && (
-        <div style={{ color: 'var(--color-neutral-500)' }}>
+        <div style={{ color: 'var(--color-neutral-500)', paddingRight: 28 }}>
           {movies.length === 0
             ? '아직 등록된 영화가 없어요. 사이드바의 "검색 · 추가"에서 첫 영화를 등록해보세요.'
             : '조건에 맞는 영화가 없어요.'}
@@ -332,7 +344,14 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
 
       <div
         ref={gridRef}
-        style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0, minWidth: 0 }}
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          minHeight: 0,
+          minWidth: 0,
+          marginRight: gutter
+        }}
       >
         {view === 'grid' ? (
           <div
@@ -341,7 +360,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
               gridTemplateColumns: `repeat(${columns}, 1fr)`,
               gap: 18,
               paddingBottom: 12,
-              paddingRight: GRID_RIGHT_GUTTER
+              paddingRight: gutter
             }}
           >
             {filtered.map(({ item, record }) => (
@@ -398,7 +417,10 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             ))}
           </div>
         ) : (
-          <table className="table" style={{ tableLayout: 'fixed' }}>
+          <table
+            className="table"
+            style={{ tableLayout: 'fixed', width: `calc(100% - ${gutter}px)` }}
+          >
             <colgroup>
               <col style={{ width: '6%' }} />
               <col style={{ width: '24%' }} />
