@@ -1,5 +1,5 @@
 import { ArrowLeft, PlayCircle, Star } from '@phosphor-icons/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getMovie, Movie, updateUserRecord } from './api'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
@@ -7,6 +7,27 @@ import { errorMessage } from '../../lib/errors'
 interface Props {
   movieId: string
   onBack: () => void
+}
+
+const POSTER_FALLBACK_HEIGHT = 420
+
+// 오른쪽 정보 컬럼의 실제 렌더링 높이를 측정해서 포스터 높이를 거기에 맞춘다.
+// (align-items:stretch + aspect-ratio만으로는 크기가 0으로 붕괴하는 문제가 있어 JS로 측정)
+function useElementHeight(): [React.RefObject<HTMLDivElement | null>, number] {
+  const ref = useRef<HTMLDivElement>(null)
+  const [height, setHeight] = useState(0)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    const observer = new ResizeObserver(() => setHeight(el.clientHeight))
+    observer.observe(el)
+    setHeight(el.clientHeight)
+    return () => observer.disconnect()
+  }, [])
+
+  return [ref, height]
 }
 
 function splitTags(value: string): string[] {
@@ -23,6 +44,7 @@ export function MovieDetail({ movieId, onBack }: Props): React.JSX.Element {
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [tagsInput, setTagsInput] = useState('')
+  const [infoRef, infoHeight] = useElementHeight()
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on movieId change needs to reset the loading/error flags before the async call resolves
@@ -67,7 +89,7 @@ export function MovieDetail({ movieId, onBack }: Props): React.JSX.Element {
       <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start' }}>
         <div
           style={{
-            width: 280,
+            height: infoHeight || POSTER_FALLBACK_HEIGHT,
             aspectRatio: '2 / 3',
             flex: 'none',
             borderRadius: 'var(--radius-lg)',
@@ -78,7 +100,7 @@ export function MovieDetail({ movieId, onBack }: Props): React.JSX.Element {
               : 'repeating-linear-gradient(45deg, var(--color-neutral-800), var(--color-neutral-800) 8px, var(--color-neutral-900) 8px, var(--color-neutral-900) 16px)'
           }}
         />
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div ref={infoRef} style={{ flex: 1, minWidth: 0 }}>
           <h1 style={{ margin: 0 }}>{movie.title}</h1>
           <div style={{ color: 'var(--color-neutral-500)', fontSize: 14, marginTop: 4 }}>
             {meta.originalTitle ?? movie.title} · {meta.releaseYear ?? '—'}
