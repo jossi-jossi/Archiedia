@@ -48,6 +48,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [tagsInput, setTagsInput] = useState('')
   const [contentRef, contentHeight] = useElementHeight()
 
@@ -67,11 +68,16 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent): void {
-      if (e.key === 'Escape') onClose()
+      if (e.key !== 'Escape') return
+      if (showDeleteConfirm) {
+        setShowDeleteConfirm(false)
+      } else {
+        onClose()
+      }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  }, [onClose, showDeleteConfirm])
 
   async function save(patch: Partial<UserRecord>): Promise<void> {
     if (!record) return
@@ -86,10 +92,8 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
     }
   }
 
-  async function handleDelete(): Promise<void> {
+  async function confirmDelete(): Promise<void> {
     if (!movie) return
-    if (!window.confirm(`"${movie.title}"을(를) 라이브러리에서 삭제할까요? 되돌릴 수 없어요.`))
-      return
     setDeleting(true)
     try {
       await deleteMovie(movie.id)
@@ -97,6 +101,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
     } catch (err) {
       setError(errorMessage(err))
       setDeleting(false)
+      setShowDeleteConfirm(false)
     }
   }
 
@@ -129,8 +134,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
         {!loading && !error && movie && (
           <button
             type="button"
-            onClick={handleDelete}
-            disabled={deleting}
+            onClick={() => setShowDeleteConfirm(true)}
             style={{
               position: 'absolute',
               bottom: 12,
@@ -141,11 +145,44 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
               fontSize: 13,
               color: 'var(--color-neutral-500)',
               textDecoration: 'underline',
-              cursor: deleting ? 'default' : 'pointer'
+              cursor: 'pointer'
             }}
           >
-            {deleting ? '삭제 중...' : '삭제'}
+            삭제
           </button>
+        )}
+
+        {showDeleteConfirm && movie && (
+          <div className="dialog-backdrop" onClick={() => !deleting && setShowDeleteConfirm(false)}>
+            <div
+              className="dialog"
+              style={{ textAlign: 'center', boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="dialog-title">영화 삭제</div>
+              <div className="dialog-body">
+                &quot;{movie.title}&quot;을(를) 라이브러리에서 삭제할까요?
+              </div>
+              <div className="dialog-actions" style={{ justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={deleting}
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={deleting}
+                  onClick={confirmDelete}
+                >
+                  {deleting ? '삭제 중...' : '삭제'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {loading && (
