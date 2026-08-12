@@ -268,7 +268,7 @@ export function LibraryView({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, 148px)',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 220px))',
               gap: 18,
               paddingBottom: 12
             }}
