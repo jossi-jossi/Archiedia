@@ -199,7 +199,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
         overflow: 'hidden'
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 6 }}>
         <div
           style={{
             display: 'flex',
