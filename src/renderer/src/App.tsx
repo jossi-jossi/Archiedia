@@ -44,17 +44,18 @@ function App(): React.JSX.Element {
             onSelect={(id) => setSelectedId(id)}
           />
         )}
-        {screen === 'add' && (
-          <AddMovieScreen
-            onCreated={(id) => {
-              setSelectedId(id)
-              setRefreshKey((k) => k + 1)
-              setScreen('library')
-            }}
-          />
-        )}
+        {screen === 'add' && <AddMovieScreen onArchived={() => setRefreshKey((k) => k + 1)} />}
       </div>
-      {selectedId && <MovieDetail movieId={selectedId} onClose={() => setSelectedId(null)} />}
+      {selectedId && (
+        <MovieDetail
+          movieId={selectedId}
+          onClose={() => setSelectedId(null)}
+          onDeleted={() => {
+            setSelectedId(null)
+            setRefreshKey((k) => k + 1)
+          }}
+        />
+      )}
     </div>
   )
 }

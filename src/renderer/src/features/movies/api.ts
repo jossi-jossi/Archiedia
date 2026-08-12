@@ -56,6 +56,7 @@ export async function getMovie(id: string): Promise<MovieListItem | null> {
 export interface CreateMovieInput {
   title: string
   posterUrl: string | null
+  externalId: string
   metadata: MovieMetadata
 }
 
@@ -71,7 +72,8 @@ export async function createMovie(input: CreateMovieInput): Promise<string> {
       user_id: userId,
       type: 'movie',
       title: input.title,
-      source: 'manual',
+      source: 'tmdb',
+      external_id: input.externalId,
       poster_url: input.posterUrl,
       metadata: input.metadata
     })
@@ -88,6 +90,23 @@ export async function createMovie(input: CreateMovieInput): Promise<string> {
   if (recordError) throw recordError
 
   return itemRow.id as string
+}
+
+export async function deleteMovie(id: string): Promise<void> {
+  // user_records.content_item_id는 on delete cascade라 같이 지워진다.
+  const { error } = await supabase.from('content_items').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function getArchivedTmdbIds(): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from('content_items')
+    .select('external_id')
+    .eq('type', 'movie')
+    .eq('source', 'tmdb')
+  if (error) throw error
+
+  return new Set((data ?? []).map((row) => row.external_id as string).filter(Boolean))
 }
 
 export interface UserRecordPatch {

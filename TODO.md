@@ -33,7 +33,7 @@
 
 - [x] 디자인 시안 기준 CSS 토큰/공용 클래스 작성 — 원본 `Nocturne` 디자인 시스템(`styles.css`)을 사용자가 추가로 업로드해줘서, 추측 없이 실제 값 그대로 `src/renderer/src/styles/nocturne.css`로 이식 + 연두색 액센트 오버라이드(`accent-override.css`). 구글 폰트 CDN import만 CSP상 제거하고 시스템 폰트로 폴백
 - [x] 로그인/회원가입 화면 (Supabase Auth 이메일/비밀번호) — `features/auth/LoginScreen.tsx`, `useSession.ts`
-- [x] 영화 등록 폼 UI (메타데이터 전체 입력) — `features/movies/AddMovieForm.tsx` (포스터는 파일 업로드 대신 URL 입력으로 단순화, Storage 버킷 미구성)
+- [x] ~~영화 등록 폼 UI~~ → 이후 TMDB 검색 기반 원클릭 보관 방식으로 대체 (`AddMovieForm.tsx` 삭제, 아래 8절 참고)
 - [x] Supabase에 저장 (`content_items` + `user_records` insert) — `features/movies/api.ts`
 - [x] 등록한 영화 목록 뷰 (카드/리스트) — `features/movies/LibraryView.tsx`
 - [x] 영화 상세 뷰 (포스터, 메타데이터, 개인 기록 표시) — `features/movies/MovieDetail.tsx`, 고정 크기(880×620) 모달 팝업으로 구현 (라이브러리 위에 오버레이, Esc/바깥 클릭으로 닫힘)
@@ -45,7 +45,7 @@
 - [x] 제목으로 TMDB 검색 → 후보 목록 표시 (`features/movies/TmdbSearch.tsx`)
 - [x] 후보 선택 시 감독/장르/배우/러닝타임/포스터/원제/개봉연도/제작국가 자동 채움 (`lib/tmdb.ts`의 `getMovieDetails`)
 - [x] 예고편 URL 자동 연결 (TMDB videos 엔드포인트, YouTube 트레일러 우선)
-- [x] 자동 입력 후 사용자가 직접 수정 가능하도록 폼 유지 — `AddMovieForm`이 `initial` prop으로 프리필되지만 제출 전까지 자유롭게 수정 가능 (수동 입력 탭은 제거, TMDB 검색만으로 추가하는 흐름으로 단순화)
+- [x] ~~자동 입력 후 사용자가 직접 수정 가능하도록 폼 유지~~ → 검색 결과에서 "보관하기" 클릭 시 수정 단계 없이 바로 라이브러리에 추가하는 방식으로 변경 (아래 8절 참고)
 
 ## Phase 6 — 라이브러리 뷰 완성
 
@@ -53,6 +53,13 @@
 - [x] 필터 (장르, 태그, 관람 매체 등) — `FilterDropdown.tsx`, 라이브러리에 실제 등장하는 값만 옵션으로 표시
 - [x] 정렬 (개봉연도, 나의 평점, 마지막 관람일 등) — 상단 드롭다운
 - [x] 태그 상태 변경 UI (보고 싶음 / 1번 봄 / n번 봄) — `StatusQuickEdit.tsx`, 그리드/리스트에서 상세 화면 진입 없이 하트 아이콘으로 "보고 싶음" 상태를 바로 토글 (관람 기록 추가는 상세 화면에서)
+
+## Phase 8 — 검색·추가 흐름 변경 (수정 단계 제거)
+
+- [x] 검색 결과 카드 우측에 "보관하기" 버튼 — 클릭 시 수정 화면 없이 바로 `content_items`/`user_records` 생성
+- [x] 이미 보관된 영화는 "보관 중"으로 표시(비활성화) — `content_items.external_id`(TMDB id)로 판별. **주의**: 이 변경 이전에 추가된 영화는 `external_id`가 저장되어 있지 않아 중복 판별이 안 됨
+- [x] `createMovie`가 `source: 'tmdb'` + `external_id`를 저장하도록 변경 (예전엔 항상 `source: 'manual'`이었음)
+- [x] `AddMovieForm.tsx` 삭제 — 수동 입력/사전 수정 단계 자체가 없어짐
 
 ## Phase 7 — 패키징
 

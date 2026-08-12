@@ -1,15 +1,13 @@
 import { MagnifyingGlass } from '@phosphor-icons/react'
 import { useState } from 'react'
-import { AddMovieForm, AddMovieInitial } from './AddMovieForm'
 import { TmdbSearch } from './TmdbSearch'
 
 interface Props {
-  onCreated: (id: string) => void
+  onArchived: () => void
 }
 
-export function AddMovieScreen({ onCreated }: Props): React.JSX.Element {
+export function AddMovieScreen({ onArchived }: Props): React.JSX.Element {
   const [query, setQuery] = useState('')
-  const [initial, setInitial] = useState<AddMovieInitial | undefined>(undefined)
 
   return (
     <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '24px 32px 40px' }}>
@@ -36,9 +34,7 @@ export function AddMovieScreen({ onCreated }: Props): React.JSX.Element {
         </div>
       </div>
 
-      {!initial && <TmdbSearch query={query} onPick={setInitial} />}
-
-      {initial && <AddMovieForm key={initial.title} initial={initial} onCreated={onCreated} />}
+      <TmdbSearch query={query} onArchived={onArchived} />
     </div>
   )
 }

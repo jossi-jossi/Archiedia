@@ -1,15 +1,16 @@
 import { PlayCircle, Star, X } from '@phosphor-icons/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getMovie, Movie, updateUserRecord } from './api'
+import { deleteMovie, getMovie, Movie, updateUserRecord } from './api'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
 
 interface Props {
   movieId: string
   onClose: () => void
+  onDeleted: () => void
 }
 
-const DIALOG_WIDTH = 866
+const DIALOG_WIDTH = 894
 const DIALOG_HEIGHT = 600
 const POSTER_FALLBACK_HEIGHT = 400
 
@@ -40,12 +41,13 @@ function splitTags(value: string): string[] {
     .filter(Boolean)
 }
 
-export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
+export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.Element {
   const [movie, setMovie] = useState<Movie | null>(null)
   const [record, setRecord] = useState<UserRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [tagsInput, setTagsInput] = useState('')
   const [contentRef, contentHeight] = useElementHeight()
 
@@ -84,6 +86,20 @@ export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
     }
   }
 
+  async function handleDelete(): Promise<void> {
+    if (!movie) return
+    if (!window.confirm(`"${movie.title}"을(를) 라이브러리에서 삭제할까요? 되돌릴 수 없어요.`))
+      return
+    setDeleting(true)
+    try {
+      await deleteMovie(movie.id)
+      onDeleted()
+    } catch (err) {
+      setError(errorMessage(err))
+      setDeleting(false)
+    }
+  }
+
   const meta = movie?.metadata
 
   return (
@@ -95,7 +111,8 @@ export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
           maxWidth: 'none',
           height: DIALOG_HEIGHT,
           position: 'relative',
-          paddingLeft: 16.8,
+          paddingLeft: 33.6,
+          paddingRight: 22.4,
           boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65)'
         }}
         onClick={(e) => e.stopPropagation()}
@@ -108,6 +125,28 @@ export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
         >
           <X size={18} />
         </button>
+
+        {!loading && !error && movie && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            style={{
+              position: 'absolute',
+              bottom: 12,
+              right: 16,
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              fontSize: 13,
+              color: 'var(--color-neutral-500)',
+              textDecoration: 'underline',
+              cursor: deleting ? 'default' : 'pointer'
+            }}
+          >
+            {deleting ? '삭제 중...' : '삭제'}
+          </button>
+        )}
 
         {loading && (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
