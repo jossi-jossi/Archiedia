@@ -412,7 +412,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                 <th></th>
                 <th>제목</th>
                 <th>장르</th>
-                <th>길이</th>
+                <th style={{ paddingLeft: 2 }}>길이</th>
                 <th>나의 평점</th>
                 <th>상태</th>
                 <th>마지막 관람</th>
@@ -453,7 +453,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                   <td style={{ color: 'var(--color-neutral-400)' }}>
                     {item.metadata.genres.join(', ') || '—'}
                   </td>
-                  <td style={{ color: 'var(--color-neutral-400)' }}>
+                  <td style={{ color: 'var(--color-neutral-400)', paddingLeft: 2 }}>
                     {item.metadata.runtimeMinutes ? `${item.metadata.runtimeMinutes}분` : '—'}
                   </td>
                   <td>
