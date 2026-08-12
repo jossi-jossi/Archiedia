@@ -269,7 +269,10 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
               width: 'auto',
               flex: 'none',
               minHeight: 28,
-              padding: '3px 10px',
+              paddingTop: 3,
+              paddingBottom: 3,
+              paddingLeft: 6,
+              paddingRight: 26,
               fontSize: 12
             }}
             value={sort}
