@@ -223,7 +223,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             <label
               className="seg-opt"
               style={{
-                padding: '10px 14px',
+                padding: '7px 14px',
                 boxShadow: 'none',
                 color: view === 'grid' ? 'var(--color-accent)' : undefined,
                 background:
@@ -243,7 +243,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             <label
               className="seg-opt"
               style={{
-                padding: '10px 14px',
+                padding: '7px 14px',
                 boxShadow: 'none',
                 color: view === 'list' ? 'var(--color-accent)' : undefined,
                 background:
