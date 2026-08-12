@@ -1,5 +1,5 @@
 import { PlayCircle, Star, X } from '@phosphor-icons/react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getMovie, Movie, updateUserRecord } from './api'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
@@ -9,8 +9,29 @@ interface Props {
   onClose: () => void
 }
 
-const DIALOG_WIDTH = 860
+const DIALOG_WIDTH = 866
 const DIALOG_HEIGHT = 600
+const POSTER_FALLBACK_HEIGHT = 400
+
+// 텍스트 콘텐츠의 실제 높이를 측정해서 포스터를 거기에 맞춘다. 콜백 ref를 쓰는 이유는
+// 로딩 중엔 이 div가 존재하지 않아서, 일반 useEffect(마운트 시 1회)로는 로딩이 끝나고
+// 실제 콘텐츠가 나타나는 순간을 놓치기 때문.
+function useElementHeight(): [(el: HTMLDivElement | null) => void, number] {
+  const [height, setHeight] = useState(0)
+  const observerRef = useRef<ResizeObserver | null>(null)
+
+  const ref = useCallback((el: HTMLDivElement | null) => {
+    observerRef.current?.disconnect()
+    if (!el) return
+
+    setHeight(el.clientHeight)
+    const observer = new ResizeObserver(() => setHeight(el.clientHeight))
+    observer.observe(el)
+    observerRef.current = observer
+  }, [])
+
+  return [ref, height]
+}
 
 function splitTags(value: string): string[] {
   return value
@@ -26,6 +47,7 @@ export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [tagsInput, setTagsInput] = useState('')
+  const [contentRef, contentHeight] = useElementHeight()
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on movieId change needs to reset the loading/error flags before the async call resolves
@@ -73,6 +95,7 @@ export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
           maxWidth: 'none',
           height: DIALOG_HEIGHT,
           position: 'relative',
+          paddingLeft: 16.8,
           boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65)'
         }}
         onClick={(e) => e.stopPropagation()}
@@ -114,7 +137,7 @@ export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
           <div style={{ display: 'flex', gap: 24, height: '100%', minHeight: 0 }}>
             <div
               style={{
-                height: '88%',
+                height: Math.min(contentHeight || POSTER_FALLBACK_HEIGHT, DIALOG_HEIGHT - 44),
                 alignSelf: 'center',
                 aspectRatio: '2 / 3',
                 flex: 'none',
@@ -132,135 +155,139 @@ export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
                 minWidth: 0,
                 overflowY: 'auto',
                 paddingRight: 4,
-                paddingTop: 20
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center'
               }}
             >
-              <h2 style={{ margin: 0, paddingRight: 24 }}>{movie.title}</h2>
-              <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
-                {meta.originalTitle ?? movie.title} · {meta.releaseYear ?? '—'}
-              </div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
-                {meta.genres.map((g) => (
-                  <span key={g} className="tag tag-neutral">
-                    {g}
-                  </span>
-                ))}
-                {meta.runtimeMinutes && (
-                  <span className="tag tag-outline">{meta.runtimeMinutes}분</span>
-                )}
-                {meta.country && <span className="tag tag-outline">{meta.country}</span>}
-              </div>
-              <div
-                style={{
-                  marginTop: 14,
-                  fontSize: 13,
-                  lineHeight: 1.7,
-                  color: 'var(--color-neutral-300)'
-                }}
-              >
-                <div>
-                  <span style={{ color: 'var(--color-neutral-500)' }}>감독</span> &nbsp;
-                  {meta.director ?? '—'}
+              <div ref={contentRef}>
+                <h2 style={{ margin: 0, paddingRight: 24 }}>{movie.title}</h2>
+                <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
+                  {meta.originalTitle ?? movie.title} · {meta.releaseYear ?? '—'}
                 </div>
-                <div>
-                  <span style={{ color: 'var(--color-neutral-500)' }}>출연</span> &nbsp;
-                  {meta.actors.length ? meta.actors.join(', ') : '—'}
-                </div>
-              </div>
-              {meta.trailerUrl && (
-                <a href={meta.trailerUrl} target="_blank" rel="noreferrer">
-                  <button className="btn btn-secondary" style={{ marginTop: 12 }} type="button">
-                    <PlayCircle />
-                    예고편 보기
-                  </button>
-                </a>
-              )}
-
-              <div className="hr" />
-
-              <h4 style={{ marginBottom: 10 }}>나의 기록</h4>
-              {record && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        size={18}
-                        weight={i < (record.myRating ?? 0) ? 'fill' : 'regular'}
-                        color={
-                          i < (record.myRating ?? 0)
-                            ? 'var(--color-accent)'
-                            : 'var(--color-neutral-700)'
-                        }
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => save({ myRating: i + 1 })}
-                      />
-                    ))}
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <div className="field">
-                      <label>본 횟수</label>
-                      <input
-                        className="input"
-                        type="number"
-                        min={0}
-                        value={record.watchCount}
-                        onChange={(e) =>
-                          setRecord({ ...record, watchCount: Number(e.target.value) })
-                        }
-                        onBlur={() => save({ watchCount: record.watchCount })}
-                      />
-                    </div>
-                    <div className="field">
-                      <label>마지막 관람일</label>
-                      <input
-                        className="input"
-                        type="date"
-                        value={record.lastWatchedAt ?? ''}
-                        onChange={(e) => save({ lastWatchedAt: e.target.value || null })}
-                      />
-                    </div>
-                    <div className="field">
-                      <label>관람 매체</label>
-                      <input
-                        className="input"
-                        value={record.watchMedium ?? ''}
-                        onChange={(e) => setRecord({ ...record, watchMedium: e.target.value })}
-                        onBlur={() => save({ watchMedium: record.watchMedium })}
-                        placeholder="극장 / OTT / 블루레이 등"
-                      />
-                    </div>
-                    <div className="field">
-                      <label>태그</label>
-                      <input
-                        className="input"
-                        value={tagsInput}
-                        onChange={(e) => setTagsInput(e.target.value)}
-                        onBlur={() => save({ tags: splitTags(tagsInput) })}
-                        placeholder="보고 싶음, 1번 봄"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="field">
-                    <label>나의 후기</label>
-                    <textarea
-                      className="input"
-                      style={{ minHeight: 70 }}
-                      value={record.myReview ?? ''}
-                      onChange={(e) => setRecord({ ...record, myReview: e.target.value })}
-                      onBlur={() => save({ myReview: record.myReview })}
-                      placeholder="이 작품에 대한 생각을 기록해보세요"
-                    />
-                  </div>
-                  {saving && (
-                    <div style={{ fontSize: 12, color: 'var(--color-neutral-500)' }}>
-                      저장 중...
-                    </div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
+                  {meta.genres.map((g) => (
+                    <span key={g} className="tag tag-neutral">
+                      {g}
+                    </span>
+                  ))}
+                  {meta.runtimeMinutes && (
+                    <span className="tag tag-outline">{meta.runtimeMinutes}분</span>
                   )}
+                  {meta.country && <span className="tag tag-outline">{meta.country}</span>}
                 </div>
-              )}
+                <div
+                  style={{
+                    marginTop: 14,
+                    fontSize: 13,
+                    lineHeight: 1.7,
+                    color: 'var(--color-neutral-300)'
+                  }}
+                >
+                  <div>
+                    <span style={{ color: 'var(--color-neutral-500)' }}>감독</span> &nbsp;
+                    {meta.director ?? '—'}
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--color-neutral-500)' }}>출연</span> &nbsp;
+                    {meta.actors.length ? meta.actors.join(', ') : '—'}
+                  </div>
+                </div>
+                {meta.trailerUrl && (
+                  <a href={meta.trailerUrl} target="_blank" rel="noreferrer">
+                    <button className="btn btn-secondary" style={{ marginTop: 12 }} type="button">
+                      <PlayCircle />
+                      예고편 보기
+                    </button>
+                  </a>
+                )}
+
+                <div className="hr" />
+
+                <h4 style={{ marginBottom: 10 }}>나의 기록</h4>
+                {record && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          size={18}
+                          weight={i < (record.myRating ?? 0) ? 'fill' : 'regular'}
+                          color={
+                            i < (record.myRating ?? 0)
+                              ? 'var(--color-accent)'
+                              : 'var(--color-neutral-700)'
+                          }
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => save({ myRating: i + 1 })}
+                        />
+                      ))}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <div className="field">
+                        <label>본 횟수</label>
+                        <input
+                          className="input"
+                          type="number"
+                          min={0}
+                          value={record.watchCount}
+                          onChange={(e) =>
+                            setRecord({ ...record, watchCount: Number(e.target.value) })
+                          }
+                          onBlur={() => save({ watchCount: record.watchCount })}
+                        />
+                      </div>
+                      <div className="field">
+                        <label>마지막 관람일</label>
+                        <input
+                          className="input"
+                          type="date"
+                          value={record.lastWatchedAt ?? ''}
+                          onChange={(e) => save({ lastWatchedAt: e.target.value || null })}
+                        />
+                      </div>
+                      <div className="field">
+                        <label>관람 매체</label>
+                        <input
+                          className="input"
+                          value={record.watchMedium ?? ''}
+                          onChange={(e) => setRecord({ ...record, watchMedium: e.target.value })}
+                          onBlur={() => save({ watchMedium: record.watchMedium })}
+                          placeholder="극장 / OTT / 블루레이 등"
+                        />
+                      </div>
+                      <div className="field">
+                        <label>태그</label>
+                        <input
+                          className="input"
+                          value={tagsInput}
+                          onChange={(e) => setTagsInput(e.target.value)}
+                          onBlur={() => save({ tags: splitTags(tagsInput) })}
+                          placeholder="보고 싶음, 1번 봄"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="field">
+                      <label>나의 후기</label>
+                      <textarea
+                        className="input"
+                        style={{ minHeight: 70 }}
+                        value={record.myReview ?? ''}
+                        onChange={(e) => setRecord({ ...record, myReview: e.target.value })}
+                        onBlur={() => save({ myReview: record.myReview })}
+                        placeholder="이 작품에 대한 생각을 기록해보세요"
+                      />
+                    </div>
+                    {saving && (
+                      <div style={{ fontSize: 12, color: 'var(--color-neutral-500)' }}>
+                        저장 중...
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
