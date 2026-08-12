@@ -1,4 +1,11 @@
-import { ListBullets, MagnifyingGlass, Plus, SquaresFour, Star } from '@phosphor-icons/react'
+import {
+  ListBullets,
+  MagnifyingGlass,
+  Plus,
+  SlidersHorizontal,
+  SquaresFour,
+  Star
+} from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
 import { listMovies, MovieListItem } from './api'
 import { FilterDropdown } from './FilterDropdown'
@@ -51,6 +58,15 @@ function unique(values: (string | null | undefined)[]): string[] {
   return Array.from(new Set(values.filter((v): v is string => Boolean(v)))).sort()
 }
 
+const POSTER_WIDTH_KEY = 'archiedia:posterCardWidth'
+const POSTER_WIDTH_MIN = 140
+const POSTER_WIDTH_MAX = 260
+
+function loadPosterWidth(): number {
+  const stored = Number(localStorage.getItem(POSTER_WIDTH_KEY))
+  return stored >= POSTER_WIDTH_MIN && stored <= POSTER_WIDTH_MAX ? stored : 180
+}
+
 export function LibraryView({
   onAdd,
   onSelect,
@@ -66,6 +82,11 @@ export function LibraryView({
   const [tagFilter, setTagFilter] = useState<string[]>([])
   const [mediumFilter, setMediumFilter] = useState<string[]>([])
   const [sort, setSort] = useState<SortKey>('year_desc')
+  const [cardWidth, setCardWidth] = useState<number>(loadPosterWidth)
+
+  useEffect(() => {
+    localStorage.setItem(POSTER_WIDTH_KEY, String(cardWidth))
+  }, [cardWidth])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on refreshKey change needs to reset the loading flag before the async call resolves
@@ -201,6 +222,21 @@ export function LibraryView({
             </option>
           ))}
         </select>
+        {view === 'grid' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 'none' }}>
+            <SlidersHorizontal size={14} color="var(--color-neutral-500)" />
+            <input
+              type="range"
+              min={POSTER_WIDTH_MIN}
+              max={POSTER_WIDTH_MAX}
+              step={10}
+              value={cardWidth}
+              onChange={(e) => setCardWidth(Number(e.target.value))}
+              style={{ width: 100, accentColor: 'var(--color-accent)' }}
+              title={`포스터 너비 ${cardWidth}px`}
+            />
+          </div>
+        )}
         <div className="seg" style={{ flex: 'none' }}>
           <label className="seg-opt">
             <input
@@ -268,7 +304,7 @@ export function LibraryView({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 220px))',
+              gridTemplateColumns: `repeat(auto-fill, ${cardWidth}px)`,
               gap: 18,
               paddingBottom: 12
             }}
