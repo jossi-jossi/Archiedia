@@ -200,8 +200,8 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 8,
-          marginBottom: 9,
+          gap: 12,
+          marginBottom: 13.5,
           paddingRight: 28
         }}
       >
