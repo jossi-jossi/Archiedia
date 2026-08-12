@@ -413,9 +413,9 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                 <th>제목</th>
                 <th>장르</th>
                 <th>길이</th>
-                <th>감독</th>
                 <th>나의 평점</th>
                 <th>상태</th>
+                <th>마지막 관람</th>
                 <th></th>
               </tr>
             </thead>
@@ -456,9 +456,6 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                   <td style={{ color: 'var(--color-neutral-400)' }}>
                     {item.metadata.runtimeMinutes ? `${item.metadata.runtimeMinutes}분` : '—'}
                   </td>
-                  <td style={{ color: 'var(--color-neutral-400)' }}>
-                    {item.metadata.director ?? '—'}
-                  </td>
                   <td>
                     <StarRating rating={record?.myRating ?? null} />
                   </td>
@@ -468,6 +465,9 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                         {tag}
                       </span>
                     )) || '—'}
+                  </td>
+                  <td style={{ color: 'var(--color-neutral-500)' }}>
+                    {record?.lastWatchedAt ?? '—'}
                   </td>
                   <td>
                     {record && (
