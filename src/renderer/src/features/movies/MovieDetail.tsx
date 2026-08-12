@@ -115,7 +115,7 @@ export function MovieDetail({ movieId, onClose }: Props): React.JSX.Element {
             <div
               style={{
                 height: '88%',
-                alignSelf: 'flex-start',
+                alignSelf: 'center',
                 aspectRatio: '2 / 3',
                 flex: 'none',
                 borderRadius: 'var(--radius-md)',
