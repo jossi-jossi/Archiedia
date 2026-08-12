@@ -407,17 +407,6 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
           </div>
         ) : (
           <table className="table">
-            <thead>
-              <tr>
-                <th></th>
-                <th>제목</th>
-                <th>장르</th>
-                <th>나의 평점</th>
-                <th>상태</th>
-                <th>관람 매체</th>
-                <th></th>
-              </tr>
-            </thead>
             <tbody>
               {filtered.map(({ item, record }) => (
                 <tr key={item.id} onClick={() => onSelect(item.id)} style={{ cursor: 'pointer' }}>
