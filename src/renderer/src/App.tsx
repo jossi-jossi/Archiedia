@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Sidebar } from './components/Sidebar'
 import { LoginScreen } from './features/auth/LoginScreen'
 import { useSession } from './features/auth/useSession'
-import { AddMovieForm } from './features/movies/AddMovieForm'
+import { AddMovieScreen } from './features/movies/AddMovieScreen'
 import { LibraryView } from './features/movies/LibraryView'
 import { MovieDetail } from './features/movies/MovieDetail'
 
@@ -49,16 +49,13 @@ function App(): React.JSX.Element {
           />
         )}
         {screen === 'add' && (
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '24px 32px 40px' }}>
-            <h2 style={{ margin: '0 0 16px' }}>검색 · 추가</h2>
-            <AddMovieForm
-              onCreated={(id) => {
-                setSelectedId(id)
-                setRefreshKey((k) => k + 1)
-                setScreen('detail')
-              }}
-            />
-          </div>
+          <AddMovieScreen
+            onCreated={(id) => {
+              setSelectedId(id)
+              setRefreshKey((k) => k + 1)
+              setScreen('detail')
+            }}
+          />
         )}
         {screen === 'detail' && selectedId && (
           <MovieDetail movieId={selectedId} onBack={() => setScreen('library')} />

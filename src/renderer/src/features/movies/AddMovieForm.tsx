@@ -1,9 +1,17 @@
+import type { MovieMetadata } from '@archiedia/schema'
 import { Plus } from '@phosphor-icons/react'
 import { FormEvent, useState } from 'react'
 import { createMovie } from './api'
 
+export interface AddMovieInitial {
+  title: string
+  posterUrl: string | null
+  metadata: MovieMetadata
+}
+
 interface Props {
   onCreated: (id: string) => void
+  initial?: AddMovieInitial
 }
 
 function splitList(value: string): string[] {
@@ -13,17 +21,19 @@ function splitList(value: string): string[] {
     .filter(Boolean)
 }
 
-export function AddMovieForm({ onCreated }: Props): React.JSX.Element {
-  const [title, setTitle] = useState('')
-  const [originalTitle, setOriginalTitle] = useState('')
-  const [releaseYear, setReleaseYear] = useState('')
-  const [runtimeMinutes, setRuntimeMinutes] = useState('')
-  const [director, setDirector] = useState('')
-  const [country, setCountry] = useState('')
-  const [genres, setGenres] = useState('')
-  const [actors, setActors] = useState('')
-  const [trailerUrl, setTrailerUrl] = useState('')
-  const [posterUrl, setPosterUrl] = useState('')
+export function AddMovieForm({ onCreated, initial }: Props): React.JSX.Element {
+  const [title, setTitle] = useState(initial?.title ?? '')
+  const [originalTitle, setOriginalTitle] = useState(initial?.metadata.originalTitle ?? '')
+  const [releaseYear, setReleaseYear] = useState(initial?.metadata.releaseYear?.toString() ?? '')
+  const [runtimeMinutes, setRuntimeMinutes] = useState(
+    initial?.metadata.runtimeMinutes?.toString() ?? ''
+  )
+  const [director, setDirector] = useState(initial?.metadata.director ?? '')
+  const [country, setCountry] = useState(initial?.metadata.country ?? '')
+  const [genres, setGenres] = useState(initial?.metadata.genres.join(', ') ?? '')
+  const [actors, setActors] = useState(initial?.metadata.actors.join(', ') ?? '')
+  const [trailerUrl, setTrailerUrl] = useState(initial?.metadata.trailerUrl ?? '')
+  const [posterUrl, setPosterUrl] = useState(initial?.posterUrl ?? '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

@@ -41,11 +41,11 @@
 
 ## Phase 5 — TMDB 연동 (메타데이터 자동 입력)
 
-- [ ] TMDB API 키 발급 및 연동 방식 결정 (클라이언트 직접 호출 vs Supabase Edge Function 경유)
-- [ ] 제목으로 TMDB 검색 → 후보 목록 표시
-- [ ] 후보 선택 시 감독/장르/배우/러닝타임/포스터/원제/개봉연도/제작국가 자동 채움
-- [ ] 예고편 URL 자동 연결 (TMDB videos 엔드포인트)
-- [ ] 자동 입력 후 사용자가 직접 수정 가능하도록 폼 유지
+- [x] TMDB API 키 발급 및 연동 방식 결정 — 렌더러에서 직접 호출 (`.env`의 `VITE_TMDB_API_KEY`, Supabase와 동일 패턴)
+- [x] 제목으로 TMDB 검색 → 후보 목록 표시 (`features/movies/TmdbSearch.tsx`)
+- [x] 후보 선택 시 감독/장르/배우/러닝타임/포스터/원제/개봉연도/제작국가 자동 채움 (`lib/tmdb.ts`의 `getMovieDetails`)
+- [x] 예고편 URL 자동 연결 (TMDB videos 엔드포인트, YouTube 트레일러 우선)
+- [x] 자동 입력 후 사용자가 직접 수정 가능하도록 폼 유지 — `AddMovieForm`이 `initial` prop으로 프리필되지만 제출 전까지 자유롭게 수정 가능 (`AddMovieScreen.tsx`가 TMDB/수동 탭 전환 담당)
 
 ## Phase 6 — 라이브러리 뷰 완성
 
