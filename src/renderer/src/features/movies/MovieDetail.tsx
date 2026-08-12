@@ -12,7 +12,7 @@ interface Props {
 }
 
 const DIALOG_WIDTH = 906
-const DIALOG_HEIGHT = 600
+const DIALOG_HEIGHT = 624
 const POSTER_FALLBACK_HEIGHT = 400
 
 // 텍스트 콘텐츠의 실제 높이를 측정해서 포스터를 거기에 맞춘다. 콜백 ref를 쓰는 이유는
@@ -119,27 +119,6 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
           <X size={18} />
         </button>
 
-        {!loading && !error && movie && (
-          <button
-            type="button"
-            onClick={() => setShowDeleteConfirm(true)}
-            style={{
-              position: 'absolute',
-              bottom: 12,
-              right: 16,
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              fontSize: 13,
-              color: 'var(--color-neutral-500)',
-              textDecoration: 'underline',
-              cursor: 'pointer'
-            }}
-          >
-            삭제
-          </button>
-        )}
-
         {showDeleteConfirm && movie && (
           <div className="dialog-backdrop" onClick={() => !deleting && setShowDeleteConfirm(false)}>
             <div
@@ -222,10 +201,10 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                 paddingRight: 4,
                 marginLeft: -2,
                 display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center'
+                flexDirection: 'column'
               }}
             >
+              <div style={{ flex: 1, minHeight: 0 }} />
               <div ref={contentRef}>
                 <h2 style={{ margin: 0, paddingRight: 24 }}>{movie.title}</h2>
                 <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
@@ -398,6 +377,31 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                     </div>
                   </div>
                 )}
+              </div>
+              <div
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end'
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    fontSize: 13,
+                    color: 'var(--color-neutral-500)',
+                    textDecoration: 'underline',
+                    cursor: 'pointer'
+                  }}
+                >
+                  삭제
+                </button>
               </div>
             </div>
           </div>
