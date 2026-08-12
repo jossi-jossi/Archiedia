@@ -359,7 +359,17 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                   )}
                 </div>
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 500, lineHeight: 1.3 }}>
+                  <div
+                    title={item.title}
+                    style={{
+                      fontSize: 13.5,
+                      fontWeight: 500,
+                      lineHeight: 1.3,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
                     {item.title}
                   </div>
                   <div style={{ fontSize: 11.5, color: 'var(--color-neutral-500)', marginTop: 2 }}>
@@ -413,7 +423,18 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                     />
                   </td>
                   <td>
-                    <div style={{ fontWeight: 500 }}>{item.title}</div>
+                    <div
+                      title={item.title}
+                      style={{
+                        fontWeight: 500,
+                        maxWidth: 320,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
+                      {item.title}
+                    </div>
                     <div style={{ fontSize: 11, color: 'var(--color-neutral-500)' }}>
                       {item.metadata.releaseYear ?? '—'}
                     </div>
