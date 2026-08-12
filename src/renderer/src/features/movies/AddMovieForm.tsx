@@ -1,6 +1,7 @@
 import type { MovieMetadata } from '@archiedia/schema'
 import { Plus } from '@phosphor-icons/react'
 import { FormEvent, useState } from 'react'
+import { errorMessage } from '../../lib/errors'
 import { createMovie } from './api'
 
 export interface AddMovieInitial {
@@ -59,7 +60,7 @@ export function AddMovieForm({ onCreated, initial }: Props): React.JSX.Element {
       })
       onCreated(id)
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(errorMessage(err))
     } finally {
       setSubmitting(false)
     }

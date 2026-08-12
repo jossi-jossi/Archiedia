@@ -2,6 +2,7 @@ import { ArrowLeft, PlayCircle, Star } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import { getMovie, Movie, updateUserRecord } from './api'
 import type { UserRecord } from '@archiedia/schema'
+import { errorMessage } from '../../lib/errors'
 
 interface Props {
   movieId: string
@@ -24,15 +25,16 @@ export function MovieDetail({ movieId, onBack }: Props): React.JSX.Element {
   const [tagsInput, setTagsInput] = useState('')
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on movieId change needs to reset the loading flag before the async call resolves
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on movieId change needs to reset the loading/error flags before the async call resolves
     setLoading(true)
+    setError(null)
     getMovie(movieId)
       .then((result) => {
         setMovie(result?.item ?? null)
         setRecord(result?.record ?? null)
         setTagsInput(result?.record?.tags.join(', ') ?? '')
       })
-      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
+      .catch((err) => setError(errorMessage(err)))
       .finally(() => setLoading(false))
   }, [movieId])
 
@@ -43,7 +45,7 @@ export function MovieDetail({ movieId, onBack }: Props): React.JSX.Element {
       await updateUserRecord(record.id, patch)
       setRecord({ ...record, ...patch })
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(errorMessage(err))
     } finally {
       setSaving(false)
     }

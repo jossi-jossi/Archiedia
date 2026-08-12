@@ -1,5 +1,6 @@
 import { MagnifyingGlass, Plus } from '@phosphor-icons/react'
 import { FormEvent, useState } from 'react'
+import { errorMessage } from '../../lib/errors'
 import { getMovieDetails, searchMovies, TmdbSearchResult } from '../../lib/tmdb'
 import type { AddMovieInitial } from './AddMovieForm'
 
@@ -22,7 +23,7 @@ export function TmdbSearch({ onPick }: Props): React.JSX.Element {
     try {
       setResults(await searchMovies(query.trim()))
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(errorMessage(err))
     } finally {
       setSearching(false)
     }
@@ -39,7 +40,7 @@ export function TmdbSearch({ onPick }: Props): React.JSX.Element {
         metadata: details.metadata
       })
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(errorMessage(err))
     } finally {
       setLoadingId(null)
     }

@@ -1,6 +1,7 @@
 import { ListBullets, MagnifyingGlass, SquaresFour, Star } from '@phosphor-icons/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { listMovies, MovieListItem } from './api'
+import { errorMessage } from '../../lib/errors'
 import { FilterDropdown } from './FilterDropdown'
 import { StatusQuickEdit } from './StatusQuickEdit'
 
@@ -96,14 +97,15 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   const [gridRef, columns] = useGridColumns(POSTER_WIDTH)
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on refreshKey change needs to reset the loading flag before the async call resolves
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on refreshKey change needs to reset the loading/error flags before the async call resolves
     setLoading(true)
+    setError(null)
     listMovies()
       .then((result) => {
         setMovies(result)
         onCountChange(result.length)
       })
-      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
+      .catch((err) => setError(errorMessage(err)))
       .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey])
