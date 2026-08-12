@@ -50,6 +50,9 @@ function unique(values: (string | null | undefined)[]): string[] {
   return Array.from(new Set(values.filter((v): v is string => Boolean(v)))).sort()
 }
 
+// 장르/태그/관람 매체 필터는 구성을 다시 고민 중이라 잠시 숨김 — 상태/로직은 그대로 두고 UI만 뺐다.
+const SHOW_FILTERS = false
+
 const POSTER_WIDTH = 150
 const GRID_GAP = 18
 const GRID_RIGHT_GUTTER = 16
@@ -213,7 +216,6 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <div style={{ flex: 1, minWidth: 12 }} />
         <select
           className="input"
           style={{ width: 'auto', flex: 'none' }}
@@ -226,48 +228,51 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             </option>
           ))}
         </select>
+        <div style={{ flex: 1, minWidth: 12 }} />
         <div className="seg" style={{ flex: 'none' }}>
-          <label className="seg-opt">
+          <label className="seg-opt" style={{ padding: '10px 14px' }}>
             <input
               type="radio"
               name="view"
               checked={view === 'grid'}
               onChange={() => setView('grid')}
             />
-            <SquaresFour />
+            <SquaresFour size={16} />
           </label>
-          <label className="seg-opt">
+          <label className="seg-opt" style={{ padding: '10px 14px' }}>
             <input
               type="radio"
               name="view"
               checked={view === 'list'}
               onChange={() => setView('list')}
             />
-            <ListBullets />
+            <ListBullets size={16} />
           </label>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 18, flex: 'none', flexWrap: 'wrap' }}>
-        <FilterDropdown
-          label="장르"
-          options={genreOptions}
-          selected={genreFilter}
-          onChange={setGenreFilter}
-        />
-        <FilterDropdown
-          label="태그"
-          options={tagOptions}
-          selected={tagFilter}
-          onChange={setTagFilter}
-        />
-        <FilterDropdown
-          label="관람 매체"
-          options={mediumOptions}
-          selected={mediumFilter}
-          onChange={setMediumFilter}
-        />
-      </div>
+      {SHOW_FILTERS && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 18, flex: 'none', flexWrap: 'wrap' }}>
+          <FilterDropdown
+            label="장르"
+            options={genreOptions}
+            selected={genreFilter}
+            onChange={setGenreFilter}
+          />
+          <FilterDropdown
+            label="태그"
+            options={tagOptions}
+            selected={tagFilter}
+            onChange={setTagFilter}
+          />
+          <FilterDropdown
+            label="관람 매체"
+            options={mediumOptions}
+            selected={mediumFilter}
+            onChange={setMediumFilter}
+          />
+        </div>
+      )}
 
       {loading && <div style={{ color: 'var(--color-neutral-500)' }}>불러오는 중...</div>}
       {error && <div style={{ color: '#e08a8a' }}>{error}</div>}
