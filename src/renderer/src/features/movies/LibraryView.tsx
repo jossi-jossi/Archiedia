@@ -237,6 +237,8 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             style={{
               padding: '10px 14px',
               boxShadow: 'none',
+              borderTopLeftRadius: 'var(--radius-md)',
+              borderBottomLeftRadius: 'var(--radius-md)',
               border: `1px solid ${view === 'grid' ? 'var(--color-accent)' : 'transparent'}`
             }}
           >
@@ -253,6 +255,8 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             style={{
               padding: '10px 14px',
               boxShadow: 'none',
+              borderTopRightRadius: 'var(--radius-md)',
+              borderBottomRightRadius: 'var(--radius-md)',
               border: `1px solid ${view === 'list' ? 'var(--color-accent)' : 'transparent'}`
             }}
           >
