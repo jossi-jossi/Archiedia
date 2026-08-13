@@ -1,6 +1,6 @@
 import { Heart, ListBullets, MagnifyingGlass, SquaresFour, Star } from '@phosphor-icons/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { listMovies, MovieListItem } from './api'
+import { listSeries, SeriesListItem } from './api'
 import { errorMessage } from '../../lib/errors'
 import { FilterDropdown } from '../../components/FilterDropdown'
 import { StatusQuickEdit } from '../../components/StatusQuickEdit'
@@ -89,7 +89,7 @@ const GRID_GAP = 18
 // 헤더 행(제목/검색/토글, 필터/정렬)의 오른쪽 여백과 같은 값. 마지막 카드가 여기 맞춰진다.
 const HEADER_RIGHT_MARGIN = 28
 
-const VIEW_KEY = 'archiedia:libraryView'
+const VIEW_KEY = 'archiedia:seriesLibraryView'
 
 function loadView(): 'grid' | 'list' {
   return localStorage.getItem(VIEW_KEY) === 'list' ? 'list' : 'grid'
@@ -134,7 +134,7 @@ function useGridColumns(
 }
 
 export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): React.JSX.Element {
-  const [movies, setMovies] = useState<MovieListItem[]>([])
+  const [series, setSeries] = useState<SeriesListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [view, setView] = useState<'grid' | 'list'>(loadView)
@@ -152,9 +152,9 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on refreshKey change needs to reset the loading/error flags before the async call resolves
     setLoading(true)
     setError(null)
-    listMovies()
+    listSeries()
       .then((result) => {
-        setMovies(result)
+        setSeries(result)
         onCountChange(result.length)
       })
       .catch((err) => setError(errorMessage(err)))
@@ -162,20 +162,20 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey])
 
-  function updateRecordInList(contentItemId: string, updated: MovieListItem['record']): void {
-    setMovies((prev) =>
-      prev.map((m) => (m.item.id === contentItemId ? { ...m, record: updated } : m))
+  function updateRecordInList(contentItemId: string, updated: SeriesListItem['record']): void {
+    setSeries((prev) =>
+      prev.map((s) => (s.item.id === contentItemId ? { ...s, record: updated } : s))
     )
   }
 
   const genreOptions = useMemo(
-    () => unique(movies.flatMap((m) => m.item.metadata.genres)),
-    [movies]
+    () => unique(series.flatMap((s) => s.item.metadata.genres)),
+    [series]
   )
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    let result = movies
+    let result = series
 
     if (q) {
       result = result.filter(
@@ -193,7 +193,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
       result = result.filter(({ record }) => record && isWishlisted(record.tags))
     }
 
-    const primaryCompare: Record<SortKey, (a: MovieListItem, b: MovieListItem) => number> = {
+    const primaryCompare: Record<SortKey, (a: SeriesListItem, b: SeriesListItem) => number> = {
       added_desc: (a, b) => Date.parse(b.item.createdAt) - Date.parse(a.item.createdAt),
       added_asc: (a, b) => Date.parse(a.item.createdAt) - Date.parse(b.item.createdAt),
       rating_desc: (a, b) => (b.record?.myRating ?? 0) - (a.record?.myRating ?? 0),
@@ -209,7 +209,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
       return a.item.title.localeCompare(b.item.title, 'ko')
     })
     return sorted
-  }, [movies, query, genreFilter, wishlistOnly, sort])
+  }, [series, query, genreFilter, wishlistOnly, sort])
 
   return (
     <div
@@ -240,7 +240,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             flexWrap: 'wrap'
           }}
         >
-          <h2 style={{ margin: 0, flex: 'none', whiteSpace: 'nowrap' }}>영화</h2>
+          <h2 style={{ margin: 0, flex: 'none', whiteSpace: 'nowrap' }}>시리즈</h2>
           <div style={{ position: 'relative', width: 240, flex: 'none' }}>
             <MagnifyingGlass
               size={14}
@@ -370,7 +370,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
           marginRight: gutter
         }}
       >
-        {loading && movies.length === 0 ? (
+        {loading && series.length === 0 ? (
           <div
             style={{
               height: '100%',
@@ -408,9 +408,9 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
               paddingRight: gutter
             }}
           >
-            {movies.length === 0
-              ? '아직 보관된 영화가 없어요. 사이드바의 "검색 · 추가"에서 첫 영화를 보관해보세요.'
-              : '조건에 맞는 영화가 없어요.'}
+            {series.length === 0
+              ? '아직 보관된 시리즈가 없어요. 사이드바의 "검색 · 추가"에서 첫 시리즈를 보관해보세요.'
+              : '조건에 맞는 시리즈가 없어요.'}
           </div>
         ) : view === 'grid' ? (
           <div

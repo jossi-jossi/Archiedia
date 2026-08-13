@@ -1,4 +1,4 @@
-# TODO — 1차 목표: 데스크톱 앱 + 영화 콘텐츠 관리
+# TODO — 1차 목표: 데스크톱 앱 + 영화·시리즈 콘텐츠 관리
 
 > 기준 문서: [ARCHITECTURE.md](./ARCHITECTURE.md)
 > 왓챠피디아는 공식 API/내보내기 기능이 없어 로그인 세션 크롤링(Playwright 등)을 1차 범위에서 제외하고, 우선 **TMDB API + 수동 입력**으로 영화 관리 MVP를 완성했다. 이후 왓챠 데이터 이전은 크롤링 대신, 커뮤니티 북마클릿 스크립트로 사용자가 직접 CSV로 내보낸 뒤 앱에서 가져오는 방식(Phase 9)으로 해결.
@@ -70,6 +70,16 @@
 - [x] 이미 보관된 작품(TMDB id 기준) 자동 스킵, TMDB 매칭 실패 작품은 목록으로 표시해 수동 확인 가능
 - [x] 실사용 검증 완료 — 실제 왓챠 CSV로 가져오기 테스트 성공
 
+## Phase 10 — 시리즈(드라마) 지원
+
+- [x] `DramaMetadata` 타입 추가 (`packages/schema`) — 당분간 `MovieMetadata`와 완전히 동일한 구조. 시리즈 전용 레이아웃(시즌/에피소드 등)으로 바뀌면 분리
+- [x] TMDB TV 엔드포인트 연동 (`lib/tmdb.ts`의 `searchTv`/`getTvDetails`) — `/search/tv`, `/tv/{id}`. 감독 필드는 TV의 `created_by`(크리에이터)로 채움
+- [x] `content_items.type = 'drama'`로 시리즈 저장 (스키마에 이미 허용돼 있어 DB 마이그레이션 불필요) — `features/series/api.ts`
+- [x] 시리즈 라이브러리/검색·추가/상세팝업(`features/series/LibraryView.tsx`, `TvSearch.tsx`, `AddSeriesScreen.tsx`, `SeriesDetail.tsx`) — 영화 쪽과 레이아웃 완전히 동일하게 구현 (추후 시리즈 전용으로 분리 예정)
+- [x] 사이드바에 "영화"(기존 라이브러리 이름 변경 + 아이콘 변경)와 "시리즈" 섹션을 나란히 배치
+- [x] 콘텐츠 타입 무관하게 재사용되던 로직을 공용 위치로 정리: `wishlist.ts`/`userRecords.ts` → `lib/`, `StatusQuickEdit.tsx`/`FilterDropdown.tsx` → `components/`
+- [ ] 왓챠 가져오기(Phase 9)는 아직 영화 전용 — 시리즈(TV) 확장은 미착수
+
 ## Phase 7 — 패키징
 
 - [ ] electron-builder 설정
@@ -80,6 +90,6 @@
 
 ## 2차 범위 (지금은 손대지 않음)
 
-- 책/웹툰/드라마 등 타 콘텐츠 타입 확장
+- 책/웹툰 등 타 콘텐츠 타입 확장
 - 원작-각색 콘텐츠 간 관계 모델링
 - 모바일 앱 (`apps/mobile`) 분리 및 `packages/schema` 공유

@@ -13,6 +13,11 @@ export interface MovieMetadata {
   relatedContentItemIds: string[]
 }
 
+// 시리즈(드라마) 상세페이지는 당분간 영화와 레이아웃을 그대로 공유해서, 필드 구성도 동일하게
+// 맞춰뒀다. director는 TV쪽에선 크리에이터(created_by)로 채운다. 추후 시리즈 전용 레이아웃으로
+// 바뀌면 이 타입도 함께 손볼 것.
+export type DramaMetadata = MovieMetadata
+
 interface ContentItemBase {
   id: string
   userId: string
@@ -23,12 +28,12 @@ interface ContentItemBase {
   createdAt: string
 }
 
-// 책/웹툰/드라마의 metadata 필드는 아직 미정 (ARCHITECTURE.md 7절 참고) — 확정되면 MovieMetadata처럼 구체 타입을 채운다.
+// 책/웹툰의 metadata 필드는 아직 미정 (ARCHITECTURE.md 7절 참고) — 확정되면 MovieMetadata처럼 구체 타입을 채운다.
 export type ContentItem =
   | (ContentItemBase & { type: 'movie'; metadata: MovieMetadata })
   | (ContentItemBase & { type: 'book'; metadata: Record<string, unknown> })
   | (ContentItemBase & { type: 'webtoon'; metadata: Record<string, unknown> })
-  | (ContentItemBase & { type: 'drama'; metadata: Record<string, unknown> })
+  | (ContentItemBase & { type: 'drama'; metadata: DramaMetadata })
 
 export interface UserRecord {
   id: string

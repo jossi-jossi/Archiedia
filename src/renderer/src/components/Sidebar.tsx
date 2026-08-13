@@ -1,17 +1,19 @@
 import {
   DownloadSimple,
+  FilmSlate,
   FilmStrip,
   MagnifyingGlass,
   SignOut,
-  SquaresFour
+  Television
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase'
 
-export type Screen = 'library' | 'add' | 'import'
+export type Screen = 'library' | 'add' | 'series' | 'series-add' | 'import'
 
 interface Props {
   screen: Screen
   movieCount: number
+  seriesCount: number
   onNavigate: (screen: Screen) => void
 }
 
@@ -24,7 +26,53 @@ function navItemStyle(active: boolean): React.CSSProperties {
     : { color: 'var(--color-text)' }
 }
 
-export function Sidebar({ screen, movieCount, onNavigate }: Props): React.JSX.Element {
+function NavItem({
+  active,
+  icon,
+  label,
+  onClick
+}: {
+  active: boolean
+  icon: React.ReactNode
+  label: string
+  onClick: () => void
+}): React.JSX.Element {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '9px 12px',
+        borderRadius: 'var(--radius-md)',
+        fontSize: 14,
+        cursor: 'pointer',
+        ...navItemStyle(active)
+      }}
+    >
+      {icon}
+      <span>{label}</span>
+    </div>
+  )
+}
+
+function NavSectionLabel({ children }: { children: string }): React.JSX.Element {
+  return (
+    <div
+      style={{
+        padding: '6px 12px 2px',
+        fontSize: 11,
+        letterSpacing: '0.04em',
+        color: 'var(--color-neutral-500)'
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+export function Sidebar({ screen, movieCount, seriesCount, onNavigate }: Props): React.JSX.Element {
   return (
     <div
       style={{
@@ -45,54 +93,41 @@ export function Sidebar({ screen, movieCount, onNavigate }: Props): React.JSX.El
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <div
+        <NavSectionLabel>영화</NavSectionLabel>
+        <NavItem
+          active={screen === 'library'}
+          icon={<FilmSlate size={17} />}
+          label="영화"
           onClick={() => onNavigate('library')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '9px 12px',
-            borderRadius: 'var(--radius-md)',
-            fontSize: 14,
-            cursor: 'pointer',
-            ...navItemStyle(screen === 'library')
-          }}
-        >
-          <SquaresFour size={17} />
-          <span>라이브러리</span>
-        </div>
-        <div
+        />
+        <NavItem
+          active={screen === 'add'}
+          icon={<MagnifyingGlass size={17} />}
+          label="검색 · 추가"
           onClick={() => onNavigate('add')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '9px 12px',
-            borderRadius: 'var(--radius-md)',
-            fontSize: 14,
-            cursor: 'pointer',
-            ...navItemStyle(screen === 'add')
-          }}
-        >
-          <MagnifyingGlass size={17} />
-          <span>검색 · 추가</span>
-        </div>
-        <div
+        />
+
+        <NavSectionLabel>시리즈</NavSectionLabel>
+        <NavItem
+          active={screen === 'series'}
+          icon={<Television size={17} />}
+          label="시리즈"
+          onClick={() => onNavigate('series')}
+        />
+        <NavItem
+          active={screen === 'series-add'}
+          icon={<MagnifyingGlass size={17} />}
+          label="검색 · 추가"
+          onClick={() => onNavigate('series-add')}
+        />
+
+        <div style={{ height: 8 }} />
+        <NavItem
+          active={screen === 'import'}
+          icon={<DownloadSimple size={17} />}
+          label="왓챠 가져오기"
           onClick={() => onNavigate('import')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '9px 12px',
-            borderRadius: 'var(--radius-md)',
-            fontSize: 14,
-            cursor: 'pointer',
-            ...navItemStyle(screen === 'import')
-          }}
-        >
-          <DownloadSimple size={17} />
-          <span>왓챠 가져오기</span>
-        </div>
+        />
       </div>
       <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div
@@ -105,9 +140,7 @@ export function Sidebar({ screen, movieCount, onNavigate }: Props): React.JSX.El
             lineHeight: 1.5
           }}
         >
-          영화 {movieCount}편 보관 중
-          <br />
-          1차 지원 타입: 영화
+          영화 {movieCount}편 · 시리즈 {seriesCount}편 보관 중
         </div>
         <div
           onClick={() => supabase.auth.signOut()}

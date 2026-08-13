@@ -3,16 +3,21 @@ import { Screen, Sidebar } from './components/Sidebar'
 import { LoginScreen } from './features/auth/LoginScreen'
 import { useSession } from './features/auth/useSession'
 import { AddMovieScreen } from './features/movies/AddMovieScreen'
-import { LibraryView } from './features/movies/LibraryView'
+import { LibraryView as MovieLibraryView } from './features/movies/LibraryView'
 import { MovieDetail } from './features/movies/MovieDetail'
 import { WatchaImportScreen } from './features/movies/WatchaImportScreen'
+import { AddSeriesScreen } from './features/series/AddSeriesScreen'
+import { LibraryView as SeriesLibraryView } from './features/series/LibraryView'
+import { SeriesDetail } from './features/series/SeriesDetail'
 
 function App(): React.JSX.Element {
   const { session, loading } = useSession()
   const [screen, setScreen] = useState<Screen>('library')
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null)
+  const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [movieCount, setMovieCount] = useState(0)
+  const [seriesCount, setSeriesCount] = useState(0)
 
   if (loading) {
     return (
@@ -26,7 +31,12 @@ function App(): React.JSX.Element {
 
   return (
     <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
-      <Sidebar screen={screen} movieCount={movieCount} onNavigate={(next) => setScreen(next)} />
+      <Sidebar
+        screen={screen}
+        movieCount={movieCount}
+        seriesCount={seriesCount}
+        onNavigate={(next) => setScreen(next)}
+      />
       <div
         style={{
           flex: 1,
@@ -37,26 +47,49 @@ function App(): React.JSX.Element {
         }}
       >
         {screen === 'library' && (
-          <LibraryView
+          <MovieLibraryView
             refreshKey={refreshKey}
             onCountChange={setMovieCount}
-            onSelect={(id) => setSelectedId(id)}
+            onSelect={(id) => setSelectedMovieId(id)}
           />
         )}
         {screen === 'add' && <AddMovieScreen onArchived={() => setRefreshKey((k) => k + 1)} />}
+        {screen === 'series' && (
+          <SeriesLibraryView
+            refreshKey={refreshKey}
+            onCountChange={setSeriesCount}
+            onSelect={(id) => setSelectedSeriesId(id)}
+          />
+        )}
+        {screen === 'series-add' && (
+          <AddSeriesScreen onArchived={() => setRefreshKey((k) => k + 1)} />
+        )}
         {screen === 'import' && (
           <WatchaImportScreen onImported={() => setRefreshKey((k) => k + 1)} />
         )}
       </div>
-      {selectedId && (
+      {selectedMovieId && (
         <MovieDetail
-          movieId={selectedId}
+          movieId={selectedMovieId}
           onClose={() => {
-            setSelectedId(null)
+            setSelectedMovieId(null)
             setRefreshKey((k) => k + 1)
           }}
           onDeleted={() => {
-            setSelectedId(null)
+            setSelectedMovieId(null)
+            setRefreshKey((k) => k + 1)
+          }}
+        />
+      )}
+      {selectedSeriesId && (
+        <SeriesDetail
+          seriesId={selectedSeriesId}
+          onClose={() => {
+            setSelectedSeriesId(null)
+            setRefreshKey((k) => k + 1)
+          }}
+          onDeleted={() => {
+            setSelectedSeriesId(null)
             setRefreshKey((k) => k + 1)
           }}
         />

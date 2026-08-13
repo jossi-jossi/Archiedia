@@ -1,7 +1,7 @@
 import {
   ContentItem,
   ContentItemRow,
-  MovieMetadata,
+  DramaMetadata,
   UserRecord,
   UserRecordRow,
   toContentItem,
@@ -9,18 +9,18 @@ import {
 } from '@archiedia/schema'
 import { supabase } from '../../lib/supabase'
 
-export type Movie = ContentItem & { type: 'movie' }
+export type Series = ContentItem & { type: 'drama' }
 
-export interface MovieListItem {
-  item: Movie
+export interface SeriesListItem {
+  item: Series
   record: UserRecord | null
 }
 
-export async function listMovies(): Promise<MovieListItem[]> {
+export async function listSeries(): Promise<SeriesListItem[]> {
   const { data, error } = await supabase
     .from('content_items')
     .select('*, user_records(*)')
-    .eq('type', 'movie')
+    .eq('type', 'drama')
     .order('created_at', { ascending: false })
   if (error) throw error
 
@@ -29,13 +29,13 @@ export async function listMovies(): Promise<MovieListItem[]> {
       user_records: UserRecordRow[]
     }
     return {
-      item: toContentItem(itemRow) as Movie,
+      item: toContentItem(itemRow) as Series,
       record: userRecords?.[0] ? toUserRecord(userRecords[0]) : null
     }
   })
 }
 
-export async function getMovie(id: string): Promise<MovieListItem | null> {
+export async function getSeries(id: string): Promise<SeriesListItem | null> {
   const { data, error } = await supabase
     .from('content_items')
     .select('*, user_records(*)')
@@ -48,16 +48,16 @@ export async function getMovie(id: string): Promise<MovieListItem | null> {
     user_records: UserRecordRow[]
   }
   return {
-    item: toContentItem(itemRow) as Movie,
+    item: toContentItem(itemRow) as Series,
     record: userRecords?.[0] ? toUserRecord(userRecords[0]) : null
   }
 }
 
-export interface CreateMovieInput {
+export interface CreateSeriesInput {
   title: string
   posterUrl: string | null
   externalId: string
-  metadata: MovieMetadata
+  metadata: DramaMetadata
   initialRecord?: {
     myRating?: number | null
     myReview?: string | null
@@ -66,7 +66,7 @@ export interface CreateMovieInput {
   }
 }
 
-export async function createMovie(input: CreateMovieInput): Promise<string> {
+export async function createSeries(input: CreateSeriesInput): Promise<string> {
   const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError) throw userError
   const userId = userData.user?.id
@@ -76,7 +76,7 @@ export async function createMovie(input: CreateMovieInput): Promise<string> {
     .from('content_items')
     .insert({
       user_id: userId,
-      type: 'movie',
+      type: 'drama',
       title: input.title,
       source: 'tmdb',
       external_id: input.externalId,
@@ -101,50 +101,17 @@ export async function createMovie(input: CreateMovieInput): Promise<string> {
   return itemRow.id as string
 }
 
-export async function deleteMovie(id: string): Promise<void> {
+export async function deleteSeries(id: string): Promise<void> {
   // user_records.content_item_id는 on delete cascade라 같이 지워진다.
   const { error } = await supabase.from('content_items').delete().eq('id', id)
   if (error) throw error
 }
 
-export interface MovieOverviewRef {
-  id: string
-  externalId: string
-}
-
-// 줄거리(overview) 필드가 없는 기존 보관작 목록 — 이 필드는 나중에 추가돼서, 그 전에
-// 보관한 영화들은 metadata에 값이 비어있다.
-export async function getMoviesMissingOverview(): Promise<MovieOverviewRef[]> {
-  const { data, error } = await supabase
-    .from('content_items')
-    .select('id, external_id, metadata')
-    .eq('type', 'movie')
-    .eq('source', 'tmdb')
-  if (error) throw error
-
-  return (data ?? [])
-    .filter((row) => !(row.metadata as { overview?: string | null })?.overview)
-    .map((row) => ({ id: row.id as string, externalId: row.external_id as string }))
-    .filter((ref) => ref.externalId)
-}
-
-export async function updateMovieMetadata(
-  id: string,
-  metadata: MovieMetadata,
-  posterUrl: string | null
-): Promise<void> {
-  const { error } = await supabase
-    .from('content_items')
-    .update({ metadata, poster_url: posterUrl })
-    .eq('id', id)
-  if (error) throw error
-}
-
-export async function getArchivedTmdbIds(): Promise<Set<string>> {
+export async function getArchivedTmdbTvIds(): Promise<Set<string>> {
   const { data, error } = await supabase
     .from('content_items')
     .select('external_id')
-    .eq('type', 'movie')
+    .eq('type', 'drama')
     .eq('source', 'tmdb')
   if (error) throw error
 

@@ -1,12 +1,12 @@
 import { Heart, PlayCircle, Star, X } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
-import { deleteMovie, getMovie, Movie, updateUserRecord } from './api'
+import { deleteSeries, getSeries, Series, updateUserRecord } from './api'
 import { isWishlisted, withoutStatusTags } from '../../lib/wishlist'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
 
 interface Props {
-  movieId: string
+  seriesId: string
   onClose: () => void
   onDeleted: () => void
 }
@@ -19,8 +19,10 @@ const POSTER_WIDTH = Math.round((POSTER_HEIGHT * 2) / 3)
 const DIALOG_WIDTH = 913.2
 const DIALOG_HEIGHT = 624
 
-export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.Element {
-  const [movie, setMovie] = useState<Movie | null>(null)
+// 상세팝업 레이아웃은 당분간 영화(MovieDetail)와 동일하게 맞춰뒀다. 시리즈 전용
+// 레이아웃(시즌/에피소드 등)으로 바뀌면 이 파일도 함께 손볼 것.
+export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX.Element {
+  const [series, setSeries] = useState<Series | null>(null)
   const [record, setRecord] = useState<UserRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -28,17 +30,17 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on movieId change needs to reset the loading/error flags before the async call resolves
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on seriesId change needs to reset the loading/error flags before the async call resolves
     setLoading(true)
     setError(null)
-    getMovie(movieId)
+    getSeries(seriesId)
       .then((result) => {
-        setMovie(result?.item ?? null)
+        setSeries(result?.item ?? null)
         setRecord(result?.record ?? null)
       })
       .catch((err) => setError(errorMessage(err)))
       .finally(() => setLoading(false))
-  }, [movieId])
+  }, [seriesId])
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent): void {
@@ -64,10 +66,10 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
   }
 
   async function confirmDelete(): Promise<void> {
-    if (!movie) return
+    if (!series) return
     setDeleting(true)
     try {
-      await deleteMovie(movie.id)
+      await deleteSeries(series.id)
       onDeleted()
     } catch (err) {
       setError(errorMessage(err))
@@ -76,7 +78,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
     }
   }
 
-  const meta = movie?.metadata
+  const meta = series?.metadata
 
   return (
     <div className="dialog-backdrop" onClick={onClose}>
@@ -102,16 +104,16 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
           <X size={18} />
         </button>
 
-        {showDeleteConfirm && movie && (
+        {showDeleteConfirm && series && (
           <div className="dialog-backdrop" onClick={() => !deleting && setShowDeleteConfirm(false)}>
             <div
               className="dialog"
               style={{ textAlign: 'center', boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65)' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="dialog-title">영화 삭제</div>
+              <div className="dialog-title">시리즈 삭제</div>
               <div className="dialog-body">
-                &quot;{movie.title}&quot;을(를) 라이브러리에서 삭제할까요?
+                &quot;{series.title}&quot;을(를) 라이브러리에서 삭제할까요?
               </div>
               <div className="dialog-actions" style={{ justifyContent: 'center' }}>
                 <button
@@ -153,13 +155,13 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
             {error}
           </div>
         )}
-        {!loading && !error && !movie && (
+        {!loading && !error && !series && (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            영화를 찾을 수 없어요.
+            시리즈를 찾을 수 없어요.
           </div>
         )}
 
-        {!loading && !error && movie && meta && (
+        {!loading && !error && series && meta && (
           <div style={{ display: 'flex', gap: 36, height: '100%', minHeight: 0 }}>
             <div
               style={{
@@ -170,8 +172,8 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                 borderRadius: 'var(--radius-md)',
                 overflow: 'hidden',
                 boxShadow: 'var(--shadow-md)',
-                background: movie.posterUrl
-                  ? `center / cover no-repeat url(${movie.posterUrl})`
+                background: series.posterUrl
+                  ? `center / cover no-repeat url(${series.posterUrl})`
                   : 'repeating-linear-gradient(45deg, var(--color-neutral-800), var(--color-neutral-800) 8px, var(--color-neutral-900) 8px, var(--color-neutral-900) 16px)'
               }}
             />
@@ -189,9 +191,9 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
             >
               <div style={{ flex: 1, minHeight: 0 }} />
               <div>
-                <h2 style={{ margin: 0, paddingRight: 24 }}>{movie.title}</h2>
+                <h2 style={{ margin: 0, paddingRight: 24 }}>{series.title}</h2>
                 <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
-                  {meta.originalTitle ?? movie.title} · {meta.releaseYear ?? '—'}
+                  {meta.originalTitle ?? series.title} · {meta.releaseYear ?? '—'}
                 </div>
                 <div
                   style={{

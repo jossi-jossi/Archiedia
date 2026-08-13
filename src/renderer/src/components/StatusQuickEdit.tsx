@@ -1,7 +1,7 @@
 import { Heart } from '@phosphor-icons/react'
 import { UserRecord } from '@archiedia/schema'
-import { updateUserRecord } from './api'
-import { isWishlisted, withoutStatusTags } from './wishlist'
+import { updateUserRecord } from '../lib/userRecords'
+import { isWishlisted, withoutStatusTags } from '../lib/wishlist'
 
 interface Props {
   record: UserRecord

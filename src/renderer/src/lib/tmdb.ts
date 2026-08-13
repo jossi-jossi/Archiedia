@@ -1,4 +1,4 @@
-import type { MovieMetadata } from '@archiedia/schema'
+import type { DramaMetadata, MovieMetadata } from '@archiedia/schema'
 
 const API_BASE = 'https://api.themoviedb.org/3'
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/w342'
@@ -87,8 +87,11 @@ function toKoreanCountryName(iso3166: string | undefined, fallback: string | nul
 
 // TMDB의 videos는 요청 language에 태깅된 영상만 돌려준다 (한국어 예고편이 없으면 빈 배열).
 // 영어 예고편이 국적 상관없이 가장 커버리지가 넓어서, ko-KR에 없으면 en-US로 한 번 더 조회한다.
-async function fetchFallbackTrailerKey(id: number): Promise<string | null> {
-  const url = new URL(`${API_BASE}/movie/${id}/videos`)
+async function fetchFallbackTrailerKey(
+  mediaType: 'movie' | 'tv',
+  id: number
+): Promise<string | null> {
+  const url = new URL(`${API_BASE}/${mediaType}/${id}/videos`)
   url.searchParams.set('api_key', apiKey())
   url.searchParams.set('language', 'en-US')
 
@@ -109,7 +112,8 @@ export async function getMovieDetails(id: number): Promise<TmdbMovieDetails> {
   const data: TmdbMovieDetail = await res.json()
 
   const director = data.credits.crew.find((c) => c.job === 'Director')?.name ?? null
-  const trailerKey = findTrailerKey(data.videos.results) ?? (await fetchFallbackTrailerKey(id))
+  const trailerKey =
+    findTrailerKey(data.videos.results) ?? (await fetchFallbackTrailerKey('movie', id))
 
   return {
     title: data.title,
@@ -121,6 +125,94 @@ export async function getMovieDetails(id: number): Promise<TmdbMovieDetails> {
       genres: data.genres.map((g) => g.name),
       actors: data.credits.cast.slice(0, 5).map((c) => c.name),
       runtimeMinutes: data.runtime,
+      country: toKoreanCountryName(
+        data.production_countries[0]?.iso_3166_1,
+        data.production_countries[0]?.name ?? null
+      ),
+      trailerUrl: trailerKey ? `https://www.youtube.com/watch?v=${trailerKey}` : null,
+      overview: data.overview || null,
+      relatedContentItemIds: []
+    }
+  }
+}
+
+interface TmdbTvSearchResponse {
+  results: {
+    id: number
+    name: string
+    original_name: string
+    first_air_date: string
+    poster_path: string | null
+  }[]
+}
+
+export async function searchTv(query: string): Promise<TmdbSearchResult[]> {
+  const url = new URL(`${API_BASE}/search/tv`)
+  url.searchParams.set('api_key', apiKey())
+  url.searchParams.set('query', query)
+  url.searchParams.set('language', 'ko-KR')
+
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`TMDB 검색 실패 (${res.status})`)
+  const data: TmdbTvSearchResponse = await res.json()
+
+  return data.results.map((r) => ({
+    id: r.id,
+    title: r.name,
+    originalTitle: r.original_name,
+    year: r.first_air_date ? Number(r.first_air_date.slice(0, 4)) : null,
+    posterUrl: r.poster_path ? `${IMAGE_BASE}${r.poster_path}` : null
+  }))
+}
+
+interface TmdbTvDetail {
+  name: string
+  original_name: string
+  first_air_date: string
+  episode_run_time: number[]
+  poster_path: string | null
+  overview: string
+  genres: { name: string }[]
+  production_countries: { iso_3166_1: string; name: string }[]
+  created_by: { name: string }[]
+  credits: {
+    cast: { name: string }[]
+  }
+  videos: {
+    results: { site: string; type: string; key: string }[]
+  }
+}
+
+export interface TmdbTvDetails {
+  title: string
+  posterUrl: string | null
+  metadata: DramaMetadata
+}
+
+export async function getTvDetails(id: number): Promise<TmdbTvDetails> {
+  const url = new URL(`${API_BASE}/tv/${id}`)
+  url.searchParams.set('api_key', apiKey())
+  url.searchParams.set('language', 'ko-KR')
+  url.searchParams.set('append_to_response', 'credits,videos')
+
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`TMDB 상세 조회 실패 (${res.status})`)
+  const data: TmdbTvDetail = await res.json()
+
+  const director = data.created_by.map((c) => c.name).join(', ') || null
+  const trailerKey =
+    findTrailerKey(data.videos.results) ?? (await fetchFallbackTrailerKey('tv', id))
+
+  return {
+    title: data.name,
+    posterUrl: data.poster_path ? `${IMAGE_BASE}${data.poster_path}` : null,
+    metadata: {
+      originalTitle: data.original_name || null,
+      releaseYear: data.first_air_date ? Number(data.first_air_date.slice(0, 4)) : null,
+      director,
+      genres: data.genres.map((g) => g.name),
+      actors: data.credits.cast.slice(0, 5).map((c) => c.name),
+      runtimeMinutes: data.episode_run_time[0] ?? null,
       country: toKoreanCountryName(
         data.production_countries[0]?.iso_3166_1,
         data.production_countries[0]?.name ?? null
