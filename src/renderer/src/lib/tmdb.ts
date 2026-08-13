@@ -1,4 +1,4 @@
-import type { DramaMetadata, MovieMetadata } from '@archiedia/schema'
+import type { DramaMetadata, DramaSeasonMetadata, MovieMetadata } from '@archiedia/schema'
 
 const API_BASE = 'https://api.themoviedb.org/3'
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/w342'
@@ -87,11 +87,9 @@ function toKoreanCountryName(iso3166: string | undefined, fallback: string | nul
 
 // TMDB의 videos는 요청 language에 태깅된 영상만 돌려준다 (한국어 예고편이 없으면 빈 배열).
 // 영어 예고편이 국적 상관없이 가장 커버리지가 넓어서, ko-KR에 없으면 en-US로 한 번 더 조회한다.
-async function fetchFallbackTrailerKey(
-  mediaType: 'movie' | 'tv',
-  id: number
-): Promise<string | null> {
-  const url = new URL(`${API_BASE}/${mediaType}/${id}/videos`)
+// path는 'movie/123', 'tv/123', 'tv/123/season/1'처럼 videos 엔드포인트 앞부분.
+async function fetchFallbackTrailerKey(path: string): Promise<string | null> {
+  const url = new URL(`${API_BASE}/${path}/videos`)
   url.searchParams.set('api_key', apiKey())
   url.searchParams.set('language', 'en-US')
 
@@ -113,7 +111,7 @@ export async function getMovieDetails(id: number): Promise<TmdbMovieDetails> {
 
   const director = data.credits.crew.find((c) => c.job === 'Director')?.name ?? null
   const trailerKey =
-    findTrailerKey(data.videos.results) ?? (await fetchFallbackTrailerKey('movie', id))
+    findTrailerKey(data.videos.results) ?? (await fetchFallbackTrailerKey(`movie/${id}`))
 
   return {
     title: data.title,
@@ -169,17 +167,81 @@ interface TmdbTvDetail {
   name: string
   original_name: string
   first_air_date: string
-  episode_run_time: number[]
   poster_path: string | null
-  overview: string
   genres: { name: string }[]
   production_countries: { iso_3166_1: string; name: string }[]
-  created_by: { name: string }[]
+  seasons: { season_number: number }[]
+  videos: {
+    results: { site: string; type: string; key: string }[]
+  }
+}
+
+interface TmdbSeasonDetail {
+  season_number: number
+  name: string
+  overview: string
+  episodes: { runtime: number | null }[]
   credits: {
     cast: { name: string }[]
+    crew: { job: string; name: string }[]
   }
   videos: {
     results: { site: string; type: string; key: string }[]
+  }
+}
+
+// 시즌 자체 예고편이 없으면(신작 등) 쇼 전체 예고편(fallbackTrailerUrl)으로 대체한다.
+async function getSeasonDetail(
+  tvId: number,
+  seasonNumber: number,
+  fallbackTrailerUrl: string | null
+): Promise<DramaSeasonMetadata> {
+  const url = new URL(`${API_BASE}/tv/${tvId}/season/${seasonNumber}`)
+  url.searchParams.set('api_key', apiKey())
+  url.searchParams.set('language', 'ko-KR')
+  url.searchParams.set('append_to_response', 'credits,videos')
+
+  const res = await fetch(url)
+  if (!res.ok) {
+    return {
+      seasonNumber,
+      name: `시즌 ${seasonNumber}`,
+      overview: null,
+      episodeCount: 0,
+      runtimeMinutes: null,
+      director: null,
+      actors: [],
+      trailerUrl: fallbackTrailerUrl
+    }
+  }
+  const data: TmdbSeasonDetail = await res.json()
+
+  const runtimes = data.episodes
+    .map((e) => e.runtime)
+    .filter((r): r is number => typeof r === 'number' && r > 0)
+  const runtimeMinutes = runtimes.length
+    ? Math.round(runtimes.reduce((sum, r) => sum + r, 0) / runtimes.length)
+    : null
+  const director =
+    Array.from(
+      new Set(data.credits.crew.filter((c) => c.job === 'Director').map((c) => c.name))
+    ).join(', ') || null
+  const seasonPath = `tv/${tvId}/season/${seasonNumber}`
+  const trailerKey =
+    findTrailerKey(data.videos.results) ?? (await fetchFallbackTrailerKey(seasonPath))
+  const trailerUrl = trailerKey
+    ? `https://www.youtube.com/watch?v=${trailerKey}`
+    : fallbackTrailerUrl
+
+  return {
+    seasonNumber: data.season_number,
+    name: data.name,
+    overview: data.overview || null,
+    episodeCount: data.episodes.length,
+    runtimeMinutes,
+    director,
+    actors: data.credits.cast.slice(0, 5).map((c) => c.name),
+    trailerUrl
   }
 }
 
@@ -193,15 +255,24 @@ export async function getTvDetails(id: number): Promise<TmdbTvDetails> {
   const url = new URL(`${API_BASE}/tv/${id}`)
   url.searchParams.set('api_key', apiKey())
   url.searchParams.set('language', 'ko-KR')
-  url.searchParams.set('append_to_response', 'credits,videos')
+  url.searchParams.set('append_to_response', 'videos')
 
   const res = await fetch(url)
   if (!res.ok) throw new Error(`TMDB 상세 조회 실패 (${res.status})`)
   const data: TmdbTvDetail = await res.json()
 
-  const director = data.created_by.map((c) => c.name).join(', ') || null
   const trailerKey =
-    findTrailerKey(data.videos.results) ?? (await fetchFallbackTrailerKey('tv', id))
+    findTrailerKey(data.videos.results) ?? (await fetchFallbackTrailerKey(`tv/${id}`))
+  const showTrailerUrl = trailerKey ? `https://www.youtube.com/watch?v=${trailerKey}` : null
+
+  // season_number 0은 "스페셜"이라 정규 시즌 목록/개수에서 제외한다.
+  const seasonNumbers = data.seasons
+    .map((s) => s.season_number)
+    .filter((n) => n > 0)
+    .sort((a, b) => a - b)
+  const seasons = await Promise.all(
+    seasonNumbers.map((n) => getSeasonDetail(id, n, showTrailerUrl))
+  )
 
   return {
     title: data.name,
@@ -209,16 +280,13 @@ export async function getTvDetails(id: number): Promise<TmdbTvDetails> {
     metadata: {
       originalTitle: data.original_name || null,
       releaseYear: data.first_air_date ? Number(data.first_air_date.slice(0, 4)) : null,
-      director,
       genres: data.genres.map((g) => g.name),
-      actors: data.credits.cast.slice(0, 5).map((c) => c.name),
-      runtimeMinutes: data.episode_run_time[0] ?? null,
       country: toKoreanCountryName(
         data.production_countries[0]?.iso_3166_1,
         data.production_countries[0]?.name ?? null
       ),
-      trailerUrl: trailerKey ? `https://www.youtube.com/watch?v=${trailerKey}` : null,
-      overview: data.overview || null,
+      trailerUrl: showTrailerUrl,
+      seasons,
       relatedContentItemIds: []
     }
   }

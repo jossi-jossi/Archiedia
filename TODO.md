@@ -72,10 +72,11 @@
 
 ## Phase 10 — 시리즈(드라마) 지원
 
-- [x] `DramaMetadata` 타입 추가 (`packages/schema`) — 당분간 `MovieMetadata`와 완전히 동일한 구조. 시리즈 전용 레이아웃(시즌/에피소드 등)으로 바뀌면 분리
-- [x] TMDB TV 엔드포인트 연동 (`lib/tmdb.ts`의 `searchTv`/`getTvDetails`) — `/search/tv`, `/tv/{id}`. 감독 필드는 TV의 `created_by`(크리에이터)로 채움
+- [x] `DramaMetadata` 타입 추가 (`packages/schema`) — 처음엔 `MovieMetadata`와 동일한 구조였다가, 시즌별 정보 지원을 위해 감독/출연/줄거리/러닝타임을 `seasons: DramaSeasonMetadata[]`로 이동 (장르/국가/예고편만 쇼 전체 공통)
+- [x] TMDB TV 엔드포인트 연동 (`lib/tmdb.ts`의 `searchTv`/`getTvDetails`) — `/search/tv`, `/tv/{id}`. 시즌 0(스페셜)은 목록에서 제외
+- [x] 시즌별 상세 조회 (`getSeasonDetail`, `/tv/{id}/season/{n}?append_to_response=credits`) — 시즌별 감독(크루의 Director)/출연(캐스트)/줄거리/평균 러닝타임(에피소드 runtime 평균)을 따로 가져옴
 - [x] `content_items.type = 'drama'`로 시리즈 저장 (스키마에 이미 허용돼 있어 DB 마이그레이션 불필요) — `features/series/api.ts`
-- [x] 시리즈 라이브러리/검색·추가/상세팝업(`features/series/LibraryView.tsx`, `TvSearch.tsx`, `AddSeriesScreen.tsx`, `SeriesDetail.tsx`) — 영화 쪽과 레이아웃 완전히 동일하게 구현 (추후 시리즈 전용으로 분리 예정)
+- [x] 시리즈 라이브러리/검색·추가/상세팝업(`features/series/LibraryView.tsx`, `TvSearch.tsx`, `AddSeriesScreen.tsx`, `SeriesDetail.tsx`) — 영화 쪽과 레이아웃 거의 동일. 상세팝업만 시즌이 2개 이상이면 시즌 선택 드롭다운이 추가되고, 감독/출연/줄거리가 선택된 시즌 기준으로 바뀜
 - [x] 사이드바에 "영화"(기존 라이브러리 이름 변경 + 아이콘 변경)와 "시리즈" 섹션을 나란히 배치
 - [x] 콘텐츠 타입 무관하게 재사용되던 로직을 공용 위치로 정리: `wishlist.ts`/`userRecords.ts` → `lib/`, `StatusQuickEdit.tsx`/`FilterDropdown.tsx` → `components/`
 - [ ] 왓챠 가져오기(Phase 9)는 아직 영화 전용 — 시리즈(TV) 확장은 미착수

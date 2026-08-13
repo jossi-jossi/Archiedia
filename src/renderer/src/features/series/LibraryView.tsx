@@ -511,7 +511,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                 <th>제목</th>
                 <th>장르</th>
                 <th style={{ padding: 0 }}>
-                  <span style={{ marginLeft: -6, display: 'inline-block' }}>길이</span>
+                  <span style={{ marginLeft: -6, display: 'inline-block' }}>회차</span>
                 </th>
                 <th>나의 평점</th>
                 <th>상태</th>
@@ -564,7 +564,9 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                   </td>
                   <td style={{ color: 'var(--color-neutral-400)', padding: 0 }}>
                     <span style={{ marginLeft: -6, display: 'inline-block' }}>
-                      {item.metadata.runtimeMinutes ? `${item.metadata.runtimeMinutes}분` : '—'}
+                      {item.metadata.seasons.length
+                        ? `${item.metadata.seasons.reduce((sum, s) => sum + s.episodeCount, 0)}부`
+                        : '—'}
                     </span>
                   </td>
                   <td>

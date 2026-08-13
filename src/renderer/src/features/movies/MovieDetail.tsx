@@ -102,39 +102,6 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
           <X size={18} />
         </button>
 
-        {showDeleteConfirm && movie && (
-          <div className="dialog-backdrop" onClick={() => !deleting && setShowDeleteConfirm(false)}>
-            <div
-              className="dialog"
-              style={{ textAlign: 'center', boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65)' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="dialog-title">영화 삭제</div>
-              <div className="dialog-body">
-                &quot;{movie.title}&quot;을(를) 라이브러리에서 삭제할까요?
-              </div>
-              <div className="dialog-actions" style={{ justifyContent: 'center' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  disabled={deleting}
-                  onClick={() => setShowDeleteConfirm(false)}
-                >
-                  취소
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={deleting}
-                  onClick={confirmDelete}
-                >
-                  {deleting ? '삭제 중...' : '삭제'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {loading && (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             불러오는 중...
@@ -409,6 +376,39 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                   }}
                 >
                   삭제
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showDeleteConfirm && movie && (
+          <div className="dialog-backdrop" onClick={() => !deleting && setShowDeleteConfirm(false)}>
+            <div
+              className="dialog"
+              style={{ textAlign: 'center', boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="dialog-title">영화 삭제</div>
+              <div className="dialog-body">
+                &quot;{movie.title}&quot;을(를) 라이브러리에서 삭제할까요?
+              </div>
+              <div className="dialog-actions" style={{ justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={deleting}
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={deleting}
+                  onClick={confirmDelete}
+                >
+                  {deleting ? '삭제 중...' : '삭제'}
                 </button>
               </div>
             </div>

@@ -1,8 +1,8 @@
-import { Heart, PlayCircle, Star, X } from '@phosphor-icons/react'
-import { useEffect, useState } from 'react'
+import { CaretDown, Heart, PlayCircle, Star, X } from '@phosphor-icons/react'
+import { useEffect, useRef, useState } from 'react'
 import { deleteSeries, getSeries, Series, updateUserRecord } from './api'
 import { isWishlisted, withoutStatusTags } from '../../lib/wishlist'
-import type { UserRecord } from '@archiedia/schema'
+import type { DramaSeasonMetadata, UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
 
 interface Props {
@@ -19,8 +19,92 @@ const POSTER_WIDTH = Math.round((POSTER_HEIGHT * 2) / 3)
 const DIALOG_WIDTH = 913.2
 const DIALOG_HEIGHT = 624
 
+function seasonLabel(season: DramaSeasonMetadata): string {
+  const fallback = `시즌 ${season.seasonNumber}`
+  return season.name && season.name !== fallback ? `${fallback}: ${season.name}` : fallback
+}
+
+function SeasonSelect({
+  seasons,
+  selectedIndex,
+  onSelect
+}: {
+  seasons: DramaSeasonMetadata[]
+  selectedIndex: number
+  onSelect: (index: number) => void
+}): React.JSX.Element {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent): void {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [])
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <div
+        className="tag tag-outline"
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          cursor: 'pointer',
+          padding: '0 10px',
+          height: 20,
+          boxSizing: 'border-box',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 5
+        }}
+      >
+        {seasonLabel(seasons[selectedIndex])}
+        <CaretDown size={9} />
+      </div>
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            zIndex: 10,
+            minWidth: 160,
+            maxHeight: 220,
+            overflowY: 'auto',
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-divider)',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-md)',
+            padding: 6
+          }}
+        >
+          {seasons.map((season, i) => (
+            <div
+              key={season.seasonNumber}
+              onClick={() => {
+                onSelect(i)
+                setOpen(false)
+              }}
+              style={{
+                padding: '5px 8px',
+                fontSize: 13,
+                cursor: 'pointer',
+                borderRadius: 'var(--radius-sm)',
+                color: i === selectedIndex ? 'var(--color-accent)' : undefined
+              }}
+            >
+              {seasonLabel(season)}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // 상세팝업 레이아웃은 당분간 영화(MovieDetail)와 동일하게 맞춰뒀다. 시리즈 전용
-// 레이아웃(시즌/에피소드 등)으로 바뀌면 이 파일도 함께 손볼 것.
+// 레이아웃으로 바뀌면 이 파일도 함께 손볼 것.
 export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX.Element {
   const [series, setSeries] = useState<Series | null>(null)
   const [record, setRecord] = useState<UserRecord | null>(null)
@@ -28,11 +112,13 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [selectedSeasonIndex, setSelectedSeasonIndex] = useState(0)
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on seriesId change needs to reset the loading/error flags before the async call resolves
     setLoading(true)
     setError(null)
+    setSelectedSeasonIndex(0)
     getSeries(seriesId)
       .then((result) => {
         setSeries(result?.item ?? null)
@@ -79,6 +165,10 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
   }
 
   const meta = series?.metadata
+  const seasons = meta?.seasons ?? []
+  const isMultiSeason = seasons.length >= 2
+  const totalEpisodes = seasons.reduce((sum, s) => sum + s.episodeCount, 0)
+  const selectedSeason = seasons[selectedSeasonIndex] ?? null
 
   return (
     <div className="dialog-backdrop" onClick={onClose}>
@@ -103,39 +193,6 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
         >
           <X size={18} />
         </button>
-
-        {showDeleteConfirm && series && (
-          <div className="dialog-backdrop" onClick={() => !deleting && setShowDeleteConfirm(false)}>
-            <div
-              className="dialog"
-              style={{ textAlign: 'center', boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65)' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="dialog-title">시리즈 삭제</div>
-              <div className="dialog-body">
-                &quot;{series.title}&quot;을(를) 라이브러리에서 삭제할까요?
-              </div>
-              <div className="dialog-actions" style={{ justifyContent: 'center' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  disabled={deleting}
-                  onClick={() => setShowDeleteConfirm(false)}
-                >
-                  취소
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={deleting}
-                  onClick={confirmDelete}
-                >
-                  {deleting ? '삭제 중...' : '삭제'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {loading && (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -209,16 +266,20 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                       {g}
                     </span>
                   ))}
-                  {meta.runtimeMinutes && (
-                    <span className="tag tag-outline">{meta.runtimeMinutes}분</span>
+                  {isMultiSeason && (
+                    <span className="tag tag-outline">시즌 {seasons.length}개</span>
+                  )}
+                  {totalEpisodes > 0 && <span className="tag tag-outline">{totalEpisodes}부</span>}
+                  {!isMultiSeason && selectedSeason?.runtimeMinutes && (
+                    <span className="tag tag-outline">{selectedSeason.runtimeMinutes}분</span>
                   )}
                   {meta.country && <span className="tag tag-outline">{meta.country}</span>}
-                  {meta.trailerUrl && (
+                  {selectedSeason?.trailerUrl && (
                     // 다른 태그와 박스가 정확히 같아야 해서 button 대신 a에 직접 .tag를 준다.
                     // button은 UA 기본 스타일(폰트/패딩/박스사이징) 때문에 높이가 미세하게 어긋난다.
                     <a
                       className="tag tag-outline"
-                      href={meta.trailerUrl}
+                      href={selectedSeason.trailerUrl}
                       target="_blank"
                       rel="noreferrer"
                       style={{ gap: 4, textDecoration: 'none', cursor: 'pointer' }}
@@ -228,6 +289,25 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                     </a>
                   )}
                 </div>
+                {isMultiSeason && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      marginTop: 8
+                    }}
+                  >
+                    <SeasonSelect
+                      seasons={seasons}
+                      selectedIndex={selectedSeasonIndex}
+                      onSelect={setSelectedSeasonIndex}
+                    />
+                    {selectedSeason && (
+                      <span className="tag tag-outline">{selectedSeason.episodeCount}부</span>
+                    )}
+                  </div>
+                )}
                 <div
                   style={{
                     marginTop: 14,
@@ -238,16 +318,23 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                 >
                   <div>
                     <span style={{ color: 'var(--color-neutral-500)' }}>감독</span> &nbsp;
-                    {meta.director ?? '—'}
+                    {selectedSeason?.director ?? '—'}
                   </div>
                   <div>
                     <span style={{ color: 'var(--color-neutral-500)' }}>출연</span> &nbsp;
-                    {meta.actors.length ? meta.actors.join(', ') : '—'}
+                    {selectedSeason?.actors.length ? selectedSeason.actors.join(', ') : '—'}
                   </div>
                   <div style={{ marginTop: 8 }}>
                     <span style={{ color: 'var(--color-neutral-500)' }}>줄거리</span>
-                    <div style={{ marginTop: 4, height: 80, overflowY: 'auto', paddingRight: 4 }}>
-                      {meta.overview || '—'}
+                    <div
+                      style={{
+                        marginTop: 4,
+                        height: isMultiSeason ? 56 : 80,
+                        overflowY: 'auto',
+                        paddingRight: 4
+                      }}
+                    >
+                      {selectedSeason?.overview || '—'}
                     </div>
                   </div>
                 </div>
@@ -411,6 +498,39 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                   }}
                 >
                   삭제
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showDeleteConfirm && series && (
+          <div className="dialog-backdrop" onClick={() => !deleting && setShowDeleteConfirm(false)}>
+            <div
+              className="dialog"
+              style={{ textAlign: 'center', boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="dialog-title">시리즈 삭제</div>
+              <div className="dialog-body">
+                &quot;{series.title}&quot;을(를) 라이브러리에서 삭제할까요?
+              </div>
+              <div className="dialog-actions" style={{ justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={deleting}
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={deleting}
+                  onClick={confirmDelete}
+                >
+                  {deleting ? '삭제 중...' : '삭제'}
                 </button>
               </div>
             </div>

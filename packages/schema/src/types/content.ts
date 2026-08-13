@@ -13,10 +13,27 @@ export interface MovieMetadata {
   relatedContentItemIds: string[]
 }
 
-// 시리즈(드라마) 상세페이지는 당분간 영화와 레이아웃을 그대로 공유해서, 필드 구성도 동일하게
-// 맞춰뒀다. director는 TV쪽에선 크리에이터(created_by)로 채운다. 추후 시리즈 전용 레이아웃으로
-// 바뀌면 이 타입도 함께 손볼 것.
-export type DramaMetadata = MovieMetadata
+// 감독/출연/줄거리/러닝타임/예고편은 시즌마다 달라질 수 있어서 시즌 단위로 따로 둔다.
+export interface DramaSeasonMetadata {
+  seasonNumber: number
+  name: string
+  overview: string | null
+  episodeCount: number
+  runtimeMinutes: number | null
+  director: string | null
+  actors: string[]
+  trailerUrl: string | null
+}
+
+export interface DramaMetadata {
+  originalTitle: string | null
+  releaseYear: number | null
+  genres: string[]
+  country: string | null
+  trailerUrl: string | null
+  seasons: DramaSeasonMetadata[]
+  relatedContentItemIds: string[]
+}
 
 interface ContentItemBase {
   id: string
