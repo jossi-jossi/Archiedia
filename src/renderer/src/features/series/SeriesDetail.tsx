@@ -20,8 +20,7 @@ const DIALOG_WIDTH = 913.2
 const DIALOG_HEIGHT = 624
 
 function seasonLabel(season: DramaSeasonMetadata): string {
-  const fallback = `시즌 ${season.seasonNumber}`
-  return season.name && season.name !== fallback ? `${fallback}: ${season.name}` : fallback
+  return `시즌 ${season.seasonNumber}`
 }
 
 // 다른 태그와 박스가 정확히 같아야 해서 button 대신 a에 직접 .tag를 준다.
@@ -66,7 +65,7 @@ function SeasonSelect({
       <div
         className="tag tag-outline"
         onClick={() => setOpen((o) => !o)}
-        style={{ cursor: 'pointer', gap: 5 }}
+        style={{ cursor: 'pointer', width: 70, justifyContent: 'space-between' }}
       >
         {seasonLabel(seasons[selectedIndex])}
         <CaretDown size={9} style={{ display: 'block' }} />
@@ -78,9 +77,7 @@ function SeasonSelect({
             top: 'calc(100% + 4px)',
             left: 0,
             zIndex: 10,
-            minWidth: 160,
-            maxHeight: 220,
-            overflowY: 'auto',
+            width: '100%',
             background: 'var(--color-surface)',
             border: '1px solid var(--color-divider)',
             borderRadius: 'var(--radius-md)',
@@ -97,7 +94,7 @@ function SeasonSelect({
               }}
               style={{
                 padding: '5px 8px',
-                fontSize: 13,
+                fontSize: 11,
                 cursor: 'pointer',
                 borderRadius: 'var(--radius-sm)',
                 color: i === selectedIndex ? 'var(--color-accent)' : undefined
@@ -283,30 +280,20 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                     <span className="tag tag-outline">{selectedSeason.runtimeMinutes}분</span>
                   )}
                   {meta.country && <span className="tag tag-outline">{meta.country}</span>}
-                  {!isMultiSeason && selectedSeason?.trailerUrl && (
-                    <TrailerTag url={selectedSeason.trailerUrl} />
+                  {isMultiSeason && (
+                    <>
+                      <SeasonSelect
+                        seasons={seasons}
+                        selectedIndex={selectedSeasonIndex}
+                        onSelect={setSelectedSeasonIndex}
+                      />
+                      {selectedSeason && (
+                        <span className="tag tag-outline">{selectedSeason.episodeCount}부</span>
+                      )}
+                    </>
                   )}
+                  {selectedSeason?.trailerUrl && <TrailerTag url={selectedSeason.trailerUrl} />}
                 </div>
-                {isMultiSeason && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      marginTop: 8
-                    }}
-                  >
-                    <SeasonSelect
-                      seasons={seasons}
-                      selectedIndex={selectedSeasonIndex}
-                      onSelect={setSelectedSeasonIndex}
-                    />
-                    {selectedSeason && (
-                      <span className="tag tag-outline">{selectedSeason.episodeCount}부</span>
-                    )}
-                    {selectedSeason?.trailerUrl && <TrailerTag url={selectedSeason.trailerUrl} />}
-                  </div>
-                )}
                 <div
                   style={{
                     marginTop: 14,
