@@ -11,13 +11,13 @@ interface Props {
   onDeleted: () => void
 }
 
-// 포스터는 항상 이 고정 크기로 그린다. 콘텐츠 높이에 맞춰 유동적으로 그리면(이전 방식)
-// 측정 전/후로 크기가 바뀌며 텍스트 줄바꿈이 깜빡이거나, 짧은 콘텐츠일 때 좌우에 빈
-// 여백이 남는 문제가 있었다. 고정 크기는 두 문제 모두 원천적으로 없앤다.
-const POSTER_HEIGHT = 550
-const POSTER_WIDTH = Math.round((POSTER_HEIGHT * 2) / 3)
+// 포스터 자리는 영화/시리즈와 같은 폭을 쓰되, 네이버웹툰 썸네일 실측 비율(480×623)에
+// 맞춰 높이를 다시 계산한다. 팝업 높이도 늘어난 포스터 높이에 맞춰 같은 여백
+// (74px = 원래 624 - 550)을 유지한 채로 조정한다.
+const POSTER_WIDTH = Math.round((550 * 2) / 3)
+const POSTER_HEIGHT = Math.round((POSTER_WIDTH * 623) / 480)
 const DIALOG_WIDTH = 913.2
-const DIALOG_HEIGHT = 624
+const DIALOG_HEIGHT = POSTER_HEIGHT + 74
 
 // 상세팝업 레이아웃은 당분간 영화(MovieDetail)와 동일한 틀을 쓰되, 웹툰에 맞는 필드
 // 구성(작가·장르·연재상태, 해시태그, 줄거리, 원본링크)으로 맞췄다.

@@ -88,7 +88,7 @@ export function NaverSearch({ query, onArchived }: Props): React.JSX.Element {
               <div
                 style={{
                   width: 46,
-                  height: 66,
+                  height: 60,
                   flex: 'none',
                   borderRadius: 4,
                   background: r.thumbnailUrl

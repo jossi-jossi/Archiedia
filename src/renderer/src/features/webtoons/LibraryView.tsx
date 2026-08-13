@@ -62,8 +62,9 @@ function StarRating({ rating }: { rating: number | null }): React.JSX.Element {
   )
 }
 
+// 네이버웹툰 썸네일 실측 비율 (480×623).
 const poster = (url: string | null): React.CSSProperties => ({
-  aspectRatio: '2 / 3',
+  aspectRatio: '480 / 623',
   borderRadius: 'var(--radius-md)',
   position: 'relative',
   overflow: 'hidden',
@@ -526,7 +527,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                     <div
                       style={{
                         width: 32,
-                        height: 45,
+                        height: 42,
                         borderRadius: 4,
                         margin: '0 auto',
                         ...poster(item.posterUrl),
