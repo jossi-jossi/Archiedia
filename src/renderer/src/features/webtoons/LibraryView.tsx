@@ -145,6 +145,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   const [query, setQuery] = useState('')
   const [genreFilter, setGenreFilter] = useState<string[]>([])
   const [wishlistOnly, setWishlistOnly] = useState(false)
+  const [finishedOnly, setFinishedOnly] = useState(false)
   const [sort, setSort] = useState<SortKey>('added_desc')
   const [gridRef, columns, gutter] = useGridColumns(POSTER_WIDTH)
 
@@ -215,6 +216,9 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     if (wishlistOnly) {
       result = result.filter(({ record }) => record && isWishlisted(record.tags))
     }
+    if (finishedOnly) {
+      result = result.filter(({ item }) => item.metadata.isFinished)
+    }
 
     const primaryCompare: Record<SortKey, (a: WebtoonListItem, b: WebtoonListItem) => number> = {
       added_desc: (a, b) => Date.parse(b.item.createdAt) - Date.parse(a.item.createdAt),
@@ -232,7 +236,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
       return a.item.title.localeCompare(b.item.title, 'ko')
     })
     return sorted
-  }, [webtoons, query, genreFilter, wishlistOnly, sort])
+  }, [webtoons, query, genreFilter, wishlistOnly, finishedOnly, sort])
 
   return (
     <div
@@ -346,6 +350,14 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
               >
                 <Heart size={12} weight={wishlistOnly ? 'fill' : 'regular'} />
                 보고 싶어요
+              </button>
+              <button
+                type="button"
+                className={finishedOnly ? 'btn btn-primary' : 'btn btn-secondary'}
+                style={{ minHeight: 28, padding: '0 12px', fontSize: 12 }}
+                onClick={() => setFinishedOnly((v) => !v)}
+              >
+                완결작
               </button>
             </div>
           ) : (
