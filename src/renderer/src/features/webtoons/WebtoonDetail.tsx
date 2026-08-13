@@ -195,7 +195,8 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                     color: 'var(--color-neutral-300)'
                   }}
                 >
-                  <div style={{ height: 70, overflowY: 'auto', paddingRight: 4 }}>
+                  <span style={{ color: 'var(--color-neutral-500)' }}>줄거리</span>
+                  <div style={{ marginTop: 4, height: 54, overflowY: 'auto', paddingRight: 4 }}>
                     {meta.overview || '—'}
                   </div>
                 </div>
