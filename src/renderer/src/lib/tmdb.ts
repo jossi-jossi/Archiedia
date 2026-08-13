@@ -192,6 +192,19 @@ interface TmdbSeasonDetail {
   }
 }
 
+// TMDB의 TV 장르는 ko-KR로도 번역이 안 되고 영문 그대로 오는 경우가 있다(예: "Action &
+// Adventure"). 이런 결합 장르는 각각의 한글 장르로 쪼개서 보여준다. 매핑에 없는 이름은 그대로 둔다.
+const TV_GENRE_TRANSLATIONS: Record<string, string[]> = {
+  'Action & Adventure': ['액션', '모험'],
+  Kids: ['아동'],
+  'Sci-Fi & Fantasy': ['SF', '판타지'],
+  'War & Politics': ['전쟁', '정치']
+}
+
+function translateTvGenres(names: string[]): string[] {
+  return names.flatMap((name) => TV_GENRE_TRANSLATIONS[name] ?? [name])
+}
+
 // 시즌 자체 줄거리/예고편/감독 정보가 없으면(TMDB에 시즌 단위 데이터가 비어있는 경우가 흔함)
 // 쇼 전체 값(줄거리는 fallbackOverview, 예고편은 fallbackTrailerUrl, 감독은
 // fallbackDirector=제작자/크리에이터)으로 대체한다.
@@ -290,7 +303,7 @@ export async function getTvDetails(id: number): Promise<TmdbTvDetails> {
     metadata: {
       originalTitle: data.original_name || null,
       releaseYear: data.first_air_date ? Number(data.first_air_date.slice(0, 4)) : null,
-      genres: data.genres.map((g) => g.name),
+      genres: translateTvGenres(data.genres.map((g) => g.name)),
       country: toKoreanCountryName(
         data.production_countries[0]?.iso_3166_1,
         data.production_countries[0]?.name ?? null
