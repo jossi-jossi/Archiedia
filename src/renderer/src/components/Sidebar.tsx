@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   DownloadSimple,
   FilmSlate,
   FilmStrip,
@@ -8,12 +9,14 @@ import {
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase'
 
-export type Screen = 'library' | 'add' | 'series' | 'series-add' | 'import'
+export type Screen =
+  'library' | 'add' | 'series' | 'series-add' | 'webtoon' | 'webtoon-add' | 'import'
 
 interface Props {
   screen: Screen
   movieCount: number
   seriesCount: number
+  webtoonCount: number
   onNavigate: (screen: Screen) => void
 }
 
@@ -72,7 +75,13 @@ function NavSectionLabel({ children }: { children: string }): React.JSX.Element 
   )
 }
 
-export function Sidebar({ screen, movieCount, seriesCount, onNavigate }: Props): React.JSX.Element {
+export function Sidebar({
+  screen,
+  movieCount,
+  seriesCount,
+  webtoonCount,
+  onNavigate
+}: Props): React.JSX.Element {
   return (
     <div
       style={{
@@ -121,6 +130,20 @@ export function Sidebar({ screen, movieCount, seriesCount, onNavigate }: Props):
           onClick={() => onNavigate('series-add')}
         />
 
+        <NavSectionLabel>웹툰</NavSectionLabel>
+        <NavItem
+          active={screen === 'webtoon'}
+          icon={<BookOpen size={17} />}
+          label="웹툰"
+          onClick={() => onNavigate('webtoon')}
+        />
+        <NavItem
+          active={screen === 'webtoon-add'}
+          icon={<MagnifyingGlass size={17} />}
+          label="검색 · 추가"
+          onClick={() => onNavigate('webtoon-add')}
+        />
+
         <div style={{ height: 8 }} />
         <NavItem
           active={screen === 'import'}
@@ -140,7 +163,7 @@ export function Sidebar({ screen, movieCount, seriesCount, onNavigate }: Props):
             lineHeight: 1.5
           }}
         >
-          영화 {movieCount}편 · 시리즈 {seriesCount}편 보관 중
+          영화 {movieCount}편 · 시리즈 {seriesCount}편 · 웹툰 {webtoonCount}편 보관 중
         </div>
         <div
           onClick={() => supabase.auth.signOut()}

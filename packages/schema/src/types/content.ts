@@ -35,6 +35,16 @@ export interface DramaMetadata {
   relatedContentItemIds: string[]
 }
 
+export interface WebtoonMetadata {
+  author: string | null
+  genres: string[]
+  tags: string[]
+  overview: string | null
+  isFinished: boolean
+  totalEpisodes: number | null
+  sourceUrl: string | null
+}
+
 interface ContentItemBase {
   id: string
   userId: string
@@ -45,11 +55,11 @@ interface ContentItemBase {
   createdAt: string
 }
 
-// 책/웹툰의 metadata 필드는 아직 미정 (ARCHITECTURE.md 7절 참고) — 확정되면 MovieMetadata처럼 구체 타입을 채운다.
+// 책의 metadata 필드는 아직 미정 (ARCHITECTURE.md 7절 참고) — 확정되면 MovieMetadata처럼 구체 타입을 채운다.
 export type ContentItem =
   | (ContentItemBase & { type: 'movie'; metadata: MovieMetadata })
   | (ContentItemBase & { type: 'book'; metadata: Record<string, unknown> })
-  | (ContentItemBase & { type: 'webtoon'; metadata: Record<string, unknown> })
+  | (ContentItemBase & { type: 'webtoon'; metadata: WebtoonMetadata })
   | (ContentItemBase & { type: 'drama'; metadata: DramaMetadata })
 
 export interface UserRecord {

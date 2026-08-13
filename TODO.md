@@ -1,4 +1,4 @@
-# TODO — 1차 목표: 데스크톱 앱 + 영화·시리즈 콘텐츠 관리
+# TODO — 1차 목표: 데스크톱 앱 + 영화·시리즈·웹툰 콘텐츠 관리
 
 > 기준 문서: [ARCHITECTURE.md](./ARCHITECTURE.md)
 > 왓챠피디아는 공식 API/내보내기 기능이 없어 로그인 세션 크롤링(Playwright 등)을 1차 범위에서 제외하고, 우선 **TMDB API + 수동 입력**으로 영화 관리 MVP를 완성했다. 이후 왓챠 데이터 이전은 크롤링 대신, 커뮤니티 북마클릿 스크립트로 사용자가 직접 CSV로 내보낸 뒤 앱에서 가져오는 방식(Phase 9)으로 해결.
@@ -81,6 +81,17 @@
 - [x] 콘텐츠 타입 무관하게 재사용되던 로직을 공용 위치로 정리: `wishlist.ts`/`userRecords.ts` → `lib/`, `StatusQuickEdit.tsx`/`FilterDropdown.tsx` → `components/`
 - [ ] 왓챠 가져오기(Phase 9)는 아직 영화 전용 — 시리즈(TV) 확장은 미착수
 
+## Phase 11 — 웹툰 지원
+
+- [x] 웹툰 API 조사 — TMDB 같은 공식 API 없음. 후보로 검토한 오픈소스 통합 API([korea-webtoon-api](https://github.com/HyeokjaeLee/korea-webtoon-api))는 목록 조회만 있고 장르/줄거리/평점이 없는 데다 공개 호스팅 인스턴스도 죽어있어서 제외. 대신 네이버웹툰 웹사이트 자체가 쓰는 비공식 내부 API를 브라우저 개발자도구로 직접 찾아서 사용
+- [x] 네이버웹툰 비공식 API 엔드포인트 3개 확보 — 검색 `GET /api/search/all?keyword=`, 상세 `GET /api/article/list/info?titleId=`, 회차수 `GET /api/article/list?titleId=&page=1`
+- [x] `WebtoonMetadata` 타입 추가 (`packages/schema`) — author/genres/tags/overview/isFinished/totalEpisodes/sourceUrl
+- [x] 네이버웹툰 API는 CORS를 허용하지 않아 렌더러에서 직접 fetch가 막힐 수 있어서, 메인 프로세스에 IPC 핸들러(`naver-webtoon:request`, comic.naver.com 도메인만 허용)를 두고 그쪽에서 대신 요청 — `src/main/index.ts`, `preload`, `lib/naverWebtoon.ts`
+- [x] `content_items.type = 'webtoon'`으로 저장, `source: 'naver'` (스키마에 이미 허용돼 있어 DB 마이그레이션 불필요) — `features/webtoons/api.ts`
+- [x] 웹툰 라이브러리/검색·추가/상세팝업(`features/webtoons/LibraryView.tsx`, `NaverSearch.tsx`, `AddWebtoonScreen.tsx`, `WebtoonDetail.tsx`) — 영화/시리즈와 같은 틀이지만 필드는 웹툰에 맞게 구성: 감독→작가, 예고편/러닝타임/국가 없음, 대신 해시태그와 원본링크(comic.naver.com) 추가
+- [x] 사이드바에 "웹툰" 섹션 추가 (라이브러리 + 검색·추가)
+- [ ] 왓챠 가져오기(Phase 9)는 아직 영화 전용 — 웹툰 확장은 미착수
+
 ## Phase 7 — 패키징
 
 - [ ] electron-builder 설정
@@ -91,6 +102,6 @@
 
 ## 2차 범위 (지금은 손대지 않음)
 
-- 책/웹툰 등 타 콘텐츠 타입 확장
+- 책 등 타 콘텐츠 타입 확장
 - 원작-각색 콘텐츠 간 관계 모델링
 - 모바일 앱 (`apps/mobile`) 분리 및 `packages/schema` 공유

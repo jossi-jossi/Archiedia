@@ -54,6 +54,25 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
+  // 네이버웹툰 내부 API는 CORS를 허용하지 않는 비공식 API라, 렌더러(브라우저 컨텍스트)에서
+  // 직접 fetch하면 막힐 수 있다. CORS 제약이 없는 메인 프로세스에서 대신 요청한다.
+  // 임의 URL을 프록시하면 위험하니 comic.naver.com 도메인으로만 제한한다.
+  ipcMain.handle('naver-webtoon:request', async (_event, url: string) => {
+    const parsed = new URL(url)
+    if (parsed.hostname !== 'comic.naver.com') {
+      throw new Error('허용되지 않은 도메인입니다')
+    }
+    const res = await fetch(url, {
+      headers: {
+        Referer: 'https://comic.naver.com/',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    })
+    if (!res.ok) throw new Error(`네이버웹툰 API 요청 실패 (${res.status})`)
+    return res.json()
+  })
+
   createWindow()
 
   app.on('activate', function () {
