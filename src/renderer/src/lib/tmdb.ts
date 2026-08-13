@@ -171,6 +171,7 @@ interface TmdbTvDetail {
   genres: { name: string }[]
   production_countries: { iso_3166_1: string; name: string }[]
   seasons: { season_number: number }[]
+  created_by: { name: string }[]
   videos: {
     results: { site: string; type: string; key: string }[]
   }
@@ -190,11 +191,13 @@ interface TmdbSeasonDetail {
   }
 }
 
-// 시즌 자체 예고편이 없으면(신작 등) 쇼 전체 예고편(fallbackTrailerUrl)으로 대체한다.
+// 시즌 자체 예고편/감독 정보가 없으면(TMDB 크루 데이터가 비어있는 경우가 흔함) 쇼 전체
+// 값(예고편은 fallbackTrailerUrl, 감독은 fallbackDirector=제작자/크리에이터)으로 대체한다.
 async function getSeasonDetail(
   tvId: number,
   seasonNumber: number,
-  fallbackTrailerUrl: string | null
+  fallbackTrailerUrl: string | null,
+  fallbackDirector: string | null
 ): Promise<DramaSeasonMetadata> {
   const url = new URL(`${API_BASE}/tv/${tvId}/season/${seasonNumber}`)
   url.searchParams.set('api_key', apiKey())
@@ -209,7 +212,7 @@ async function getSeasonDetail(
       overview: null,
       episodeCount: 0,
       runtimeMinutes: null,
-      director: null,
+      director: fallbackDirector,
       actors: [],
       trailerUrl: fallbackTrailerUrl
     }
@@ -225,7 +228,9 @@ async function getSeasonDetail(
   const director =
     Array.from(
       new Set(data.credits.crew.filter((c) => c.job === 'Director').map((c) => c.name))
-    ).join(', ') || null
+    ).join(', ') ||
+    fallbackDirector ||
+    null
   const seasonPath = `tv/${tvId}/season/${seasonNumber}`
   const trailerKey =
     findTrailerKey(data.videos.results) ?? (await fetchFallbackTrailerKey(seasonPath))
@@ -264,6 +269,7 @@ export async function getTvDetails(id: number): Promise<TmdbTvDetails> {
   const trailerKey =
     findTrailerKey(data.videos.results) ?? (await fetchFallbackTrailerKey(`tv/${id}`))
   const showTrailerUrl = trailerKey ? `https://www.youtube.com/watch?v=${trailerKey}` : null
+  const showDirector = data.created_by.map((c) => c.name).join(', ') || null
 
   // season_number 0은 "스페셜"이라 정규 시즌 목록/개수에서 제외한다.
   const seasonNumbers = data.seasons
@@ -271,7 +277,7 @@ export async function getTvDetails(id: number): Promise<TmdbTvDetails> {
     .filter((n) => n > 0)
     .sort((a, b) => a - b)
   const seasons = await Promise.all(
-    seasonNumbers.map((n) => getSeasonDetail(id, n, showTrailerUrl))
+    seasonNumbers.map((n) => getSeasonDetail(id, n, showTrailerUrl, showDirector))
   )
 
   return {

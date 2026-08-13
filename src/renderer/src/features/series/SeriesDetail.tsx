@@ -24,6 +24,23 @@ function seasonLabel(season: DramaSeasonMetadata): string {
   return season.name && season.name !== fallback ? `${fallback}: ${season.name}` : fallback
 }
 
+// 다른 태그와 박스가 정확히 같아야 해서 button 대신 a에 직접 .tag를 준다.
+// button은 UA 기본 스타일(폰트/패딩/박스사이징) 때문에 높이가 미세하게 어긋난다.
+function TrailerTag({ url }: { url: string }): React.JSX.Element {
+  return (
+    <a
+      className="tag tag-outline"
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      style={{ gap: 4, textDecoration: 'none', cursor: 'pointer' }}
+    >
+      <PlayCircle size={12} style={{ display: 'block' }} />
+      예고편 보기
+    </a>
+  )
+}
+
 function SeasonSelect({
   seasons,
   selectedIndex,
@@ -49,18 +66,10 @@ function SeasonSelect({
       <div
         className="tag tag-outline"
         onClick={() => setOpen((o) => !o)}
-        style={{
-          cursor: 'pointer',
-          padding: '0 10px',
-          height: 20,
-          boxSizing: 'border-box',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 5
-        }}
+        style={{ cursor: 'pointer', gap: 5 }}
       >
         {seasonLabel(seasons[selectedIndex])}
-        <CaretDown size={9} />
+        <CaretDown size={9} style={{ display: 'block' }} />
       </div>
       {open && (
         <div
@@ -274,19 +283,8 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                     <span className="tag tag-outline">{selectedSeason.runtimeMinutes}분</span>
                   )}
                   {meta.country && <span className="tag tag-outline">{meta.country}</span>}
-                  {selectedSeason?.trailerUrl && (
-                    // 다른 태그와 박스가 정확히 같아야 해서 button 대신 a에 직접 .tag를 준다.
-                    // button은 UA 기본 스타일(폰트/패딩/박스사이징) 때문에 높이가 미세하게 어긋난다.
-                    <a
-                      className="tag tag-outline"
-                      href={selectedSeason.trailerUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ gap: 4, textDecoration: 'none', cursor: 'pointer' }}
-                    >
-                      <PlayCircle size={12} style={{ display: 'block' }} />
-                      예고편 보기
-                    </a>
+                  {!isMultiSeason && selectedSeason?.trailerUrl && (
+                    <TrailerTag url={selectedSeason.trailerUrl} />
                   )}
                 </div>
                 {isMultiSeason && (
@@ -306,6 +304,7 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                     {selectedSeason && (
                       <span className="tag tag-outline">{selectedSeason.episodeCount}부</span>
                     )}
+                    {selectedSeason?.trailerUrl && <TrailerTag url={selectedSeason.trailerUrl} />}
                   </div>
                 )}
                 <div
