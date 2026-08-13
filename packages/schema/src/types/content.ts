@@ -47,6 +47,9 @@ export interface WebtoonMetadata {
   // 캐릭터 컷아웃(posterUrl)을 얹는 2겹 카드 구조라 배경 이미지를 따로 저장해서 합성
   // 렌더링한다. 네이버는 항상 null.
   backgroundImageUrl: string | null
+  // 연재 중인 작품은 화수·썸네일이 계속 바뀌므로, 마지막으로 원본에서 다시 받아온 시각을
+  // 기록해서 오래된 것만 자동으로 다시 받아오게 한다.
+  lastSyncedAt: string | null
 }
 
 interface ContentItemBase {

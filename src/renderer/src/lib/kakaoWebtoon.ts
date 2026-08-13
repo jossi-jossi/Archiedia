@@ -129,7 +129,8 @@ export async function getWebtoonDetails(result: WebtoonSearchResult): Promise<We
       isFinished: isFinished(profile.data.badges ?? []),
       totalEpisodes: episodes.meta.pagination.totalCount ?? null,
       sourceUrl: `https://webtoon.kakao.com/content/${result.seoId}/${result.id}`,
-      backgroundImageUrl: result.backgroundImageUrl
+      backgroundImageUrl: result.backgroundImageUrl,
+      lastSyncedAt: new Date().toISOString()
     }
   }
 }

@@ -6,6 +6,7 @@ import { FilterDropdown } from '../../components/FilterDropdown'
 import { StatusQuickEdit } from '../../components/StatusQuickEdit'
 import { displayTag, isWishlisted } from '../../lib/wishlist'
 import { webtoonPosterFill } from './poster'
+import { syncStaleOngoingWebtoons } from './autoSync'
 
 interface Props {
   onSelect: (id: string) => void
@@ -159,6 +160,25 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
       .then((result) => {
         setWebtoons(result)
         onCountChange(result.length)
+        // 연재중인데 오래 갱신 안 된 항목을 백그라운드에서 조용히 다시 받아온다.
+        // 로딩 상태와는 무관하게 각 항목이 끝나는 대로 하나씩 갱신되게 한다.
+        syncStaleOngoingWebtoons(result, (id, patch) => {
+          setWebtoons((prev) =>
+            prev.map((w) =>
+              w.item.id === id
+                ? {
+                    ...w,
+                    item: {
+                      ...w.item,
+                      title: patch.title,
+                      posterUrl: patch.posterUrl,
+                      metadata: patch.metadata
+                    }
+                  }
+                : w
+            )
+          )
+        })
       })
       .catch((err) => setError(errorMessage(err)))
       .finally(() => setLoading(false))

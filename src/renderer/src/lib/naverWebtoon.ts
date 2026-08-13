@@ -115,7 +115,8 @@ export async function getWebtoonDetails(titleId: number): Promise<WebtoonDetails
       isFinished: info.finished,
       totalEpisodes: articles.totalCount ?? null,
       sourceUrl: `https://comic.naver.com/webtoon/list?titleId=${titleId}`,
-      backgroundImageUrl: null
+      backgroundImageUrl: null,
+      lastSyncedAt: new Date().toISOString()
     }
   }
 }

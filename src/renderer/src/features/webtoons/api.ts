@@ -102,6 +102,22 @@ export async function createWebtoon(input: CreateWebtoonInput): Promise<string> 
   return itemRow.id as string
 }
 
+export interface RefetchWebtoonInput {
+  title: string
+  posterUrl: string | null
+  metadata: WebtoonMetadata
+}
+
+// 원본 사이트에서 최신 정보를 다시 받아와서 기존 항목의 title/posterUrl/metadata만 덮어쓴다.
+// (외부 ID·소스·사용자 기록은 그대로 유지) 연재중 작품 자동 동기화에 쓰인다.
+export async function refetchWebtoon(id: string, input: RefetchWebtoonInput): Promise<void> {
+  const { error } = await supabase
+    .from('content_items')
+    .update({ title: input.title, poster_url: input.posterUrl, metadata: input.metadata })
+    .eq('id', id)
+  if (error) throw error
+}
+
 export async function deleteWebtoon(id: string): Promise<void> {
   // user_records.content_item_id는 on delete cascade라 같이 지워진다.
   const { error } = await supabase.from('content_items').delete().eq('id', id)

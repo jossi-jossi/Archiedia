@@ -172,7 +172,7 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                         rel="noreferrer"
                         style={{ color: 'inherit', textDecoration: 'underline' }}
                       >
-                        원본 링크(바로가기)
+                        바로가기
                       </a>
                     </>
                   )}
