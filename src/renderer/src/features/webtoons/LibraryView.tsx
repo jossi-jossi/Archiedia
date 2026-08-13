@@ -7,6 +7,7 @@ import { StatusQuickEdit } from '../../components/StatusQuickEdit'
 import { displayTag, isWishlisted } from '../../lib/wishlist'
 import { webtoonPosterFill } from './poster'
 import { syncStaleOngoingWebtoons } from './autoSync'
+import { SourceLogo } from './sourceLogo'
 
 interface Props {
   onSelect: (id: string) => void
@@ -470,10 +471,15 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                 }}
               >
                 <div style={poster(item)}>
+                  <SourceLogo
+                    source={item.source}
+                    size={22}
+                    style={{ position: 'absolute', top: 8, left: 8 }}
+                  />
                   {record && isWishlisted(record.tags) && (
                     <div
                       className="tag tag-accent-2"
-                      style={{ position: 'absolute', top: 8, left: 8 }}
+                      style={{ position: 'absolute', top: 8, left: 36 }}
                     >
                       보고 싶어요
                     </div>
@@ -573,13 +579,27 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                     <div
                       title={item.title}
                       style={{
-                        fontWeight: 500,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        minWidth: 0
                       }}
                     >
-                      {item.title}
+                      <span
+                        style={{
+                          fontWeight: 500,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}
+                      >
+                        {item.title}
+                      </span>
+                      <SourceLogo
+                        source={item.source}
+                        size={item.source === 'kakao' ? 16 : 13}
+                        style={item.source === 'naver' ? { marginTop: -1 } : undefined}
+                      />
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--color-neutral-500)' }}>
                       {item.metadata.author ?? '—'}

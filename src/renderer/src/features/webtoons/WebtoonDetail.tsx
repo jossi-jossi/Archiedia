@@ -5,6 +5,7 @@ import { isWishlisted, withoutStatusTags } from '../../lib/wishlist'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
 import { webtoonPosterFill } from './poster'
+import { SourceLogo } from './sourceLogo'
 
 interface Props {
   webtoonId: string
@@ -137,12 +138,19 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                 height: POSTER_HEIGHT,
                 alignSelf: 'center',
                 flex: 'none',
+                position: 'relative',
                 borderRadius: 'var(--radius-md)',
                 overflow: 'hidden',
                 boxShadow: 'var(--shadow-md)',
                 ...webtoonPosterFill(webtoon.posterUrl, meta.backgroundImageUrl)
               }}
-            />
+            >
+              <SourceLogo
+                source={webtoon.source}
+                size={32}
+                style={{ position: 'absolute', top: 10, left: 10 }}
+              />
+            </div>
             <div
               style={{
                 flex: 1,

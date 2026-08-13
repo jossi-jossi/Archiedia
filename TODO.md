@@ -93,7 +93,7 @@
 - [x] 왓챠 가져오기(Phase 9) 웹툰 지원 추가 — 연도 매칭이 의미 없어서 제목만으로 매칭 (네이버웹툰만, 카카오웹툰은 미포함)
 - [x] 카카오웹툰 소스 추가 — 비공식 API 엔드포인트 3개 확보: 검색 `GET gateway-kw.kakao.com/search/v2/content`, 상세 `GET .../decorator/v2/decorator/contents/{id}/profile`, 회차수 `GET .../episode/v2/views/content-home/contents/{id}/episodes`(meta.pagination.totalCount). 완결 여부는 상세 응답의 `badges`에서 `{type: 'STATUS', title: 'COMPLETED'}` 여부로 판별
 - [x] 카카오웹툰은 네이버와 달리 완성된 포스터 이미지가 없고 배경색(`backgroundColor`) 위에 캐릭터 컷아웃(투명 PNG)을 얹는 카드 구조라, `WebtoonMetadata.backgroundColor`에 배경색을 저장하고 `features/webtoons/poster.ts`에서 배경색+`background-size: contain` 합성으로 렌더링 (네이버는 이 필드가 항상 null, 기존 cover 방식 유지)
-- [x] 검색·추가 화면에 네이버/카카오 소스 토글 추가 — `AddWebtoonScreen.tsx`, `KakaoSearch.tsx`
+- [x] 검색·추가 화면에서 네이버/카카오를 동시에 검색해서 한 목록에 합쳐서 보여줌(각 카드에 출처 배지 표시) — `WebtoonSearch.tsx`가 `NaverSearch.tsx`/`KakaoSearch.tsx`(소스별 탭 방식)를 대체
 - [ ] 카카오웹툰 왓챠 가져오기 지원은 아직 미착수 (제목 매칭이 네이버와 카카오 양쪽에 걸칠 수 있어서 별도 논의 필요)
 
 ## Phase 7 — 패키징
