@@ -163,6 +163,20 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                   {meta.author ?? '—'} · {meta.genres.join(', ') || '—'} |{' '}
                   {meta.totalEpisodes ? `${meta.totalEpisodes}화 ` : ''}
                   {meta.isFinished ? '완결' : '연재 중'}
+                  {meta.sourceUrl && (
+                    <>
+                      {' '}
+                      |{' '}
+                      <a
+                        href={meta.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ color: 'inherit', textDecoration: 'underline' }}
+                      >
+                        원본 링크(바로가기)
+                      </a>
+                    </>
+                  )}
                 </div>
                 {meta.tags.length > 0 && (
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
@@ -184,21 +198,6 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                   <div style={{ height: 70, overflowY: 'auto', paddingRight: 4 }}>
                     {meta.overview || '—'}
                   </div>
-                  {meta.sourceUrl && (
-                    <a
-                      href={meta.sourceUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        display: 'block',
-                        marginTop: 8,
-                        color: 'var(--color-accent)',
-                        wordBreak: 'break-all'
-                      }}
-                    >
-                      {meta.sourceUrl}
-                    </a>
-                  )}
                 </div>
 
                 <div className="hr" />
