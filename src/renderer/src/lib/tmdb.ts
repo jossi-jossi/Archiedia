@@ -50,6 +50,7 @@ interface TmdbMovieDetail {
   release_date: string
   runtime: number | null
   poster_path: string | null
+  overview: string
   genres: { name: string }[]
   production_countries: { iso_3166_1: string; name: string }[]
   credits: {
@@ -125,6 +126,7 @@ export async function getMovieDetails(id: number): Promise<TmdbMovieDetails> {
         data.production_countries[0]?.name ?? null
       ),
       trailerUrl: trailerKey ? `https://www.youtube.com/watch?v=${trailerKey}` : null,
+      overview: data.overview || null,
       relatedContentItemIds: []
     }
   }

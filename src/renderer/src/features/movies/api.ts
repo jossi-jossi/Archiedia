@@ -107,6 +107,39 @@ export async function deleteMovie(id: string): Promise<void> {
   if (error) throw error
 }
 
+export interface MovieOverviewRef {
+  id: string
+  externalId: string
+}
+
+// 줄거리(overview) 필드가 없는 기존 보관작 목록 — 이 필드는 나중에 추가돼서, 그 전에
+// 보관한 영화들은 metadata에 값이 비어있다.
+export async function getMoviesMissingOverview(): Promise<MovieOverviewRef[]> {
+  const { data, error } = await supabase
+    .from('content_items')
+    .select('id, external_id, metadata')
+    .eq('type', 'movie')
+    .eq('source', 'tmdb')
+  if (error) throw error
+
+  return (data ?? [])
+    .filter((row) => !(row.metadata as { overview?: string | null })?.overview)
+    .map((row) => ({ id: row.id as string, externalId: row.external_id as string }))
+    .filter((ref) => ref.externalId)
+}
+
+export async function updateMovieMetadata(
+  id: string,
+  metadata: MovieMetadata,
+  posterUrl: string | null
+): Promise<void> {
+  const { error } = await supabase
+    .from('content_items')
+    .update({ metadata, poster_url: posterUrl })
+    .eq('id', id)
+  if (error) throw error
+}
+
 export async function getArchivedTmdbIds(): Promise<Set<string>> {
   const { data, error } = await supabase
     .from('content_items')

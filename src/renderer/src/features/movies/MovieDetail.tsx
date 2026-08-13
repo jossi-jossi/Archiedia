@@ -193,7 +193,15 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                 <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
                   {meta.originalTitle ?? movie.title} · {meta.releaseYear ?? '—'}
                 </div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    flexWrap: 'wrap',
+                    marginTop: 12
+                  }}
+                >
                   {meta.genres.map((g) => (
                     <span key={g} className="tag tag-neutral">
                       {g}
@@ -203,6 +211,20 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                     <span className="tag tag-outline">{meta.runtimeMinutes}분</span>
                   )}
                   {meta.country && <span className="tag tag-outline">{meta.country}</span>}
+                  {meta.trailerUrl && (
+                    // 다른 태그와 박스가 정확히 같아야 해서 button 대신 a에 직접 .tag를 준다.
+                    // button은 UA 기본 스타일(폰트/패딩/박스사이징) 때문에 높이가 미세하게 어긋난다.
+                    <a
+                      className="tag tag-outline"
+                      href={meta.trailerUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ gap: 4, textDecoration: 'none', cursor: 'pointer' }}
+                    >
+                      <PlayCircle size={12} style={{ display: 'block' }} />
+                      예고편 보기
+                    </a>
+                  )}
                 </div>
                 <div
                   style={{
@@ -220,19 +242,16 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                     <span style={{ color: 'var(--color-neutral-500)' }}>출연</span> &nbsp;
                     {meta.actors.length ? meta.actors.join(', ') : '—'}
                   </div>
+                  <div style={{ marginTop: 8 }}>
+                    <span style={{ color: 'var(--color-neutral-500)' }}>줄거리</span>
+                    <div style={{ marginTop: 4, height: 80, overflowY: 'auto', paddingRight: 4 }}>
+                      {meta.overview || '—'}
+                    </div>
+                  </div>
                 </div>
-                {meta.trailerUrl && (
-                  <a href={meta.trailerUrl} target="_blank" rel="noreferrer">
-                    <button className="btn btn-secondary" style={{ marginTop: 12 }} type="button">
-                      <PlayCircle />
-                      예고편 보기
-                    </button>
-                  </a>
-                )}
 
                 <div className="hr" />
 
-                <h4 style={{ marginBottom: 10 }}>나의 기록</h4>
                 {record && (
                   <div
                     style={{
@@ -241,53 +260,55 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                       gap: 12
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      {Array.from({ length: 5 }).map((_, i) => {
-                        const fill = Math.max(0, Math.min(1, (record.myRating ?? 0) - i))
-                        return (
-                          <div
-                            key={i}
-                            style={{
-                              position: 'relative',
-                              width: 18,
-                              height: 18,
-                              cursor: 'pointer'
-                            }}
-                            onClick={(e) => {
-                              const rect = e.currentTarget.getBoundingClientRect()
-                              const half = e.clientX - rect.left < rect.width / 2
-                              save({ myRating: i + (half ? 0.5 : 1) })
-                            }}
-                          >
-                            <Star
-                              size={18}
-                              weight="fill"
-                              color="var(--color-neutral-700)"
-                              style={{ position: 'absolute', top: 0, left: 0 }}
-                            />
-                            <div
-                              style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                height: 18,
-                                overflow: 'hidden',
-                                width: fill * 18
-                              }}
-                            >
-                              <Star
-                                size={18}
-                                weight="fill"
-                                color="var(--color-accent)"
-                                style={{ position: 'absolute', top: 0, left: 0 }}
-                              />
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                      <div className="field">
+                        <label>평점</label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, height: 36 }}>
+                          {Array.from({ length: 5 }).map((_, i) => {
+                            const fill = Math.max(0, Math.min(1, (record.myRating ?? 0) - i))
+                            return (
+                              <div
+                                key={i}
+                                style={{
+                                  position: 'relative',
+                                  width: 18,
+                                  height: 18,
+                                  cursor: 'pointer'
+                                }}
+                                onClick={(e) => {
+                                  const rect = e.currentTarget.getBoundingClientRect()
+                                  const half = e.clientX - rect.left < rect.width / 2
+                                  save({ myRating: i + (half ? 0.5 : 1) })
+                                }}
+                              >
+                                <Star
+                                  size={18}
+                                  weight="fill"
+                                  color="var(--color-neutral-700)"
+                                  style={{ position: 'absolute', top: 0, left: 0 }}
+                                />
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    height: 18,
+                                    overflow: 'hidden',
+                                    width: fill * 18
+                                  }}
+                                >
+                                  <Star
+                                    size={18}
+                                    weight="fill"
+                                    color="var(--color-accent)"
+                                    style={{ position: 'absolute', top: 0, left: 0 }}
+                                  />
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
                       <div className="field">
                         <label>시청 횟수</label>
                         <input
@@ -301,29 +322,6 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                             setRecord({ ...record, watchCount: Number(e.target.value) || 0 })
                           }
                           onBlur={() => save({ watchCount: record.watchCount })}
-                        />
-                      </div>
-                      <div className="field">
-                        <label>마지막 시청일</label>
-                        <input
-                          className="input"
-                          type="text"
-                          placeholder="YYYY-MM-DD"
-                          value={record.lastWatchedAt ?? ''}
-                          onChange={(e) =>
-                            setRecord({ ...record, lastWatchedAt: e.target.value || null })
-                          }
-                          onBlur={() => save({ lastWatchedAt: record.lastWatchedAt })}
-                        />
-                      </div>
-                      <div className="field">
-                        <label>시청 매체</label>
-                        <input
-                          className="input"
-                          value={record.watchMedium ?? ''}
-                          onChange={(e) => setRecord({ ...record, watchMedium: e.target.value })}
-                          onBlur={() => save({ watchMedium: record.watchMedium })}
-                          placeholder="극장 / OTT / 블루레이 등"
                         />
                       </div>
                       <div className="field">
@@ -345,6 +343,32 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                           <Heart weight={isWishlisted(record.tags) ? 'fill' : 'regular'} />
                           보고 싶어요
                         </button>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <div className="field">
+                        <label>시청 매체</label>
+                        <input
+                          className="input"
+                          value={record.watchMedium ?? ''}
+                          onChange={(e) => setRecord({ ...record, watchMedium: e.target.value })}
+                          onBlur={() => save({ watchMedium: record.watchMedium })}
+                          placeholder="극장 / OTT / 블루레이 등"
+                        />
+                      </div>
+                      <div className="field">
+                        <label>마지막 시청일</label>
+                        <input
+                          className="input"
+                          type="text"
+                          placeholder="YYYY-MM-DD"
+                          value={record.lastWatchedAt ?? ''}
+                          onChange={(e) =>
+                            setRecord({ ...record, lastWatchedAt: e.target.value || null })
+                          }
+                          onBlur={() => save({ lastWatchedAt: record.lastWatchedAt })}
+                        />
                       </div>
                     </div>
 

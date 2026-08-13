@@ -9,6 +9,7 @@ export interface MovieMetadata {
   runtimeMinutes: number | null
   country: string | null
   trailerUrl: string | null
+  overview: string | null
   relatedContentItemIds: string[]
 }
 
