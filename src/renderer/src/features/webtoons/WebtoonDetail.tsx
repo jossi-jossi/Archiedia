@@ -179,7 +179,7 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                 </div>
                 {meta.tags.length > 0 && (
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
-                    {meta.tags.map((tag) => (
+                    {meta.tags.slice(0, 10).map((tag) => (
                       <span key={tag} className="tag tag-neutral">
                         {tag}
                       </span>

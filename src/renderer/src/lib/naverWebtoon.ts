@@ -19,7 +19,8 @@ interface NaverGenre {
   description: string
 }
 
-// 장르 태그(curationType이 GENRE_로 시작)와 순수 해시태그(CUSTOM_TAG)를 구분해서 뽑는다.
+// 장르 태그(curationType이 GENRE_로 시작)를 장르로 뽑고, 나머지 중 FINISH_GENRE_*(완결작에
+// 붙는 "완결+장르" 조합 태그, 예: 완결개그)를 뺀 나머지를 해시태그로 뽑는다.
 function extractGenresAndTags(
   tagList: NaverCurationTag[] | undefined,
   genreList: NaverGenre[] | undefined
@@ -28,7 +29,11 @@ function extractGenresAndTags(
     ? genreList.map((g) => g.description)
     : (tagList ?? []).filter((t) => t.curationType.startsWith('GENRE_')).map((t) => t.tagName)
 
-  const tags = (tagList ?? []).filter((t) => t.curationType === 'CUSTOM_TAG').map((t) => t.tagName)
+  const tags = (tagList ?? [])
+    .filter(
+      (t) => !t.curationType.startsWith('GENRE_') && !t.curationType.startsWith('FINISH_GENRE_')
+    )
+    .map((t) => t.tagName)
 
   return { genres: Array.from(new Set(genres)), tags: Array.from(new Set(tags)) }
 }
