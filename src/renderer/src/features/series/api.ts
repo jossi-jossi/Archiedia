@@ -107,6 +107,42 @@ export async function deleteSeries(id: string): Promise<void> {
   if (error) throw error
 }
 
+export interface SeriesOverviewRef {
+  id: string
+  externalId: string
+}
+
+// 시즌별 줄거리(overview)가 비어있는 보관작 목록 — 시즌 단위 metadata 구조가 나중에
+// 추가돼서, 그 전에 보관했거나 TMDB에 시즌 줄거리가 비어있던 항목은 값이 없다.
+export async function getSeriesMissingOverview(): Promise<SeriesOverviewRef[]> {
+  const { data, error } = await supabase
+    .from('content_items')
+    .select('id, external_id, metadata')
+    .eq('type', 'drama')
+    .eq('source', 'tmdb')
+  if (error) throw error
+
+  return (data ?? [])
+    .filter((row) => {
+      const seasons = (row.metadata as { seasons?: { overview?: string | null }[] })?.seasons
+      return !seasons || seasons.length === 0 || seasons.some((s) => !s.overview)
+    })
+    .map((row) => ({ id: row.id as string, externalId: row.external_id as string }))
+    .filter((ref) => ref.externalId)
+}
+
+export async function updateSeriesMetadata(
+  id: string,
+  metadata: DramaMetadata,
+  posterUrl: string | null
+): Promise<void> {
+  const { error } = await supabase
+    .from('content_items')
+    .update({ metadata, poster_url: posterUrl })
+    .eq('id', id)
+  if (error) throw error
+}
+
 export async function getArchivedTmdbTvIds(): Promise<Set<string>> {
   const { data, error } = await supabase
     .from('content_items')
