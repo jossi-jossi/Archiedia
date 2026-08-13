@@ -3,8 +3,8 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 const api = {
-  naverWebtoon: {
-    request: (url: string): Promise<unknown> => ipcRenderer.invoke('naver-webtoon:request', url)
+  webtoon: {
+    request: (url: string): Promise<unknown> => ipcRenderer.invoke('webtoon:request', url)
   }
 }
 

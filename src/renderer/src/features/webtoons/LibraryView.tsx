@@ -5,6 +5,7 @@ import { errorMessage } from '../../lib/errors'
 import { FilterDropdown } from '../../components/FilterDropdown'
 import { StatusQuickEdit } from '../../components/StatusQuickEdit'
 import { displayTag, isWishlisted } from '../../lib/wishlist'
+import { webtoonPosterFill } from './poster'
 
 interface Props {
   onSelect: (id: string) => void
@@ -63,14 +64,15 @@ function StarRating({ rating }: { rating: number | null }): React.JSX.Element {
 }
 
 // 네이버웹툰 썸네일 실측 비율 (480×623).
-const poster = (url: string | null): React.CSSProperties => ({
+const poster = (item: {
+  posterUrl: string | null
+  metadata: { backgroundImageUrl: string | null }
+}): React.CSSProperties => ({
   aspectRatio: '480 / 623',
   borderRadius: 'var(--radius-md)',
   position: 'relative',
   overflow: 'hidden',
-  background: url
-    ? `center / cover no-repeat url(${url})`
-    : 'repeating-linear-gradient(45deg, var(--color-neutral-800), var(--color-neutral-800) 8px, var(--color-neutral-900) 8px, var(--color-neutral-900) 16px)'
+  ...webtoonPosterFill(item.posterUrl, item.metadata.backgroundImageUrl)
 })
 
 function parseWatchedAt(value: string | null | undefined): number {
@@ -435,7 +437,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                   minWidth: 0
                 }}
               >
-                <div style={poster(item.posterUrl)}>
+                <div style={poster(item)}>
                   {record && isWishlisted(record.tags) && (
                     <div
                       className="tag tag-accent-2"
@@ -530,7 +532,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                         height: 42,
                         borderRadius: 4,
                         margin: '0 auto',
-                        ...poster(item.posterUrl),
+                        ...poster(item),
                         aspectRatio: undefined
                       }}
                     />

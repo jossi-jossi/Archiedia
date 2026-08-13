@@ -85,12 +85,16 @@
 
 - [x] 웹툰 API 조사 — TMDB 같은 공식 API 없음. 후보로 검토한 오픈소스 통합 API([korea-webtoon-api](https://github.com/HyeokjaeLee/korea-webtoon-api))는 목록 조회만 있고 장르/줄거리/평점이 없는 데다 공개 호스팅 인스턴스도 죽어있어서 제외. 대신 네이버웹툰 웹사이트 자체가 쓰는 비공식 내부 API를 브라우저 개발자도구로 직접 찾아서 사용
 - [x] 네이버웹툰 비공식 API 엔드포인트 3개 확보 — 검색 `GET /api/search/all?keyword=`, 상세 `GET /api/article/list/info?titleId=`, 회차수 `GET /api/article/list?titleId=&page=1`
-- [x] `WebtoonMetadata` 타입 추가 (`packages/schema`) — author/genres/tags/overview/isFinished/totalEpisodes/sourceUrl
-- [x] 네이버웹툰 API는 CORS를 허용하지 않아 렌더러에서 직접 fetch가 막힐 수 있어서, 메인 프로세스에 IPC 핸들러(`naver-webtoon:request`, comic.naver.com 도메인만 허용)를 두고 그쪽에서 대신 요청 — `src/main/index.ts`, `preload`, `lib/naverWebtoon.ts`
-- [x] `content_items.type = 'webtoon'`으로 저장, `source: 'naver'` (스키마에 이미 허용돼 있어 DB 마이그레이션 불필요) — `features/webtoons/api.ts`
+- [x] `WebtoonMetadata` 타입 추가 (`packages/schema`) — author/genres/tags/overview/isFinished/totalEpisodes/sourceUrl/backgroundColor
+- [x] 웹툰 API는 CORS를 허용하지 않아 렌더러에서 직접 fetch가 막힐 수 있어서, 메인 프로세스에 IPC 핸들러(`webtoon:request`, 알려진 웹툰 도메인만 허용)를 두고 그쪽에서 대신 요청 — `src/main/index.ts`, `preload`, `lib/naverWebtoon.ts` / `lib/kakaoWebtoon.ts`
+- [x] `content_items.type = 'webtoon'`으로 저장, `source: 'naver' | 'kakao'` (스키마에 이미 허용돼 있어 DB 마이그레이션 불필요) — `features/webtoons/api.ts`
 - [x] 웹툰 라이브러리/검색·추가/상세팝업(`features/webtoons/LibraryView.tsx`, `NaverSearch.tsx`, `AddWebtoonScreen.tsx`, `WebtoonDetail.tsx`) — 영화/시리즈와 같은 틀이지만 필드는 웹툰에 맞게 구성: 감독→작가, 예고편/러닝타임/국가 없음, 대신 해시태그와 원본링크(comic.naver.com) 추가
 - [x] 사이드바에 "웹툰" 섹션 추가 (라이브러리 + 검색·추가)
-- [ ] 왓챠 가져오기(Phase 9)는 아직 영화 전용 — 웹툰 확장은 미착수
+- [x] 왓챠 가져오기(Phase 9) 웹툰 지원 추가 — 연도 매칭이 의미 없어서 제목만으로 매칭 (네이버웹툰만, 카카오웹툰은 미포함)
+- [x] 카카오웹툰 소스 추가 — 비공식 API 엔드포인트 3개 확보: 검색 `GET gateway-kw.kakao.com/search/v2/content`, 상세 `GET .../decorator/v2/decorator/contents/{id}/profile`, 회차수 `GET .../episode/v2/views/content-home/contents/{id}/episodes`(meta.pagination.totalCount). 완결 여부는 상세 응답의 `badges`에서 `{type: 'STATUS', title: 'COMPLETED'}` 여부로 판별
+- [x] 카카오웹툰은 네이버와 달리 완성된 포스터 이미지가 없고 배경색(`backgroundColor`) 위에 캐릭터 컷아웃(투명 PNG)을 얹는 카드 구조라, `WebtoonMetadata.backgroundColor`에 배경색을 저장하고 `features/webtoons/poster.ts`에서 배경색+`background-size: contain` 합성으로 렌더링 (네이버는 이 필드가 항상 null, 기존 cover 방식 유지)
+- [x] 검색·추가 화면에 네이버/카카오 소스 토글 추가 — `AddWebtoonScreen.tsx`, `KakaoSearch.tsx`
+- [ ] 카카오웹툰 왓챠 가져오기 지원은 아직 미착수 (제목 매칭이 네이버와 카카오 양쪽에 걸칠 수 있어서 별도 논의 필요)
 
 ## Phase 7 — 패키징
 

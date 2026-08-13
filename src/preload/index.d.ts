@@ -1,7 +1,7 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
 interface ArchiediaApi {
-  naverWebtoon: {
+  webtoon: {
     request: (url: string) => Promise<unknown>
   }
 }

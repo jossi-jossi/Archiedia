@@ -1,7 +1,7 @@
 import { Check, Plus } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import { errorMessage } from '../../lib/errors'
-import { getWebtoonDetails, searchWebtoons, WebtoonSearchResult } from '../../lib/naverWebtoon'
+import { getWebtoonDetails, searchWebtoons, WebtoonSearchResult } from '../../lib/kakaoWebtoon'
 import { createWebtoon, getArchivedWebtoonIds } from './api'
 import { webtoonPosterFill } from './poster'
 
@@ -12,7 +12,7 @@ interface Props {
 
 const SEARCH_DEBOUNCE_MS = 350
 
-export function NaverSearch({ query, onArchived }: Props): React.JSX.Element {
+export function KakaoSearch({ query, onArchived }: Props): React.JSX.Element {
   const [results, setResults] = useState<WebtoonSearchResult[]>([])
   const [searching, setSearching] = useState(false)
   const [archivingId, setArchivingId] = useState<number | null>(null)
@@ -20,7 +20,7 @@ export function NaverSearch({ query, onArchived }: Props): React.JSX.Element {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    getArchivedWebtoonIds('naver')
+    getArchivedWebtoonIds('kakao')
       .then(setArchivedIds)
       .catch((err) => setError(errorMessage(err)))
   }, [])
@@ -49,12 +49,12 @@ export function NaverSearch({ query, onArchived }: Props): React.JSX.Element {
     setError(null)
     setArchivingId(result.id)
     try {
-      const details = await getWebtoonDetails(result.id)
+      const details = await getWebtoonDetails(result)
       await createWebtoon({
         title: details.title,
         posterUrl: details.posterUrl,
         externalId: String(result.id),
-        source: 'naver',
+        source: 'kakao',
         metadata: details.metadata
       })
       setArchivedIds((prev) => new Set(prev).add(String(result.id)))
@@ -93,13 +93,13 @@ export function NaverSearch({ query, onArchived }: Props): React.JSX.Element {
                   height: 60,
                   flex: 'none',
                   borderRadius: 4,
-                  ...webtoonPosterFill(r.thumbnailUrl)
+                  ...webtoonPosterFill(r.posterUrl, r.backgroundImageUrl)
                 }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 500 }}>{r.title}</div>
                 <div style={{ fontSize: 12, color: 'var(--color-neutral-500)' }}>
-                  {r.author} · {r.genres.join(', ') || '—'}
+                  {r.authors ?? '—'} · {r.genre || '—'}
                 </div>
               </div>
               <button

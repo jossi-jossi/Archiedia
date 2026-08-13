@@ -5,7 +5,7 @@ import { getWebtoonDetails, searchWebtoons } from '../../lib/naverWebtoon'
 import { getMovieDetails, getTvDetails, searchMovies, searchTv } from '../../lib/tmdb'
 import { createMovie, getArchivedTmdbIds } from './api'
 import { createSeries, getArchivedTmdbTvIds } from '../series/api'
-import { createWebtoon, getArchivedNaverWebtoonIds } from '../webtoons/api'
+import { createWebtoon, getArchivedWebtoonIds } from '../webtoons/api'
 
 interface Props {
   onImported: () => void
@@ -249,7 +249,7 @@ export function WatchaImportScreen({ onImported }: Props): React.JSX.Element {
     setWebtoonProgress(0)
     setError(null)
 
-    const archivedIds = await getArchivedNaverWebtoonIds()
+    const archivedIds = await getArchivedWebtoonIds('naver')
     const summary: ImportResult = { matched: 0, duplicate: 0, unmatched: [], failed: [] }
 
     for (let i = 0; i < webtoonRows.length; i++) {
@@ -274,6 +274,7 @@ export function WatchaImportScreen({ onImported }: Props): React.JSX.Element {
           title: details.title,
           posterUrl: details.posterUrl,
           externalId: String(match.id),
+          source: 'naver',
           metadata: details.metadata,
           initialRecord: {
             myRating: row.rating,

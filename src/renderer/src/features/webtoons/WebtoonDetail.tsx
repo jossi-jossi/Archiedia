@@ -4,6 +4,7 @@ import { deleteWebtoon, getWebtoon, updateUserRecord, Webtoon } from './api'
 import { isWishlisted, withoutStatusTags } from '../../lib/wishlist'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
+import { webtoonPosterFill } from './poster'
 
 interface Props {
   webtoonId: string
@@ -139,9 +140,7 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                 borderRadius: 'var(--radius-md)',
                 overflow: 'hidden',
                 boxShadow: 'var(--shadow-md)',
-                background: webtoon.posterUrl
-                  ? `center / cover no-repeat url(${webtoon.posterUrl})`
-                  : 'repeating-linear-gradient(45deg, var(--color-neutral-800), var(--color-neutral-800) 8px, var(--color-neutral-900) 8px, var(--color-neutral-900) 16px)'
+                ...webtoonPosterFill(webtoon.posterUrl, meta.backgroundImageUrl)
               }}
             />
             <div

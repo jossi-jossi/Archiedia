@@ -43,6 +43,10 @@ export interface WebtoonMetadata {
   isFinished: boolean
   totalEpisodes: number | null
   sourceUrl: string | null
+  // 카카오웹툰은 완성된 포스터 이미지 한 장이 아니라, 배경 삽화(backgroundImageUrl) 위에
+  // 캐릭터 컷아웃(posterUrl)을 얹는 2겹 카드 구조라 배경 이미지를 따로 저장해서 합성
+  // 렌더링한다. 네이버는 항상 null.
+  backgroundImageUrl: string | null
 }
 
 interface ContentItemBase {

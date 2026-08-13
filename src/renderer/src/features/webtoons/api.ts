@@ -57,6 +57,7 @@ export interface CreateWebtoonInput {
   title: string
   posterUrl: string | null
   externalId: string
+  source: 'naver' | 'kakao'
   metadata: WebtoonMetadata
   initialRecord?: {
     myRating?: number | null
@@ -78,7 +79,7 @@ export async function createWebtoon(input: CreateWebtoonInput): Promise<string> 
       user_id: userId,
       type: 'webtoon',
       title: input.title,
-      source: 'naver',
+      source: input.source,
       external_id: input.externalId,
       poster_url: input.posterUrl,
       metadata: input.metadata
@@ -107,12 +108,12 @@ export async function deleteWebtoon(id: string): Promise<void> {
   if (error) throw error
 }
 
-export async function getArchivedNaverWebtoonIds(): Promise<Set<string>> {
+export async function getArchivedWebtoonIds(source: 'naver' | 'kakao'): Promise<Set<string>> {
   const { data, error } = await supabase
     .from('content_items')
     .select('external_id')
     .eq('type', 'webtoon')
-    .eq('source', 'naver')
+    .eq('source', source)
   if (error) throw error
 
   return new Set((data ?? []).map((row) => row.external_id as string).filter(Boolean))

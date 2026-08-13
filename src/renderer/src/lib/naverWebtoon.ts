@@ -3,7 +3,7 @@ import type { WebtoonMetadata } from '@archiedia/schema'
 const API_BASE = 'https://comic.naver.com/api'
 
 function request<T>(url: string): Promise<T> {
-  return window.api.naverWebtoon.request(url) as Promise<T>
+  return window.api.webtoon.request(url) as Promise<T>
 }
 
 interface NaverArtist {
@@ -109,7 +109,8 @@ export async function getWebtoonDetails(titleId: number): Promise<WebtoonDetails
       overview: info.synopsis?.trim() || null,
       isFinished: info.finished,
       totalEpisodes: articles.totalCount ?? null,
-      sourceUrl: `https://comic.naver.com/webtoon/list?titleId=${titleId}`
+      sourceUrl: `https://comic.naver.com/webtoon/list?titleId=${titleId}`,
+      backgroundImageUrl: null
     }
   }
 }
