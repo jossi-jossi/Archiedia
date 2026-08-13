@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
 import { csvRowsToObjects, parseCsv } from '../../lib/csv'
 import { errorMessage } from '../../lib/errors'
-import { getMovieDetails, searchMovies } from '../../lib/tmdb'
+import { getMovieDetails, getTvDetails, searchMovies, searchTv } from '../../lib/tmdb'
 import { createMovie, getArchivedTmdbIds } from './api'
+import { createSeries, getArchivedTmdbTvIds } from '../series/api'
 
 interface Props {
   onImported: () => void
@@ -27,10 +28,10 @@ interface ImportResult {
 // 채워 넣는다. 실제 시청일이 아니라 "기록 없음"을 뜻하므로 null로 취급한다.
 const WATCHA_EMPTY_DATE = '1970-01-01'
 
-function parseWatchaRows(text: string): WatchaRow[] {
+function parseWatchaRows(text: string, type: 'MOVIE' | 'TV'): WatchaRow[] {
   const objects = csvRowsToObjects(parseCsv(text))
   return objects
-    .filter((row) => (row.Type ?? '').trim().toUpperCase() === 'MOVIE')
+    .filter((row) => (row.Type ?? '').trim().toUpperCase() === type)
     .map((row) => {
       const watchedAt = row.WatchedAt?.trim() || null
       return {
@@ -44,45 +45,95 @@ function parseWatchaRows(text: string): WatchaRow[] {
     .filter((row) => row.title)
 }
 
+function ImportResultView({ result }: { result: ImportResult }): React.JSX.Element {
+  return (
+    <div style={{ marginTop: 12 }}>
+      <div style={{ fontSize: 14 }}>
+        매칭 성공 {result.matched}개 · 이미 보관됨 {result.duplicate}개 · 매칭 실패{' '}
+        {result.unmatched.length}개{result.failed.length > 0 && ` · 오류 ${result.failed.length}개`}
+      </div>
+
+      {result.unmatched.length > 0 && (
+        <div style={{ marginTop: 12 }}>
+          <div style={{ fontSize: 13, color: 'var(--color-neutral-500)', marginBottom: 6 }}>
+            TMDB에서 못 찾은 작품 (검색·추가에서 직접 찾아보세요)
+          </div>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.8 }}>
+            {result.unmatched.map((u, i) => (
+              <li key={i}>
+                {u.title} {u.year ? `(${u.year})` : ''}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {result.failed.length > 0 && (
+        <div style={{ marginTop: 12 }}>
+          <div style={{ fontSize: 13, color: '#e08a8a', marginBottom: 6 }}>
+            가져오는 중 오류가 발생한 작품
+          </div>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.8 }}>
+            {result.failed.map((f, i) => (
+              <li key={i}>
+                {f.title} — {f.error}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function WatchaImportScreen({ onImported }: Props): React.JSX.Element {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [rows, setRows] = useState<WatchaRow[] | null>(null)
+  const [movieRows, setMovieRows] = useState<WatchaRow[] | null>(null)
+  const [seriesRows, setSeriesRows] = useState<WatchaRow[] | null>(null)
   const [fileName, setFileName] = useState('')
-  const [importing, setImporting] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [result, setResult] = useState<ImportResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const [movieImporting, setMovieImporting] = useState(false)
+  const [movieProgress, setMovieProgress] = useState(0)
+  const [movieResult, setMovieResult] = useState<ImportResult | null>(null)
+
+  const [seriesImporting, setSeriesImporting] = useState(false)
+  const [seriesProgress, setSeriesProgress] = useState(0)
+  const [seriesResult, setSeriesResult] = useState<ImportResult | null>(null)
 
   function handleFile(file: File): void {
     setError(null)
-    setResult(null)
+    setMovieResult(null)
+    setSeriesResult(null)
     setFileName(file.name)
     const reader = new FileReader()
     reader.onload = () => {
       try {
-        const parsed = parseWatchaRows(String(reader.result ?? ''))
-        setRows(parsed)
+        const text = String(reader.result ?? '')
+        setMovieRows(parseWatchaRows(text, 'MOVIE'))
+        setSeriesRows(parseWatchaRows(text, 'TV'))
       } catch (err) {
         setError(errorMessage(err))
-        setRows(null)
+        setMovieRows(null)
+        setSeriesRows(null)
       }
     }
     reader.onerror = () => setError('파일을 읽지 못했어요.')
     reader.readAsText(file)
   }
 
-  async function startImport(): Promise<void> {
-    if (!rows || rows.length === 0) return
-    setImporting(true)
-    setProgress(0)
+  async function startMovieImport(): Promise<void> {
+    if (!movieRows || movieRows.length === 0) return
+    setMovieImporting(true)
+    setMovieProgress(0)
     setError(null)
 
     const archivedIds = await getArchivedTmdbIds()
     const summary: ImportResult = { matched: 0, duplicate: 0, unmatched: [], failed: [] }
 
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i]
-      setProgress(i + 1)
+    for (let i = 0; i < movieRows.length; i++) {
+      const row = movieRows[i]
+      setMovieProgress(i + 1)
       try {
         const results = await searchMovies(row.title)
         const match =
@@ -118,18 +169,72 @@ export function WatchaImportScreen({ onImported }: Props): React.JSX.Element {
       }
     }
 
-    setResult(summary)
-    setImporting(false)
+    setMovieResult(summary)
+    setMovieImporting(false)
     if (summary.matched > 0) onImported()
   }
 
+  async function startSeriesImport(): Promise<void> {
+    if (!seriesRows || seriesRows.length === 0) return
+    setSeriesImporting(true)
+    setSeriesProgress(0)
+    setError(null)
+
+    const archivedIds = await getArchivedTmdbTvIds()
+    const summary: ImportResult = { matched: 0, duplicate: 0, unmatched: [], failed: [] }
+
+    for (let i = 0; i < seriesRows.length; i++) {
+      const row = seriesRows[i]
+      setSeriesProgress(i + 1)
+      try {
+        const results = await searchTv(row.title)
+        const match =
+          (row.year && results.find((r) => r.year === row.year)) ??
+          (results.length === 1 ? results[0] : null)
+
+        if (!match) {
+          summary.unmatched.push({ title: row.title, year: row.year })
+          continue
+        }
+        if (archivedIds.has(String(match.id))) {
+          summary.duplicate++
+          continue
+        }
+
+        const details = await getTvDetails(match.id)
+        await createSeries({
+          title: details.title,
+          posterUrl: details.posterUrl,
+          externalId: String(match.id),
+          metadata: details.metadata,
+          initialRecord: {
+            myRating: row.rating,
+            myReview: row.review,
+            watchCount: 1,
+            lastWatchedAt: row.watchedAt
+          }
+        })
+        archivedIds.add(String(match.id))
+        summary.matched++
+      } catch (err) {
+        summary.failed.push({ title: row.title, error: errorMessage(err) })
+      }
+    }
+
+    setSeriesResult(summary)
+    setSeriesImporting(false)
+    if (summary.matched > 0) onImported()
+  }
+
+  const importing = movieImporting || seriesImporting
+
   return (
-    <div style={{ padding: 24, maxWidth: 640 }}>
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 24, maxWidth: 640 }}>
       <h2 style={{ margin: 0 }}>왓챠피디아에서 가져오기</h2>
       <p style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 6 }}>
-        왓챠피디아 평가 데이터를 내보낸 CSV 파일을 선택하면, 영화(Type=MOVIE) 항목을 TMDB에서 찾아
-        라이브러리에 추가해요. 제목/연도가 일치하는 항목만 매칭하고, 못 찾은 작품은 아래에 목록으로
-        보여드려요.
+        왓챠피디아 평가 데이터를 내보낸 CSV 파일을 선택하면, 영화(Type=MOVIE)와 시리즈(Type=TV)
+        항목을 TMDB에서 찾아 각각 라이브러리에 추가해요. 제목/연도가 일치하는 항목만 매칭하고, 못
+        찾은 작품은 아래에 목록으로 보여드려요.
       </p>
 
       <input
@@ -160,61 +265,55 @@ export function WatchaImportScreen({ onImported }: Props): React.JSX.Element {
 
       {error && <div style={{ color: '#e08a8a', fontSize: 13, marginTop: 12 }}>{error}</div>}
 
-      {rows && !result && (
-        <div style={{ marginTop: 16 }}>
-          <div style={{ fontSize: 13, color: 'var(--color-neutral-500)' }}>
-            영화 {rows.length}개를 찾았어요.
-          </div>
-          <button
-            type="button"
-            className="btn btn-primary"
-            style={{ marginTop: 10 }}
-            disabled={importing}
-            onClick={startImport}
-          >
-            {importing ? `가져오는 중... (${progress}/${rows.length})` : '가져오기 시작'}
-          </button>
+      {movieRows && (
+        <div style={{ marginTop: 20 }}>
+          <div className="hr" />
+          <h4 style={{ margin: 0 }}>영화</h4>
+          {!movieResult && (
+            <>
+              <div style={{ fontSize: 13, color: 'var(--color-neutral-500)', marginTop: 8 }}>
+                영화 {movieRows.length}개를 찾았어요.
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ marginTop: 10 }}
+                disabled={importing || movieRows.length === 0}
+                onClick={startMovieImport}
+              >
+                {movieImporting
+                  ? `가져오는 중... (${movieProgress}/${movieRows.length})`
+                  : '영화 가져오기 시작'}
+              </button>
+            </>
+          )}
+          {movieResult && <ImportResultView result={movieResult} />}
         </div>
       )}
 
-      {result && (
+      {seriesRows && (
         <div style={{ marginTop: 20 }}>
           <div className="hr" />
-          <div style={{ fontSize: 14 }}>
-            매칭 성공 {result.matched}개 · 이미 보관됨 {result.duplicate}개 · 매칭 실패{' '}
-            {result.unmatched.length}개
-            {result.failed.length > 0 && ` · 오류 ${result.failed.length}개`}
-          </div>
-
-          {result.unmatched.length > 0 && (
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 13, color: 'var(--color-neutral-500)', marginBottom: 6 }}>
-                TMDB에서 못 찾은 작품 (검색·추가에서 직접 찾아보세요)
+          <h4 style={{ margin: 0 }}>시리즈</h4>
+          {!seriesResult && (
+            <>
+              <div style={{ fontSize: 13, color: 'var(--color-neutral-500)', marginTop: 8 }}>
+                시리즈 {seriesRows.length}개를 찾았어요.
               </div>
-              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.8 }}>
-                {result.unmatched.map((u, i) => (
-                  <li key={i}>
-                    {u.title} {u.year ? `(${u.year})` : ''}
-                  </li>
-                ))}
-              </ul>
-            </div>
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ marginTop: 10 }}
+                disabled={importing || seriesRows.length === 0}
+                onClick={startSeriesImport}
+              >
+                {seriesImporting
+                  ? `가져오는 중... (${seriesProgress}/${seriesRows.length})`
+                  : '시리즈 가져오기 시작'}
+              </button>
+            </>
           )}
-
-          {result.failed.length > 0 && (
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 13, color: '#e08a8a', marginBottom: 6 }}>
-                가져오는 중 오류가 발생한 작품
-              </div>
-              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.8 }}>
-                {result.failed.map((f, i) => (
-                  <li key={i}>
-                    {f.title} — {f.error}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {seriesResult && <ImportResultView result={seriesResult} />}
         </div>
       )}
     </div>

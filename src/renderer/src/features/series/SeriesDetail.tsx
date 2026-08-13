@@ -328,7 +328,7 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                     <div
                       style={{
                         marginTop: 4,
-                        height: isMultiSeason ? 56 : 80,
+                        height: isMultiSeason ? 46 : 80,
                         overflowY: 'auto',
                         paddingRight: 4
                       }}
