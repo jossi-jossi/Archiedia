@@ -169,7 +169,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
               <div>
                 <h2 style={{ margin: 0, paddingRight: 24, fontSize: 26 }}>{movie.title}</h2>
                 <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
-                  {meta.originalTitle ?? movie.title} · {meta.releaseYear ?? '—'}
+                  {meta.releaseYear ?? '—'} · {meta.genres.join(', ') || '—'}
                 </div>
                 <div
                   style={{
@@ -180,20 +180,15 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                     marginTop: 12
                   }}
                 >
-                  {meta.genres.map((g) => (
-                    <span key={g} className="tag tag-neutral">
-                      {g}
-                    </span>
-                  ))}
+                  {meta.country && <span className="tag tag-outline">{meta.country}</span>}
                   {meta.runtimeMinutes && (
                     <span className="tag tag-outline">{meta.runtimeMinutes}분</span>
                   )}
-                  {meta.country && <span className="tag tag-outline">{meta.country}</span>}
                   {meta.trailerUrl && (
                     // 다른 태그와 박스가 정확히 같아야 해서 button 대신 a에 직접 .tag를 준다.
                     // button은 UA 기본 스타일(폰트/패딩/박스사이징) 때문에 높이가 미세하게 어긋난다.
                     <a
-                      className="tag tag-outline"
+                      className="tag tag-neutral"
                       href={meta.trailerUrl}
                       target="_blank"
                       rel="noreferrer"

@@ -32,7 +32,7 @@ function seasonLabel(season: DramaSeasonMetadata): string {
 function TrailerTag({ url }: { url: string }): React.JSX.Element {
   return (
     <a
-      className="tag tag-outline"
+      className="tag tag-neutral"
       href={url}
       target="_blank"
       rel="noreferrer"
@@ -267,7 +267,7 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
               <div>
                 <h2 style={{ margin: 0, paddingRight: 24, fontSize: 26 }}>{series.title}</h2>
                 <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
-                  {meta.originalTitle ?? series.title} · {meta.releaseYear ?? '—'}
+                  {meta.releaseYear ?? '—'} · {meta.genres.join(', ') || '—'}
                 </div>
                 <div
                   style={{
@@ -278,11 +278,7 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                     marginTop: 12
                   }}
                 >
-                  {meta.genres.map((g) => (
-                    <span key={g} className="tag tag-neutral">
-                      {g}
-                    </span>
-                  ))}
+                  {meta.country && <span className="tag tag-outline">{meta.country}</span>}
                   {isMultiSeason && (
                     <span className="tag tag-outline">시즌 {seasons.length}개</span>
                   )}
@@ -290,7 +286,6 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                   {!isMultiSeason && selectedSeason?.runtimeMinutes && (
                     <span className="tag tag-outline">{selectedSeason.runtimeMinutes}분</span>
                   )}
-                  {meta.country && <span className="tag tag-outline">{meta.country}</span>}
                   {isMultiSeason && (
                     <>
                       <SeasonSelect
