@@ -165,7 +165,7 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
             >
               <div style={{ flex: 1, minHeight: 0 }} />
               <div>
-                <h2 style={{ margin: 0, paddingRight: 24 }}>{webtoon.title}</h2>
+                <h2 style={{ margin: 0, paddingRight: 24, fontSize: 26 }}>{webtoon.title}</h2>
                 <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
                   {meta.author ?? '—'} · {meta.genres.join(', ') || '—'} |{' '}
                   {meta.totalEpisodes ? `${meta.totalEpisodes}화 ` : ''}

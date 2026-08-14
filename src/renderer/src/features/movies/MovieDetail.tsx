@@ -156,7 +156,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
             >
               <div style={{ flex: 1, minHeight: 0 }} />
               <div>
-                <h2 style={{ margin: 0, paddingRight: 24 }}>{movie.title}</h2>
+                <h2 style={{ margin: 0, paddingRight: 24, fontSize: 26 }}>{movie.title}</h2>
                 <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
                   {meta.originalTitle ?? movie.title} · {meta.releaseYear ?? '—'}
                 </div>
