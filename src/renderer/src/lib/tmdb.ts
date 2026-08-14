@@ -12,6 +12,7 @@ export interface TmdbSearchResult {
   title: string
   originalTitle: string
   year: number | null
+  genres: string[]
   posterUrl: string | null
 }
 
@@ -21,8 +22,35 @@ interface TmdbSearchResponse {
     title: string
     original_title: string
     release_date: string
+    genre_ids: number[]
     poster_path: string | null
   }[]
+}
+
+// 검색 응답은 장르를 숫자 ID로만 주고 이름은 따로 받아와야 한다. 목록은 세션 중에 바뀌지
+// 않으니 한 번만 받아서 재사용한다. 실패하면 캐시를 비워서 다음 검색 때 다시 시도한다.
+const genreMapCache: Partial<Record<'movie' | 'tv', Promise<Record<number, string>>>> = {}
+
+function loadGenreMap(kind: 'movie' | 'tv'): Promise<Record<number, string>> {
+  const cached = genreMapCache[kind]
+  if (cached) return cached
+
+  const url = new URL(`${API_BASE}/genre/${kind}/list`)
+  url.searchParams.set('api_key', apiKey())
+  url.searchParams.set('language', 'ko-KR')
+
+  const pending = fetch(url).then(async (res) => {
+    if (!res.ok) throw new Error(`TMDB 장르 목록 요청 실패 (${res.status})`)
+    const data: { genres: { id: number; name: string }[] } = await res.json()
+    return Object.fromEntries(data.genres.map((g) => [g.id, g.name]))
+  })
+  pending.catch(() => delete genreMapCache[kind])
+  genreMapCache[kind] = pending
+  return pending
+}
+
+function namesForIds(ids: number[] | undefined, map: Record<number, string>): string[] {
+  return (ids ?? []).map((id) => map[id]).filter((name): name is string => Boolean(name))
 }
 
 export async function searchMovies(query: string): Promise<TmdbSearchResult[]> {
@@ -31,7 +59,7 @@ export async function searchMovies(query: string): Promise<TmdbSearchResult[]> {
   url.searchParams.set('query', query)
   url.searchParams.set('language', 'ko-KR')
 
-  const res = await fetch(url)
+  const [res, genreMap] = await Promise.all([fetch(url), loadGenreMap('movie')])
   if (!res.ok) throw new Error(`TMDB 검색 실패 (${res.status})`)
   const data: TmdbSearchResponse = await res.json()
 
@@ -40,6 +68,7 @@ export async function searchMovies(query: string): Promise<TmdbSearchResult[]> {
     title: r.title,
     originalTitle: r.original_title,
     year: r.release_date ? Number(r.release_date.slice(0, 4)) : null,
+    genres: namesForIds(r.genre_ids, genreMap),
     posterUrl: r.poster_path ? `${IMAGE_BASE}${r.poster_path}` : null
   }))
 }
@@ -140,6 +169,7 @@ interface TmdbTvSearchResponse {
     name: string
     original_name: string
     first_air_date: string
+    genre_ids: number[]
     poster_path: string | null
   }[]
 }
@@ -150,7 +180,7 @@ export async function searchTv(query: string): Promise<TmdbSearchResult[]> {
   url.searchParams.set('query', query)
   url.searchParams.set('language', 'ko-KR')
 
-  const res = await fetch(url)
+  const [res, genreMap] = await Promise.all([fetch(url), loadGenreMap('tv')])
   if (!res.ok) throw new Error(`TMDB 검색 실패 (${res.status})`)
   const data: TmdbTvSearchResponse = await res.json()
 
@@ -159,6 +189,7 @@ export async function searchTv(query: string): Promise<TmdbSearchResult[]> {
     title: r.name,
     originalTitle: r.original_name,
     year: r.first_air_date ? Number(r.first_air_date.slice(0, 4)) : null,
+    genres: translateTvGenres(namesForIds(r.genre_ids, genreMap)),
     posterUrl: r.poster_path ? `${IMAGE_BASE}${r.poster_path}` : null
   }))
 }
@@ -197,7 +228,11 @@ interface TmdbSeasonDetail {
 const TV_GENRE_TRANSLATIONS: Record<string, string[]> = {
   'Action & Adventure': ['액션', '모험'],
   Kids: ['아동'],
+  News: ['뉴스'],
+  Reality: ['리얼리티'],
   'Sci-Fi & Fantasy': ['SF', '판타지'],
+  Soap: ['연속극'],
+  Talk: ['토크쇼'],
   'War & Politics': ['전쟁', '정치']
 }
 

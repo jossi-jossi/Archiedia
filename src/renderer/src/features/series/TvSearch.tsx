@@ -99,7 +99,7 @@ export function TvSearch({ query, onArchived }: Props): React.JSX.Element {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 500 }}>{r.title}</div>
                 <div style={{ fontSize: 12, color: 'var(--color-neutral-500)' }}>
-                  {r.originalTitle} · {r.year ?? '—'}
+                  {r.year ?? '—'} · {r.genres.join(', ') || '—'}
                 </div>
               </div>
               <button
