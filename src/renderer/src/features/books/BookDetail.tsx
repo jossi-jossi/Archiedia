@@ -75,6 +75,8 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
   }
 
   const meta = book?.metadata
+  // 국내도서는 원제가 있어도 어차피 한글 제목과 같거나 큰 의미가 없어서 생략한다.
+  const isForeign = meta?.category ? !meta.category.startsWith('국내도서') : false
 
   return (
     <div className="dialog-backdrop" onClick={onClose}>
@@ -156,29 +158,30 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
               <div>
                 <h2 style={{ margin: 0, paddingRight: 24 }}>{book.title}</h2>
                 <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
-                  {meta.originalTitle ?? book.title} · {meta.author ?? '—'} ·{' '}
-                  {meta.pageCount ? `${meta.pageCount}페이지` : '—'}
+                  {isForeign && meta.originalTitle && `${meta.originalTitle} | `}
+                  {meta.author ?? '—'} | {meta.pageCount ? `${meta.pageCount}페이지` : '—'}
                 </div>
-                <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 2 }}>
-                  {meta.publisher ?? '—'} · {meta.releaseYear ?? '—'}
-                  {meta.sourceUrl && (
-                    <>
-                      {' '}
-                      |{' '}
-                      <a
-                        href={meta.sourceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ color: 'inherit', textDecoration: 'underline' }}
-                      >
-                        바로가기
-                      </a>
-                    </>
-                  )}
+                <div style={{ color: 'var(--color-neutral-300)', fontSize: 13, marginTop: 2 }}>
+                  <span style={{ color: 'var(--color-neutral-500)' }}>출판</span> &nbsp;
+                  {meta.publisher ?? '—'}
+                  {meta.releaseYear ? `(${meta.releaseYear}년)` : ''}
                 </div>
-                <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 2 }}>
-                  카테고리 · {meta.category ?? '—'}
+                <div style={{ color: 'var(--color-neutral-300)', fontSize: 13, marginTop: 2 }}>
+                  <span style={{ color: 'var(--color-neutral-500)' }}>카테고리</span> &nbsp;
+                  {meta.category ?? '—'}
                 </div>
+                {meta.sourceUrl && (
+                  <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 2 }}>
+                    <a
+                      href={meta.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: 'inherit', textDecoration: 'underline' }}
+                    >
+                      알라딘 바로가기
+                    </a>
+                  </div>
+                )}
                 <div
                   style={{
                     marginTop: 14,
@@ -187,7 +190,8 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                     color: 'var(--color-neutral-300)'
                   }}
                 >
-                  <div style={{ height: 80, overflowY: 'auto', paddingRight: 4 }}>
+                  <span style={{ color: 'var(--color-neutral-500)' }}>요약</span>
+                  <div style={{ marginTop: 4, height: 70, overflowY: 'auto', paddingRight: 4 }}>
                     {meta.overview || '—'}
                   </div>
                 </div>
