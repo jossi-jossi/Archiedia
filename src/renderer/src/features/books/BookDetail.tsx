@@ -18,6 +18,10 @@ const POSTER_WIDTH = Math.round((POSTER_HEIGHT * 2) / 3)
 const DIALOG_WIDTH = 913.2
 const DIALOG_HEIGHT = 624
 
+// 줄거리/요약 칸은 네 상세팝업 모두 딱 세 줄이 보이는 같은 높이를 쓴다.
+// (본문 13px × line-height 1.7 × 3줄)
+const OVERVIEW_HEIGHT = 66.3
+
 export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Element {
   const [book, setBook] = useState<Book | null>(null)
   const [record, setRecord] = useState<UserRecord | null>(null)
@@ -223,7 +227,7 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                   <div
                     style={{
                       marginTop: 4,
-                      height: 70,
+                      height: OVERVIEW_HEIGHT,
                       overflowY: 'auto',
                       paddingRight: 4,
                       whiteSpace: 'pre-line'

@@ -21,6 +21,10 @@ const POSTER_HEIGHT = Math.round((POSTER_WIDTH * 623) / 480)
 const DIALOG_WIDTH = 913.2
 const DIALOG_HEIGHT = POSTER_HEIGHT + 74
 
+// 줄거리/요약 칸은 네 상세팝업 모두 딱 세 줄이 보이는 같은 높이를 쓴다.
+// (본문 13px × line-height 1.7 × 3줄)
+const OVERVIEW_HEIGHT = 66.3
+
 // 상세팝업 레이아웃은 당분간 영화(MovieDetail)와 동일한 틀을 쓰되, 웹툰에 맞는 필드
 // 구성(작가·장르·연재상태, 해시태그, 줄거리, 원본링크)으로 맞췄다.
 export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.JSX.Element {
@@ -210,7 +214,14 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                   }}
                 >
                   <span style={{ color: 'var(--color-neutral-500)' }}>줄거리</span>
-                  <div style={{ marginTop: 4, height: 54, overflowY: 'auto', paddingRight: 4 }}>
+                  <div
+                    style={{
+                      marginTop: 4,
+                      height: OVERVIEW_HEIGHT,
+                      overflowY: 'auto',
+                      paddingRight: 4
+                    }}
+                  >
                     {meta.overview || '—'}
                   </div>
                 </div>
