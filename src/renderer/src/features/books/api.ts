@@ -101,22 +101,6 @@ export async function createBook(input: CreateBookInput): Promise<string> {
   return itemRow.id as string
 }
 
-export interface RefetchBookInput {
-  title: string
-  posterUrl: string | null
-  metadata: BookMetadata
-}
-
-// 알라딘에서 최신 정보를 다시 받아와서 기존 항목의 title/posterUrl/metadata만 덮어쓴다.
-// (외부 ID·사용자 기록은 그대로 유지) 삭제 후 재보관하지 않고도 정보를 갱신할 수 있게 해준다.
-export async function refetchBook(id: string, input: RefetchBookInput): Promise<void> {
-  const { error } = await supabase
-    .from('content_items')
-    .update({ title: input.title, poster_url: input.posterUrl, metadata: input.metadata })
-    .eq('id', id)
-  if (error) throw error
-}
-
 export async function deleteBook(id: string): Promise<void> {
   // user_records.content_item_id는 on delete cascade라 같이 지워진다.
   const { error } = await supabase.from('content_items').delete().eq('id', id)

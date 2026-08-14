@@ -1,10 +1,9 @@
-import { ArrowClockwise, Heart, Star, X } from '@phosphor-icons/react'
+import { Heart, Star, X } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
-import { deleteBook, getBook, refetchBook, Book, updateUserRecord } from './api'
+import { deleteBook, getBook, Book, updateUserRecord } from './api'
 import { isWishlisted, withoutStatusTags } from '../../lib/wishlist'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
-import { getBookDetails } from '../../lib/aladin'
 
 interface Props {
   bookId: string
@@ -29,7 +28,6 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [refetching, setRefetching] = useState(false)
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on bookId change needs to reset the loading/error flags before the async call resolves
@@ -77,26 +75,6 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
       setError(errorMessage(err))
       setDeleting(false)
       setShowDeleteConfirm(false)
-    }
-  }
-
-  async function handleRefetch(): Promise<void> {
-    if (!book || !book.externalId) return
-    setRefetching(true)
-    setError(null)
-    try {
-      const details = await getBookDetails(Number(book.externalId))
-      await refetchBook(book.id, details)
-      setBook({
-        ...book,
-        title: details.title,
-        posterUrl: details.posterUrl,
-        metadata: details.metadata
-      })
-    } catch (err) {
-      setError(errorMessage(err))
-    } finally {
-      setRefetching(false)
     }
   }
 
@@ -378,52 +356,24 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
         )}
 
         {!loading && !error && book && meta && (
-          <div
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
             style={{
               position: 'absolute',
               bottom: 8,
               right: 33.6,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 14
+              background: 'none',
+              border: 'none',
+              padding: 6,
+              fontSize: 13,
+              color: 'var(--color-neutral-500)',
+              textDecoration: 'underline',
+              cursor: 'pointer'
             }}
           >
-            <button
-              type="button"
-              onClick={handleRefetch}
-              disabled={refetching}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                background: 'none',
-                border: 'none',
-                padding: 6,
-                fontSize: 13,
-                color: 'var(--color-neutral-500)',
-                textDecoration: 'underline',
-                cursor: refetching ? 'default' : 'pointer'
-              }}
-            >
-              <ArrowClockwise size={13} />
-              {refetching ? '업데이트 중...' : '정보 업데이트'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: 6,
-                fontSize: 13,
-                color: 'var(--color-neutral-500)',
-                textDecoration: 'underline',
-                cursor: 'pointer'
-              }}
-            >
-              삭제
-            </button>
-          </div>
+            삭제
+          </button>
         )}
 
         {showDeleteConfirm && book && (

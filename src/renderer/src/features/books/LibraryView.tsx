@@ -1,15 +1,8 @@
-import {
-  ArrowClockwise,
-  Heart,
-  ListBullets,
-  MagnifyingGlass,
-  SquaresFour,
-  Star
-} from '@phosphor-icons/react'
+import { Heart, ListBullets, MagnifyingGlass, SquaresFour, Star } from '@phosphor-icons/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { listBooks, refetchBook, BookListItem } from './api'
+import { listBooks, BookListItem } from './api'
 import { errorMessage } from '../../lib/errors'
-import { getBookDetails, shortCategory } from '../../lib/aladin'
+import { shortCategory } from '../../lib/aladin'
 import { FilterDropdown } from '../../components/FilterDropdown'
 import { StatusQuickEdit } from '../../components/StatusQuickEdit'
 import { displayTag, isWishlisted } from '../../lib/wishlist'
@@ -152,8 +145,6 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   const [wishlistOnly, setWishlistOnly] = useState(false)
   const [sort, setSort] = useState<SortKey>('added_desc')
   const [gridRef, columns, gutter] = useGridColumns(POSTER_WIDTH)
-  const [bulkRefetching, setBulkRefetching] = useState(false)
-  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null)
 
   useEffect(() => {
     localStorage.setItem(VIEW_KEY, view)
@@ -172,43 +163,6 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
       .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey])
-
-  // 이미 보관된 책들을 알라딘에서 한 번에 다시 받아온다. 알라딘에 부담 안 주려고 하나씩
-  // 순차 요청하고, 개별 항목이 실패해도(외부ID 없음, 네트워크 오류 등) 건너뛰고 계속한다.
-  async function handleBulkRefetch(): Promise<void> {
-    setBulkRefetching(true)
-    setError(null)
-    setBulkProgress({ done: 0, total: books.length })
-    for (let i = 0; i < books.length; i++) {
-      const item = books[i].item
-      try {
-        if (item.externalId) {
-          const details = await getBookDetails(Number(item.externalId))
-          await refetchBook(item.id, details)
-          setBooks((prev) =>
-            prev.map((b) =>
-              b.item.id === item.id
-                ? {
-                    ...b,
-                    item: {
-                      ...b.item,
-                      title: details.title,
-                      posterUrl: details.posterUrl,
-                      metadata: details.metadata
-                    }
-                  }
-                : b
-            )
-          )
-        }
-      } catch {
-        // 개별 실패는 무시하고 다음 항목으로 넘어간다.
-      }
-      setBulkProgress({ done: i + 1, total: books.length })
-    }
-    setBulkRefetching(false)
-    setBulkProgress(null)
-  }
 
   function updateRecordInList(contentItemId: string, updated: BookListItem['record']): void {
     setBooks((prev) =>
@@ -351,18 +305,6 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
               <ListBullets size={16} />
             </label>
           </div>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            style={{ flex: 'none', minHeight: 28, padding: '0 12px', fontSize: 12 }}
-            disabled={bulkRefetching || books.length === 0}
-            onClick={handleBulkRefetch}
-          >
-            <ArrowClockwise size={12} />
-            {bulkRefetching
-              ? `업데이트 중... (${bulkProgress?.done ?? 0}/${bulkProgress?.total ?? 0})`
-              : '전체 새로고침'}
-          </button>
         </div>
         <div
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}
