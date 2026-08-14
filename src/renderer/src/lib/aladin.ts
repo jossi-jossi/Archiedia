@@ -87,11 +87,46 @@ export async function searchBooks(keyword: string): Promise<BookSearchResult[]> 
   return [...domestic, ...foreign]
 }
 
-// 카드/검색결과처럼 좁은 자리에 쓸 짧은 카테고리명 — 전체 경로의 마지막 구간만 뽑는다.
-export function shortCategory(category: string | null): string | null {
+// 국내/외국이 같은 분야를 다르게 부르는 것들. 한쪽 이름으로 통일한다.
+const CATEGORY_ALIASES: Record<string, string> = {
+  해외잡지: '잡지',
+  '컴퓨터/모바일': '컴퓨터',
+  '만화/라이트노벨': '만화',
+  'ELT/어학/사전': '외국어'
+}
+
+// "일본 도서"/"중국 도서"는 분야가 아니라 언어 묶음이라, 한 단계 더 들어가야 분야가 나온다.
+const LANGUAGE_BUCKETS = new Set(['일본 도서', '중국 도서'])
+
+// 언어 묶음 아래의 분야명도 국내 분류 쪽 이름에 맞춘다.
+const BUCKET_ALIASES: Record<string, string> = {
+  일본잡지: '잡지',
+  브랜드무크지: '잡지',
+  '코믹/게임': '만화',
+  엔터테인먼트: '예술/대중문화',
+  '실용/취미/생활': '건강/취미'
+}
+
+// 목록 필터·카드·표처럼 좁은 자리에 쓸 대분류. (상세팝업은 전체 경로를 그대로 보여준다)
+//
+// 알라딘 경로는 "국내도서>소설/시/희곡>한국소설>2000년대 이후 한국소설"처럼 깊이가
+// 3~5단계로 제각각이라, 마지막 구간을 쓰면 "Space Opera" 같은 말단까지 잡혀서 값이
+// 수십 종으로 흩어진다. 그래서 깊이와 무관하게 일정한 2단계(대분류)를 기준으로 삼고,
+// 국내/외국 분류의 표기 차이만 통합한다.
+export function categoryGroup(category: string | null): string | null {
   if (!category) return null
-  const segments = category.split('>')
-  return segments.at(-1)?.trim() || null
+  const segments = category
+    .split('>')
+    .map((s) => s.trim())
+    .filter(Boolean)
+  if (segments.length === 0) return null
+
+  // segments[0]은 항상 "국내도서"/"외국도서" 같은 최상위 구분이라 건너뛴다.
+  let main = segments[1] ?? segments[0]
+  if (LANGUAGE_BUCKETS.has(main) && segments[2]) {
+    main = BUCKET_ALIASES[segments[2]] ?? segments[2]
+  }
+  return CATEGORY_ALIASES[main] ?? main
 }
 
 interface AladinLookupItem {

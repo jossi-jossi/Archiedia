@@ -2,7 +2,7 @@ import { Heart, ListBullets, MagnifyingGlass, SquaresFour, Star } from '@phospho
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { listBooks, BookListItem } from './api'
 import { errorMessage } from '../../lib/errors'
-import { shortCategory } from '../../lib/aladin'
+import { categoryGroup } from '../../lib/aladin'
 import { FilterDropdown } from '../../components/FilterDropdown'
 import { StatusQuickEdit } from '../../components/StatusQuickEdit'
 import { displayTag, isWishlisted } from '../../lib/wishlist'
@@ -171,7 +171,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   }
 
   const categoryOptions = useMemo(
-    () => unique(books.map((b) => shortCategory(b.item.metadata.category))),
+    () => unique(books.map((b) => categoryGroup(b.item.metadata.category))),
     [books]
   )
 
@@ -188,7 +188,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     }
     if (categoryFilter.length > 0) {
       result = result.filter(({ item }) =>
-        categoryFilter.includes(shortCategory(item.metadata.category) ?? '')
+        categoryFilter.includes(categoryGroup(item.metadata.category) ?? '')
       )
     }
     if (wishlistOnly) {
@@ -470,7 +470,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                       textOverflow: 'ellipsis'
                     }}
                   >
-                    {item.metadata.author ?? '—'} · {shortCategory(item.metadata.category) ?? '—'}
+                    {item.metadata.author ?? '—'} · {categoryGroup(item.metadata.category) ?? '—'}
                   </div>
                   <div
                     style={{
@@ -499,11 +499,11 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
           >
             <colgroup>
               <col style={{ width: '6%' }} />
-              <col style={{ width: '22%' }} />
-              <col style={{ width: '18%' }} />
-              <col style={{ width: '10%' }} />
+              <col style={{ width: '33%' }} />
               <col style={{ width: '13%' }} />
-              <col style={{ width: '13%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '11%' }} />
               <col style={{ width: '13%' }} />
               <col style={{ width: '5%' }} />
             </colgroup>
@@ -562,7 +562,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                     }}
                     title={item.metadata.category ?? undefined}
                   >
-                    {shortCategory(item.metadata.category) ?? '—'}
+                    {categoryGroup(item.metadata.category) ?? '—'}
                   </td>
                   <td style={{ color: 'var(--color-neutral-400)', padding: 0 }}>
                     <span style={{ marginLeft: -6, display: 'inline-block' }}>
