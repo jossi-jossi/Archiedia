@@ -33,16 +33,7 @@ function WebtoonIcon({ size }: { size: number }): React.JSX.Element {
   )
 }
 
-export type Screen =
-  | 'library'
-  | 'add'
-  | 'series'
-  | 'series-add'
-  | 'webtoon'
-  | 'webtoon-add'
-  | 'book'
-  | 'book-add'
-  | 'import'
+export type Screen = 'library' | 'series' | 'webtoon' | 'book' | 'add' | 'import'
 
 interface Props {
   screen: Screen
@@ -93,21 +84,6 @@ function NavItem({
   )
 }
 
-function NavSectionLabel({ children }: { children: string }): React.JSX.Element {
-  return (
-    <div
-      style={{
-        padding: '6px 12px 2px',
-        fontSize: 11,
-        letterSpacing: '0.04em',
-        color: 'var(--color-neutral-500)'
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
 export function Sidebar({
   screen,
   movieCount,
@@ -136,7 +112,6 @@ export function Sidebar({
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <NavSectionLabel>영화</NavSectionLabel>
         <NavItem
           active={screen === 'library'}
           icon={<FilmSlate size={17} />}
@@ -144,27 +119,11 @@ export function Sidebar({
           onClick={() => onNavigate('library')}
         />
         <NavItem
-          active={screen === 'add'}
-          icon={<MagnifyingGlass size={17} />}
-          label="검색 · 추가"
-          onClick={() => onNavigate('add')}
-        />
-
-        <NavSectionLabel>시리즈</NavSectionLabel>
-        <NavItem
           active={screen === 'series'}
           icon={<Television size={17} />}
           label="시리즈"
           onClick={() => onNavigate('series')}
         />
-        <NavItem
-          active={screen === 'series-add'}
-          icon={<MagnifyingGlass size={17} />}
-          label="검색 · 추가"
-          onClick={() => onNavigate('series-add')}
-        />
-
-        <NavSectionLabel>웹툰</NavSectionLabel>
         <NavItem
           active={screen === 'webtoon'}
           icon={<WebtoonIcon size={17} />}
@@ -172,27 +131,17 @@ export function Sidebar({
           onClick={() => onNavigate('webtoon')}
         />
         <NavItem
-          active={screen === 'webtoon-add'}
-          icon={<MagnifyingGlass size={17} />}
-          label="검색 · 추가"
-          onClick={() => onNavigate('webtoon-add')}
-        />
-
-        <NavSectionLabel>책</NavSectionLabel>
-        <NavItem
           active={screen === 'book'}
           icon={<BookOpen size={17} />}
           label="책"
           onClick={() => onNavigate('book')}
         />
         <NavItem
-          active={screen === 'book-add'}
+          active={screen === 'add'}
           icon={<MagnifyingGlass size={17} />}
           label="검색 · 추가"
-          onClick={() => onNavigate('book-add')}
+          onClick={() => onNavigate('add')}
         />
-
-        <div style={{ height: 8 }} />
         <NavItem
           active={screen === 'import'}
           icon={<DownloadSimple size={17} />}

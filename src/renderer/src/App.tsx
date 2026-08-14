@@ -2,19 +2,24 @@ import { useState } from 'react'
 import { Screen, Sidebar } from './components/Sidebar'
 import { LoginScreen } from './features/auth/LoginScreen'
 import { useSession } from './features/auth/useSession'
-import { AddMovieScreen } from './features/movies/AddMovieScreen'
+import { AddScreen, SearchType } from './features/search/AddScreen'
 import { LibraryView as MovieLibraryView } from './features/movies/LibraryView'
 import { MovieDetail } from './features/movies/MovieDetail'
 import { WatchaImportScreen } from './features/movies/WatchaImportScreen'
-import { AddSeriesScreen } from './features/series/AddSeriesScreen'
 import { LibraryView as SeriesLibraryView } from './features/series/LibraryView'
 import { SeriesDetail } from './features/series/SeriesDetail'
-import { AddWebtoonScreen } from './features/webtoons/AddWebtoonScreen'
 import { LibraryView as WebtoonLibraryView } from './features/webtoons/LibraryView'
 import { WebtoonDetail } from './features/webtoons/WebtoonDetail'
-import { AddBookScreen } from './features/books/AddBookScreen'
 import { LibraryView as BookLibraryView } from './features/books/LibraryView'
 import { BookDetail } from './features/books/BookDetail'
+
+// 검색 화면에 들어갈 때 방금 보던 목록의 종류를 기본값으로 잡아준다.
+const SEARCH_TYPE_BY_SCREEN: Partial<Record<Screen, SearchType>> = {
+  library: 'movie',
+  series: 'series',
+  webtoon: 'webtoon',
+  book: 'book'
+}
 
 function App(): React.JSX.Element {
   const { session, loading } = useSession()
@@ -28,6 +33,7 @@ function App(): React.JSX.Element {
   const [seriesCount, setSeriesCount] = useState(0)
   const [webtoonCount, setWebtoonCount] = useState(0)
   const [bookCount, setBookCount] = useState(0)
+  const [searchType, setSearchType] = useState<SearchType>('movie')
 
   if (loading) {
     return (
@@ -47,7 +53,11 @@ function App(): React.JSX.Element {
         seriesCount={seriesCount}
         webtoonCount={webtoonCount}
         bookCount={bookCount}
-        onNavigate={(next) => setScreen(next)}
+        onNavigate={(next) => {
+          const type = SEARCH_TYPE_BY_SCREEN[next]
+          if (type) setSearchType(type)
+          setScreen(next)
+        }}
       />
       <div
         style={{
@@ -65,16 +75,19 @@ function App(): React.JSX.Element {
             onSelect={(id) => setSelectedMovieId(id)}
           />
         )}
-        {screen === 'add' && <AddMovieScreen onArchived={() => setRefreshKey((k) => k + 1)} />}
+        {screen === 'add' && (
+          <AddScreen
+            type={searchType}
+            onTypeChange={setSearchType}
+            onArchived={() => setRefreshKey((k) => k + 1)}
+          />
+        )}
         {screen === 'series' && (
           <SeriesLibraryView
             refreshKey={refreshKey}
             onCountChange={setSeriesCount}
             onSelect={(id) => setSelectedSeriesId(id)}
           />
-        )}
-        {screen === 'series-add' && (
-          <AddSeriesScreen onArchived={() => setRefreshKey((k) => k + 1)} />
         )}
         {screen === 'webtoon' && (
           <WebtoonLibraryView
@@ -83,9 +96,6 @@ function App(): React.JSX.Element {
             onSelect={(id) => setSelectedWebtoonId(id)}
           />
         )}
-        {screen === 'webtoon-add' && (
-          <AddWebtoonScreen onArchived={() => setRefreshKey((k) => k + 1)} />
-        )}
         {screen === 'book' && (
           <BookLibraryView
             refreshKey={refreshKey}
@@ -93,7 +103,6 @@ function App(): React.JSX.Element {
             onSelect={(id) => setSelectedBookId(id)}
           />
         )}
-        {screen === 'book-add' && <AddBookScreen onArchived={() => setRefreshKey((k) => k + 1)} />}
         {screen === 'import' && (
           <WatchaImportScreen onImported={() => setRefreshKey((k) => k + 1)} />
         )}
