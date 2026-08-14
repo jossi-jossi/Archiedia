@@ -1,7 +1,13 @@
 import { Check, Plus } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import { errorMessage } from '../../lib/errors'
-import { categoryGroup, getBookDetails, searchBooks, BookSearchResult } from '../../lib/aladin'
+import {
+  authorNames,
+  categoryGroup,
+  getBookDetails,
+  searchBooks,
+  BookSearchResult
+} from '../../lib/aladin'
 import { createBook, getArchivedAladinIds } from './api'
 
 interface Props {
@@ -99,7 +105,7 @@ export function AladinSearch({ query, onArchived }: Props): React.JSX.Element {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.3 }}>{r.title}</div>
                 <div style={{ fontSize: 12, color: 'var(--color-neutral-500)' }}>
-                  {r.author} · {categoryGroup(r.category) ?? '—'}
+                  {authorNames(r.author) ?? '—'} · {categoryGroup(r.category) ?? '—'}
                 </div>
               </div>
               <button

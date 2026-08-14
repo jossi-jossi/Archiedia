@@ -87,6 +87,37 @@ export async function searchBooks(keyword: string): Promise<BookSearchResult[]> 
   return [...domestic, ...foreign]
 }
 
+// 목록 필터·카드·표처럼 좁은 자리에 쓸 지은이명. (상세팝업은 원문을 그대로 보여준다)
+//
+// 알라딘 author는 "호메로스 (지은이), 천병희 (옮긴이)"처럼 역할 꼬리표가 붙어서 오고,
+// "롤랑 마르탱 (지은이), 김민화, 이수진 (옮긴이)"처럼 이름 여러 개가 역할 하나를
+// 공유하기도 한다. 그래서 역할 단위로 묶은 뒤 지은이만 남기고 꼬리표는 떼어낸다.
+export function authorNames(author: string | null): string | null {
+  if (!author) return null
+
+  const groups: { names: string[]; role: string | null }[] = []
+  let pending: string[] = []
+  for (const raw of author.split(',')) {
+    const part = raw.trim()
+    if (!part) continue
+    const tagged = part.match(/^(.*?)\s*\(([^()]*)\)$/)
+    if (tagged) {
+      pending.push(tagged[1].trim())
+      groups.push({ names: pending.filter(Boolean), role: tagged[2].trim() })
+      pending = []
+    } else {
+      pending.push(part)
+    }
+  }
+  if (pending.length > 0) groups.push({ names: pending, role: null })
+
+  // 역할 꼬리표가 아예 없는 경우(role === null)도 지은이로 본다. 지은이가 하나도 없으면
+  // (엮음/원작만 있는 책 등) 빈칸으로 두지 말고 맨 앞 역할을 대신 쓴다.
+  const authors = groups.filter((g) => g.role === null || g.role === '지은이')
+  const picked = authors.length > 0 ? authors : groups.slice(0, 1)
+  return picked.flatMap((g) => g.names).join(', ') || null
+}
+
 // 국내/외국이 같은 분야를 다르게 부르는 것들. 한쪽 이름으로 통일한다.
 const CATEGORY_ALIASES: Record<string, string> = {
   해외잡지: '잡지',

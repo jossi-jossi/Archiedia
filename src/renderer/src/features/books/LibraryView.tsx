@@ -2,7 +2,7 @@ import { Heart, ListBullets, MagnifyingGlass, SquaresFour, Star } from '@phospho
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { listBooks, BookListItem } from './api'
 import { errorMessage } from '../../lib/errors'
-import { categoryGroup } from '../../lib/aladin'
+import { authorNames, categoryGroup } from '../../lib/aladin'
 import { FilterDropdown } from '../../components/FilterDropdown'
 import { StatusQuickEdit } from '../../components/StatusQuickEdit'
 import { displayTag, isWishlisted } from '../../lib/wishlist'
@@ -470,7 +470,8 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                       textOverflow: 'ellipsis'
                     }}
                   >
-                    {item.metadata.author ?? '—'} · {categoryGroup(item.metadata.category) ?? '—'}
+                    {authorNames(item.metadata.author) ?? '—'} ·{' '}
+                    {categoryGroup(item.metadata.category) ?? '—'}
                   </div>
                   <div
                     style={{
@@ -549,7 +550,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                       {item.title}
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--color-neutral-500)' }}>
-                      {item.metadata.author ?? '—'}
+                      {authorNames(item.metadata.author) ?? '—'}
                     </div>
                   </td>
                   <td
