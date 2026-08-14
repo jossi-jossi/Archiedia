@@ -4,6 +4,7 @@ import { deleteWebtoon, getWebtoon, updateUserRecord, Webtoon } from './api'
 import { isWishlisted, withoutStatusTags } from '../../lib/wishlist'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
+import { normalizeGenres } from './genres'
 import { webtoonPosterFill } from './poster'
 import { SourceLogo } from './sourceLogo'
 
@@ -24,6 +25,12 @@ const DIALOG_HEIGHT = POSTER_HEIGHT + 74
 // 줄거리/요약 칸은 네 상세팝업 모두 딱 세 줄이 보이는 같은 높이를 쓴다.
 // (본문 13px × line-height 1.7 × 3줄)
 const OVERVIEW_HEIGHT = 66.3
+
+// 카카오웹툰은 해시태그를 "#로맨스"처럼 #을 붙여서 주고 네이버웹툰은 안 붙여서 준다.
+// 표기를 맞추려고 화면에 그릴 때 떼어낸다. (이미 보관된 항목에도 바로 적용된다)
+function stripHash(tag: string): string {
+  return tag.replace(/^#/, '')
+}
 
 // 상세팝업 레이아웃은 당분간 영화(MovieDetail)와 동일한 틀을 쓰되, 웹툰에 맞는 필드
 // 구성(작가·장르·연재상태, 해시태그, 줄거리, 원본링크)으로 맞췄다.
@@ -178,7 +185,7 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
               <div>
                 <h2 style={{ margin: 0, paddingRight: 24, fontSize: 26 }}>{webtoon.title}</h2>
                 <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
-                  {meta.author ?? '—'} · {meta.genres.join(', ') || '—'} |{' '}
+                  {meta.author ?? '—'} · {normalizeGenres(meta.genres).join(', ') || '—'} |{' '}
                   {meta.totalEpisodes ? `${meta.totalEpisodes}화 ` : ''}
                   {meta.isFinished ? '완결' : '연재 중'}
                   {meta.sourceUrl && (
@@ -200,7 +207,7 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
                     {meta.tags.slice(0, 10).map((tag) => (
                       <span key={tag} className="tag tag-neutral">
-                        {tag}
+                        {stripHash(tag)}
                       </span>
                     ))}
                   </div>

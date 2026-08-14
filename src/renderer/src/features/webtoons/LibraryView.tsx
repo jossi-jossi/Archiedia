@@ -5,6 +5,7 @@ import { errorMessage } from '../../lib/errors'
 import { FilterDropdown } from '../../components/FilterDropdown'
 import { StatusQuickEdit } from '../../components/StatusQuickEdit'
 import { displayTag, isWishlisted } from '../../lib/wishlist'
+import { normalizeGenres } from './genres'
 import { webtoonPosterFill } from './poster'
 import { syncStaleOngoingWebtoons } from './autoSync'
 import { SourceLogo } from './sourceLogo'
@@ -194,7 +195,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   }
 
   const genreOptions = useMemo(
-    () => unique(webtoons.flatMap((w) => w.item.metadata.genres)),
+    () => unique(webtoons.flatMap((w) => normalizeGenres(w.item.metadata.genres))),
     [webtoons]
   )
 
@@ -211,7 +212,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     }
     if (genreFilter.length > 0) {
       result = result.filter(({ item }) =>
-        item.metadata.genres.some((g) => genreFilter.includes(g))
+        normalizeGenres(item.metadata.genres).some((g) => genreFilter.includes(g))
       )
     }
     if (wishlistOnly) {
@@ -509,7 +510,8 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                       textOverflow: 'ellipsis'
                     }}
                   >
-                    {item.metadata.author ?? '—'} · {item.metadata.genres.join(', ') || '—'}
+                    {item.metadata.author ?? '—'} ·{' '}
+                    {normalizeGenres(item.metadata.genres).join(', ') || '—'}
                   </div>
                   <div
                     style={{
@@ -613,9 +615,9 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                       overflow: 'hidden',
                       textOverflow: 'ellipsis'
                     }}
-                    title={item.metadata.genres.join(', ') || undefined}
+                    title={normalizeGenres(item.metadata.genres).join(', ') || undefined}
                   >
-                    {item.metadata.genres.join(', ') || '—'}
+                    {normalizeGenres(item.metadata.genres).join(', ') || '—'}
                   </td>
                   <td style={{ color: 'var(--color-neutral-400)', padding: 0 }}>
                     <span style={{ marginLeft: -6, display: 'inline-block' }}>

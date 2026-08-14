@@ -4,6 +4,7 @@ import { errorMessage } from '../../lib/errors'
 import * as naverWebtoon from '../../lib/naverWebtoon'
 import * as kakaoWebtoon from '../../lib/kakaoWebtoon'
 import { createWebtoon, getArchivedWebtoonIds } from './api'
+import { normalizeGenres } from './genres'
 import { webtoonPosterFill } from './poster'
 import { SourceLogo } from './sourceLogo'
 
@@ -63,7 +64,7 @@ export function WebtoonSearch({ query, onArchived }: Props): React.JSX.Element {
             source: 'naver',
             id: r.id,
             title: r.title,
-            subtitle: `${r.author} · ${r.genres.join(', ') || '—'}`,
+            subtitle: `${r.author} · ${normalizeGenres(r.genres).join(', ') || '—'}`,
             posterUrl: r.thumbnailUrl,
             backgroundImageUrl: null,
             raw: r
@@ -73,7 +74,7 @@ export function WebtoonSearch({ query, onArchived }: Props): React.JSX.Element {
             source: 'kakao',
             id: r.id,
             title: r.title,
-            subtitle: `${r.authors ?? '—'} · ${r.genre || '—'}`,
+            subtitle: `${r.authors ?? '—'} · ${normalizeGenres([r.genre]).join(', ') || '—'}`,
             posterUrl: r.posterUrl,
             backgroundImageUrl: r.backgroundImageUrl,
             raw: r
