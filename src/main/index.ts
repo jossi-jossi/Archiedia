@@ -79,15 +79,20 @@ app.whenReady().then(() => {
   })
 
   // 알라딘 Open API는 서버사이드 호출을 전제로 만들어져 있어 CORS 헤더가 없을 수 있으니,
-  // 웹툰과 같은 이유로 메인 프로세스에서 대신 요청한다.
+  // 웹툰과 같은 이유로 메인 프로세스에서 대신 요청한다. 원서 출판사 책소개는 API에 없어서
+  // 사이트가 쓰는 내부 조각 HTML 엔드포인트(getContents.aspx)도 같은 도메인이라 함께 허용하고,
+  // 이건 JSON이 아니라 HTML 조각을 돌려주므로 Content-Type을 보고 분기한다.
   ipcMain.handle('aladin:request', async (_event, url: string) => {
     const parsed = new URL(url)
     if (parsed.hostname !== 'www.aladin.co.kr') {
       throw new Error('허용되지 않은 도메인입니다')
     }
-    const res = await fetch(url)
+    // getContents.aspx(조각 HTML)는 Referer 없이 요청하면 빈 응답만 준다. ItemSearch/
+    // ItemLookUp에는 필요 없지만 넣어도 무해해서 모든 알라딘 요청에 그냥 같이 붙인다.
+    const res = await fetch(url, { headers: { Referer: 'https://www.aladin.co.kr/' } })
     if (!res.ok) throw new Error(`알라딘 API 요청 실패 (${res.status})`)
-    return res.json()
+    const contentType = res.headers.get('content-type') ?? ''
+    return contentType.includes('json') ? res.json() : res.text()
   })
 
   createWindow()

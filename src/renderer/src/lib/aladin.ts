@@ -104,6 +104,7 @@ interface AladinLookupItem {
   description: string
   link: string
   categoryName: string
+  isbn: string
   subInfo?: {
     originalTitle?: string
     itemPage?: number
@@ -113,6 +114,39 @@ interface AladinLookupItem {
 
 interface AladinLookupResponse {
   item?: AladinLookupItem[]
+}
+
+// 원서는 ItemLookUp API 자체에 출판사 책소개가 안 실려 있다(API 데이터셋에서 빠져 있음).
+// 대신 알라딘 사이트가 상품페이지에서 탭 내용을 비동기로 채울 때 쓰는 내부 조각-HTML
+// 엔드포인트를 그대로 호출해서 같은 내용을 가져온다.
+async function fetchPublisherDescription(isbn: string): Promise<string | null> {
+  if (!isbn) return null
+  const url = new URL('https://www.aladin.co.kr/shop/product/getContents.aspx')
+  url.searchParams.set('ISBN', isbn)
+  url.searchParams.set('name', 'PublisherDesc')
+  url.searchParams.set('type', '0')
+  url.searchParams.set('date', '15')
+
+  let html: string
+  try {
+    html = await request<string>(url.toString())
+  } catch {
+    return null
+  }
+
+  const match = html.match(
+    /<div style="word-break:break-all;">([\s\S]*?)<\/div>\s*<div class="Ere_line2">/
+  )
+  const inner = match?.[1]
+  if (!inner) return null
+
+  const text = inner
+    .replace(/<p\s*\/?>/gi, '\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+  return decodeHtmlEntities(text) || null
 }
 
 export interface BookDetails {
@@ -136,7 +170,8 @@ export async function getBookDetails(itemId: number): Promise<BookDetails> {
   if (!item) throw new Error('알라딘에서 이 책 정보를 찾지 못했어요')
 
   const originalTitle = item.subInfo?.originalTitle?.replace(/\s*\(\d{4}년?\)\s*$/, '').trim()
-  const overview = (item.subInfo?.fullDescription?.trim() || item.description?.trim()) ?? null
+  const apiOverview = (item.subInfo?.fullDescription?.trim() || item.description?.trim()) ?? null
+  const overview = apiOverview || (await fetchPublisherDescription(item.isbn))
 
   return {
     title: decodeHtmlEntities(item.title),
