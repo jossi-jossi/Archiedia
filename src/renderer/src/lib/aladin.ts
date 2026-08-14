@@ -17,15 +17,14 @@ function upscaleCover(url: string | null): string | null {
   return url.replace(/\/cover\d+\//, '/cover500/')
 }
 
-// 알라딘 응답 텍스트(특히 책 소개)에 "&lt;이방인&gt;"처럼 <, > 등이 HTML 엔티티로 이스케이프돼
-// 있는 경우가 있다. 화면에는 그냥 텍스트로 꽂아 넣으므로 미리 실제 문자로 되돌려둔다.
+// 알라딘 응답 텍스트(특히 원서 소개)에 &lt; &rsquo; &hellip; &ndash; &euml; &#160; 같은
+// HTML 엔티티가 잔뜩 섞여 있다. 하나하나 매핑표를 만드는 대신, textarea에 HTML로 꽂았다가
+// 값만 읽는 트릭으로 브라우저의 HTML 엔티티 디코더를 그대로 활용한다(textarea는 태그를
+// 해석하지 않는 텍스트 콘텐츠라 스크립트 실행 위험이 없다).
 function decodeHtmlEntities(text: string): string {
-  return text
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&amp;/g, '&')
+  const el = document.createElement('textarea')
+  el.innerHTML = text
+  return el.value
 }
 
 export interface BookSearchResult {
