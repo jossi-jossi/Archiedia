@@ -97,18 +97,8 @@ export function AladinSearch({ query, onArchived }: Props): React.JSX.Element {
                 }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 500,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                  >
-                    {r.title}
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.3 }}>{r.title}</div>
                   {r.isForeign && (
                     <span className="tag tag-neutral" style={{ flex: 'none', fontSize: 10 }}>
                       원서
