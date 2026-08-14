@@ -116,37 +116,54 @@ interface AladinLookupResponse {
   item?: AladinLookupItem[]
 }
 
-// 원서는 ItemLookUp API 자체에 출판사 책소개가 안 실려 있다(API 데이터셋에서 빠져 있음).
-// 대신 알라딘 사이트가 상품페이지에서 탭 내용을 비동기로 채울 때 쓰는 내부 조각-HTML
-// 엔드포인트를 그대로 호출해서 같은 내용을 가져온다.
-async function fetchPublisherDescription(isbn: string): Promise<string | null> {
-  if (!isbn) return null
+// ItemLookUp API의 description/fullDescription은 짧게 축약돼 있거나(국내도서) 아예 비어있는
+// 경우가 많다(원서). 알라딘 상품페이지의 "책소개" 탭이 훨씬 자세한 내용을 담고 있는데, 이건
+// API에 없고 사이트가 탭을 비동기로 채울 때 쓰는 내부 조각-HTML 엔드포인트로만 받을 수 있다.
+// 국내도서는 보통 name=Introduce에 책소개가 있고, 원서는 그게 비어있는 대신 name=PublisherDesc에
+// 있어서 순서대로 시도한다.
+async function fetchContentFragment(
+  isbn: string,
+  name: 'Introduce' | 'PublisherDesc'
+): Promise<string> {
   const url = new URL('https://www.aladin.co.kr/shop/product/getContents.aspx')
   url.searchParams.set('ISBN', isbn)
-  url.searchParams.set('name', 'PublisherDesc')
+  url.searchParams.set('name', name)
   url.searchParams.set('type', '0')
   url.searchParams.set('date', '15')
 
-  let html: string
   try {
-    html = await request<string>(url.toString())
+    return await request<string>(url.toString())
   } catch {
-    return null
+    return ''
   }
+}
 
-  const match = html.match(
-    /<div style="word-break:break-all;">([\s\S]*?)<\/div>\s*<div class="Ere_line2">/
-  )
-  const inner = match?.[1]
-  if (!inner) return null
-
-  const text = inner
+// 조각 HTML은 서식 맞추려고 들여쓰기/줄바꿈이 잔뜩 섞여 있다. <br>/<p>만 실제 문단 구분으로
+// 살리고, 나머지 태그와 소스 들여쓰기는 지운다.
+function htmlFragmentToText(html: string): string {
+  return html
     .replace(/<p\s*\/?>/gi, '\n\n')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<[^>]+>/g, '')
+    .split('\n')
+    .map((line) => line.trim())
+    .join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
-  return decodeHtmlEntities(text) || null
+}
+
+async function fetchBookIntro(isbn: string): Promise<string | null> {
+  if (!isbn) return null
+
+  for (const name of ['Introduce', 'PublisherDesc'] as const) {
+    const html = await fetchContentFragment(isbn, name)
+    const match = html.match(
+      /<div class="Ere_prod_mconts_R"[^>]*>([\s\S]*?)<div class="Ere_line2">/
+    )
+    const text = match?.[1] ? htmlFragmentToText(match[1]) : ''
+    if (text) return decodeHtmlEntities(text)
+  }
+  return null
 }
 
 export interface BookDetails {
@@ -171,7 +188,7 @@ export async function getBookDetails(itemId: number): Promise<BookDetails> {
 
   const originalTitle = item.subInfo?.originalTitle?.replace(/\s*\(\d{4}년?\)\s*$/, '').trim()
   const apiOverview = (item.subInfo?.fullDescription?.trim() || item.description?.trim()) ?? null
-  const overview = apiOverview || (await fetchPublisherDescription(item.isbn))
+  const overview = (await fetchBookIntro(item.isbn)) || apiOverview
 
   return {
     title: decodeHtmlEntities(item.title),

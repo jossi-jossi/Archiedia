@@ -1,9 +1,10 @@
-import { Heart, Star, X } from '@phosphor-icons/react'
+import { ArrowClockwise, Heart, Star, X } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
-import { deleteBook, getBook, Book, updateUserRecord } from './api'
+import { deleteBook, getBook, refetchBook, Book, updateUserRecord } from './api'
 import { isWishlisted, withoutStatusTags } from '../../lib/wishlist'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
+import { getBookDetails } from '../../lib/aladin'
 
 interface Props {
   bookId: string
@@ -24,6 +25,7 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [refetching, setRefetching] = useState(false)
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on bookId change needs to reset the loading/error flags before the async call resolves
@@ -71,6 +73,26 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
       setError(errorMessage(err))
       setDeleting(false)
       setShowDeleteConfirm(false)
+    }
+  }
+
+  async function handleRefetch(): Promise<void> {
+    if (!book || !book.externalId) return
+    setRefetching(true)
+    setError(null)
+    try {
+      const details = await getBookDetails(Number(book.externalId))
+      await refetchBook(book.id, details)
+      setBook({
+        ...book,
+        title: details.title,
+        posterUrl: details.posterUrl,
+        metadata: details.metadata
+      })
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setRefetching(false)
     }
   }
 
@@ -191,7 +213,15 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                   }}
                 >
                   <span style={{ color: 'var(--color-neutral-500)' }}>요약</span>
-                  <div style={{ marginTop: 4, height: 70, overflowY: 'auto', paddingRight: 4 }}>
+                  <div
+                    style={{
+                      marginTop: 4,
+                      height: 70,
+                      overflowY: 'auto',
+                      paddingRight: 4,
+                      whiteSpace: 'pre-line'
+                    }}
+                  >
                     {meta.overview || '—'}
                   </div>
                 </div>
@@ -338,9 +368,30 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                   minHeight: 0,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'flex-end'
+                  justifyContent: 'flex-end',
+                  gap: 14
                 }}
               >
+                <button
+                  type="button"
+                  onClick={handleRefetch}
+                  disabled={refetching}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    fontSize: 13,
+                    color: 'var(--color-neutral-500)',
+                    textDecoration: 'underline',
+                    cursor: refetching ? 'default' : 'pointer'
+                  }}
+                >
+                  <ArrowClockwise size={13} />
+                  {refetching ? '업데이트 중...' : '정보 업데이트'}
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(true)}
