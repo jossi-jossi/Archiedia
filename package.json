@@ -5,14 +5,16 @@
   "main": "./out/main/index.js",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
-    "typecheck": "npm run typecheck:node && npm run typecheck:web && npm run typecheck --workspace=packages/schema",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web && npm run typecheck --workspace=packages/schema && npm run typecheck --workspace=@archiedia/mobile",
+    "mobile": "npm run start --workspace=@archiedia/mobile",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",

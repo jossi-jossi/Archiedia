@@ -28,5 +28,12 @@ export default defineConfig(
       ...eslintPluginReactRefresh.configs.vite.rules
     }
   },
+  {
+    // Metro/Babel 설정 파일은 CommonJS로만 읽히기 때문에 require()를 허용한다.
+    files: ['apps/*/metro.config.js', 'apps/*/babel.config.js'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off'
+    }
+  },
   eslintConfigPrettier
 )

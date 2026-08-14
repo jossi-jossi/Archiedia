@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <link rel="stylesheet" href="_ds/nocturne-f6d1b043-65f5-414e-b286-0213a6cfb9ac/styles.css">
+  <script src="_ds/nocturne-f6d1b043-65f5-414e-b286-0213a6cfb9ac/_ds_bundle.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+  <style>
+    html, body { height: 100%; }
+    #root, #root > div { height: 100%; overflow-y: auto; }
+    ::-webkit-scrollbar { width: 0; height: 0; }
+    :root { --font-heading: 'Pretendard', -apple-system, sans-serif; --font-body: 'Pretendard', -apple-system, sans-serif; }
+    .hr { background: var(--color-divider) !important; }
+    /* 메인 컬러 연두색 — 데스크톱 앱의 accent-override.css와 동일 */
+    :root {
+      --color-accent: oklch(0.74 0.17 128);
+      --color-accent-2: oklch(0.77 0.115 128);
+      --color-accent-100: oklch(0.97 0.035 128);
+      --color-accent-200: oklch(0.93 0.065 128);
+      --color-accent-300: oklch(0.87 0.10 128);
+      --color-accent-400: oklch(0.80 0.14 128);
+      --color-accent-500: oklch(0.74 0.17 128);
+      --color-accent-600: oklch(0.62 0.16 128);
+      --color-accent-700: oklch(0.49 0.13 128);
+      --color-accent-800: oklch(0.36 0.095 128);
+      --color-accent-900: oklch(0.23 0.06 128);
+      --color-accent-2-100: oklch(0.97 0.03 128);
+      --color-accent-2-200: oklch(0.93 0.05 128);
+      --color-accent-2-300: oklch(0.87 0.08 128);
+      --color-accent-2-400: oklch(0.80 0.10 128);
+      --color-accent-2-500: oklch(0.74 0.115 128);
+      --color-accent-2-600: oklch(0.62 0.105 128);
+      --color-accent-2-700: oklch(0.49 0.085 128);
+      --color-accent-2-800: oklch(0.36 0.06 128);
+      --color-accent-2-900: oklch(0.23 0.04 128);
+    }
+  </style>
+</helmet>
+<div style="width:100%;min-height:100%;display:flex;align-items:flex-start;justify-content:center;background:var(--color-bg);padding:24px 0;box-sizing:border-box;overflow-y:auto">
+  <div style="transform:scale(0.72);transform-origin:top center;margin-bottom:-236px">
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390,844">
+    <div style="height:100%;display:flex;flex-direction:column;background:var(--color-bg);font-family:var(--font-body);overflow:hidden;color:var(--color-text)">
+
+      <sc-if value="{{ isLibrary }}" hint-placeholder-val="{{ true }}">
+        <div data-screen-label="라이브러리 (모바일)" style="display:flex;flex-direction:column;height:100%;min-height:0">
+          <div style="flex:none;padding:62px 18px 10px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="position:relative;flex:1;min-width:0">
+                <i class="ph ph-magnifying-glass" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--color-neutral-500)"></i>
+                <input class="input" placeholder="보관된 콘텐츠 검색" style="padding-left:30px" />
+              </div>
+              <button class="btn btn-icon" style="flex:none;width:44px;height:44px" onClick="{{ goToSettings }}"><i class="ph ph-gear" style="font-size:19px"></i></button>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;overflow-x:auto;flex:1;min-width:0;margin:0 0 0 -18px;padding:0 0 2px 18px">
+                <div class="tag" style="cursor:pointer;padding:6px 12px;display:flex;align-items:center;gap:5px;white-space:nowrap;flex:none;border:1px solid var(--color-divider);color:var(--color-text)">{{ filterLabel }} <i class="ph ph-caret-down" style="font-size:10px"></i></div>
+                <sc-if value="{{ isWebtoonLib }}" hint-placeholder-val="{{ false }}">
+                  <div class="tag" style="cursor:pointer;padding:6px 12px;white-space:nowrap;flex:none;border:1px solid var(--color-divider);color:var(--color-text)">완결작</div>
+                </sc-if>
+                <sc-if value="{{ isBookLib }}" hint-placeholder-val="{{ false }}">
+                  <div class="tag" style="cursor:pointer;padding:6px 12px;white-space:nowrap;flex:none;border:1px solid var(--color-divider);color:var(--color-text)">국내도서</div>
+                  <div class="tag" style="cursor:pointer;padding:6px 12px;white-space:nowrap;flex:none;border:1px solid var(--color-divider);color:var(--color-text)">외국도서</div>
+                </sc-if>
+                <div class="tag" style="cursor:pointer;padding:6px 12px;display:flex;align-items:center;gap:5px;white-space:nowrap;flex:none;border:1px solid var(--color-divider);color:var(--color-text)"><i class="ph ph-heart" style="font-size:12px"></i>보고 싶어요</div>
+              </div>
+              <div class="tag" style="cursor:pointer;padding:6px 12px;display:flex;align-items:center;gap:5px;white-space:nowrap;flex:none;background:var(--color-neutral-800);border:1px solid var(--color-divider);color:var(--color-text)">보관 최신순 <i class="ph ph-caret-down" style="font-size:10px"></i></div>
+            </div>
+          </div>
+
+          <div style="flex:1;overflow-y:auto;min-height:0;padding:6px 18px 18px">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+              <sc-for list="{{ items }}" as="item" hint-placeholder-count="6">
+                <div onClick="{{ item.select }}" style="cursor:pointer;display:flex;flex-direction:column;gap:7px;min-width:0">
+                  <div style="aspect-ratio:2/3;border-radius:var(--radius-md);position:relative;overflow:hidden;background:repeating-linear-gradient(45deg, var(--color-neutral-800), var(--color-neutral-800) 8px, var(--color-neutral-900) 8px, var(--color-neutral-900) 16px)">
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:10px;letter-spacing:0.08em;color:var(--color-neutral-600)">POSTER</div>
+                    <sc-if value="{{ item.isWishlist }}" hint-placeholder-val="{{ false }}">
+                      <div class="tag tag-accent-2" style="position:absolute;top:6px;left:6px;font-size:9px;padding:2px 6px;white-space:nowrap">보고 싶어요</div>
+                    </sc-if>
+                  </div>
+                  <div style="min-width:0">
+                    <div style="font-size:12px;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.title }}</div>
+                    <div style="font-size:10px;color:var(--color-neutral-500);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.sub }}</div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+                      <div style="display:flex;gap:1px">
+                        <sc-for list="{{ item.starsFilled }}" as="s" hint-placeholder-count="0"><i class="ph-fill ph-star" style="font-size:9.5px;color:var(--color-accent)"></i></sc-for>
+                        <sc-for list="{{ item.starsEmpty }}" as="s" hint-placeholder-count="0"><i class="ph-fill ph-star" style="font-size:9.5px;color:var(--color-neutral-700)"></i></sc-for>
+                      </div>
+                      <i class="{{ item.heartIcon }}" style="font-size:11px;color:var(--color-accent);cursor:pointer" onClick="{{ item.toggleWishlist }}"></i>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="flex:none;display:flex;border-top:1px solid var(--color-divider);background:var(--color-surface);padding:8px 4px 22px">
+            <sc-for list="{{ bottomTabs }}" as="tb" hint-placeholder-count="5">
+              <div onClick="{{ tb.select }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;{{ tb.style }}">
+                <i class="{{ tb.icon }}" style="font-size:20px"></i>
+                <span style="font-size:10px">{{ tb.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="상세 (모바일)" style="display:flex;flex-direction:column;height:100%;min-height:0">
+          <div style="flex:1;overflow-y:auto;min-height:0;padding:62px 18px 28px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+              <button class="btn btn-ghost" onClick="{{ goToLibrary }}" style="padding:6px 10px;white-space:nowrap;flex:none"><i class="ph ph-arrow-left"></i>{{ typeTitle }}</button>
+              <div style="flex:1"></div>
+              <button class="btn btn-icon"><i class="ph ph-trash"></i></button>
+            </div>
+
+            <div style="display:flex;flex-direction:column;align-items:center;text-align:center">
+              <div style="width:150px;aspect-ratio:2/3;border-radius:var(--radius-md);position:relative;overflow:hidden;background:repeating-linear-gradient(45deg, var(--color-neutral-800), var(--color-neutral-800) 8px, var(--color-neutral-900) 8px, var(--color-neutral-900) 16px);box-shadow:var(--shadow-md)">
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:10px;letter-spacing:0.08em;color:var(--color-neutral-600)">POSTER</div>
+              </div>
+              <div style="margin-top:14px;width:100%">
+                <h2 style="margin:0;font-size:19px">{{ selected.title }}</h2>
+
+                <sc-if value="{{ selected.hasChips }}" hint-placeholder-val="{{ true }}">
+                  <div style="color:var(--color-neutral-500);font-size:12.5px;margin-top:3px">{{ selected.sub }}</div>
+                  <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;justify-content:center">
+                    <sc-for list="{{ selected.chips }}" as="c" hint-placeholder-count="2"><span class="tag {{ c.cls }}" style="font-size:11px;white-space:nowrap;flex:none">{{ c.label }}</span></sc-for>
+                    <sc-if value="{{ selected.isMultiSeason }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:relative">
+                        <div onClick="{{ selected.toggleSeasonMenu }}" class="tag tag-outline" style="cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;flex:none">{{ selected.seasonLabel }}<i class="ph ph-caret-down" style="font-size:9px"></i></div>
+                        <sc-if value="{{ selected.seasonMenuOpen }}" hint-placeholder-val="{{ false }}">
+                          <div style="position:absolute;top:calc(100% + 4px);left:0;z-index:10;background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-md);box-shadow:var(--shadow-md);padding:6px;min-width:70px;text-align:left">
+                            <sc-for list="{{ selected.seasonOptions }}" as="opt" hint-placeholder-count="2">
+                              <div onClick="{{ opt.select }}" style="padding:5px 8px;font-size:11px;cursor:pointer;border-radius:var(--radius-sm);white-space:nowrap;{{ opt.style }}">{{ opt.label }}</div>
+                            </sc-for>
+                          </div>
+                        </sc-if>
+                      </div>
+                      <span class="tag tag-outline" style="font-size:11px;white-space:nowrap;flex:none">{{ selected.seasonEpisodesChip }}</span>
+                    </sc-if>
+                  </div>
+                  <sc-if value="{{ selected.trailerUrl }}" hint-placeholder-val="{{ false }}">
+                    <div style="margin-top:10px;display:flex;justify-content:center">
+                      <a href="{{ selected.trailerUrl }}" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:var(--color-neutral-800);color:var(--color-text);font-size:12.5px;text-decoration:none">
+                        <i class="ph ph-play-circle"></i>예고편 보기
+                      </a>
+                    </div>
+                  </sc-if>
+                </sc-if>
+
+                <sc-if value="{{ selected.isWebtoon }}" hint-placeholder-val="{{ false }}">
+                  <div style="color:var(--color-neutral-500);font-size:12.5px;margin-top:3px">{{ selected.webtoonHeader }}</div>
+                  <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;justify-content:center">
+                    <sc-for list="{{ selected.webtoonTags }}" as="c" hint-placeholder-count="3"><span class="tag {{ c.cls }}" style="font-size:11px;white-space:nowrap;flex:none">{{ c.label }}</span></sc-for>
+                  </div>
+                  <div style="margin-top:10px;display:flex;justify-content:center">
+                    <a href="{{ selected.sourceUrl }}" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:var(--color-neutral-800);color:var(--color-text);font-size:12.5px;text-decoration:none">
+                      <i class="ph ph-arrow-square-out"></i>바로가기
+                    </a>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ selected.isBook }}" hint-placeholder-val="{{ false }}">
+                  <div style="color:var(--color-neutral-500);font-size:12.5px;margin-top:3px">{{ selected.bookHeader }}</div>
+                  <div style="margin-top:10px;display:flex;justify-content:center">
+                    <a href="{{ selected.sourceUrl }}" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:var(--color-neutral-800);color:var(--color-text);font-size:12.5px;text-decoration:none">
+                      <i class="ph ph-arrow-square-out"></i>알라딘 바로가기
+                    </a>
+                  </div>
+                  <div style="color:var(--color-neutral-300);font-size:12.5px;margin-top:12px;text-align:left"><span style="color:var(--color-neutral-500)">출판사·연도</span> &nbsp; {{ selected.publisherYear }}</div>
+                  <div style="color:var(--color-neutral-300);font-size:12.5px;margin-top:4px;text-align:left"><span style="color:var(--color-neutral-500)">카테고리</span> &nbsp; {{ selected.category }}</div>
+                </sc-if>
+              </div>
+            </div>
+
+            <sc-if value="{{ selected.hasStandardMeta }}" hint-placeholder-val="{{ true }}">
+              <div style="margin-top:16px;font-size:13px;line-height:1.85;color:var(--color-neutral-300)">
+                <div><span style="color:var(--color-neutral-500)">감독</span> &nbsp; {{ selected.director }}</div>
+                <div><span style="color:var(--color-neutral-500)">출연</span> &nbsp; {{ selected.actors }}</div>
+              </div>
+            </sc-if>
+            <div style="margin-top:10px;font-size:12.5px;line-height:1.8;color:var(--color-neutral-400)">
+              <div style="color:var(--color-neutral-500);margin-bottom:3px">{{ selected.overviewLabel }}</div>
+              {{ selected.overview }}
+            </div>
+
+            <div class="hr"></div>
+            <div class="field" style="margin-bottom:12px">
+              <label>평점</label>
+              <div style="display:flex;gap:3px;padding:4px 0">
+                <sc-for list="{{ selected.starsFilled }}" as="s" hint-placeholder-count="0"><i class="ph-fill ph-star" style="font-size:24px;color:var(--color-accent)"></i></sc-for>
+                <sc-for list="{{ selected.starsEmpty }}" as="s" hint-placeholder-count="0"><i class="ph-fill ph-star" style="font-size:24px;color:var(--color-neutral-700)"></i></sc-for>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="field"><label>{{ selected.countLabel }}</label><input class="input" value="{{ selected.countValue }}" /></div>
+              <div class="field">
+                <label>상태</label>
+                <button type="button" class="btn {{ selected.wishlistBtnClass }}" style="width:100%;min-height:36px;{{ selected.wishlistBtnStyle }}" onClick="{{ selected.toggleWishlist }}">
+                  <i class="{{ selected.heartIcon }}"></i>보고 싶어요
+                </button>
+              </div>
+              <div class="field"><label>{{ selected.mediumLabel }}</label><input class="input" placeholder="{{ selected.mediumPlaceholder }}" value="{{ selected.mediumValue }}" /></div>
+              <div class="field"><label>{{ selected.dateLabel }}</label><input class="input" placeholder="YYYY-MM-DD" value="{{ selected.dateValue }}" /></div>
+            </div>
+            <div class="field" style="margin-top:12px">
+              <label>나의 후기</label>
+              <textarea class="input" placeholder="이 작품에 대한 생각을 기록해보세요" value="{{ selected.review }}"></textarea>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="설정 (모바일)" style="display:flex;flex-direction:column;height:100%;min-height:0">
+          <div style="flex:1;overflow-y:auto;min-height:0;padding:62px 18px 28px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+              <button class="btn btn-ghost" onClick="{{ goToLibrary }}" style="padding:6px 10px;white-space:nowrap;flex:none"><i class="ph ph-arrow-left"></i>설정</button>
+            </div>
+
+            <div style="font-size:12px;color:var(--color-neutral-500);margin-bottom:8px;padding:0 2px">보관 현황</div>
+            <div style="display:flex;flex-direction:column;border:1px solid var(--color-divider);border-radius:var(--radius-md);overflow:hidden;margin-bottom:24px">
+              <sc-for list="{{ typeCounts }}" as="tc" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid var(--color-divider)">
+                  <i class="{{ tc.icon }}" style="font-size:17px;color:var(--color-neutral-400)"></i>
+                  <span style="flex:1;font-size:14px">{{ tc.label }}</span>
+                  <span style="font-size:13px;color:var(--color-neutral-500)">{{ tc.countText }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <button class="btn btn-secondary btn-block" onClick="{{ goToLogin }}"><i class="ph ph-sign-out"></i>로그아웃</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isAdd }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="검색 · 추가 (모바일)" style="display:flex;flex-direction:column;height:100%;min-height:0">
+          <div style="flex:none;padding:62px 18px 10px;display:flex;flex-direction:column;gap:12px">
+            <div class="seg" style="display:grid;grid-template-columns:repeat(4, 1fr);font-size:13px">
+              <sc-for list="{{ searchTabs }}" as="t" hint-placeholder-count="4">
+                <label class="seg-opt" style="justify-content:center;box-shadow:none;{{ t.style }}">
+                  <input type="radio" name="search-type" checked="{{ t.checked }}" onChange="{{ t.select }}" />{{ t.label }}
+                </label>
+              </sc-for>
+            </div>
+            <div style="position:relative">
+              <i class="ph ph-magnifying-glass" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--color-neutral-500)"></i>
+              <input class="input" placeholder="{{ searchPlaceholder }}" style="padding-left:30px" />
+            </div>
+          </div>
+
+          <div style="flex:1;overflow-y:auto;min-height:0;padding:2px 18px 18px">
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ searchResults }}" as="r" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--color-divider)">
+                  <div style="width:34px;height:48px;flex:none;border-radius:4px;background:repeating-linear-gradient(45deg, var(--color-neutral-800), var(--color-neutral-800) 5px, var(--color-neutral-900) 5px, var(--color-neutral-900) 10px)"></div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</div>
+                    <div style="font-size:11.5px;color:var(--color-neutral-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</div>
+                  </div>
+                  <button class="btn btn-icon" style="{{ r.addBtnStyle }}" onClick="{{ r.toggleArchived }}"><i class="{{ r.addIcon }}"></i></button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="flex:none;display:flex;border-top:1px solid var(--color-divider);background:var(--color-surface);padding:8px 4px 22px">
+            <sc-for list="{{ bottomTabs }}" as="tb" hint-placeholder-count="5">
+              <div onClick="{{ tb.select }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;{{ tb.style }}">
+                <i class="{{ tb.icon }}" style="font-size:20px"></i>
+                <span style="font-size:10px">{{ tb.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="로그인 (모바일)" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 28px;background:radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--color-accent) 6%, transparent), transparent 60%)">
+          <div style="width:100%;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:6px">
+              <i class="ph-fill ph-film-strip" style="font-size:30px;color:var(--color-accent)"></i>
+              <h2 style="margin:0;font-size:20px">아키디아</h2>
+              <div style="font-size:12.5px;color:var(--color-neutral-500);text-align:center">영화 · 시리즈 · 웹툰 · 책 기록을 한곳에</div>
+            </div>
+            <div class="field"><label>이메일</label><input class="input" placeholder="you@example.com" /></div>
+            <div class="field"><label>비밀번호</label><input class="input" type="password" placeholder="••••••••" /></div>
+            <button class="btn btn-primary btn-block" onClick="{{ goToLibrary }}">로그인</button>
+            <div class="hr" style="margin:4px 0"></div>
+            <button class="btn btn-secondary btn-block"><i class="ph ph-envelope-simple"></i>이메일로 회원가입</button>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </x-import>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const TYPES = [
+  { key: 'movie', label: '영화', icon: 'ph ph-film-slate', placeholder: 'TMDB에서 영화 검색' },
+  { key: 'series', label: '시리즈', icon: 'ph ph-television', placeholder: 'TMDB에서 시리즈 검색' },
+  { key: 'webtoon', label: '웹툰', icon: 'ph ph-layout', placeholder: '네이버웹툰·카카오웹툰에서 검색' },
+  { key: 'book', label: '책', icon: 'ph ph-book-open', placeholder: '알라딘에서 책 검색' },
+];
+
+const ITEMS = {
+  movie: [
+    { id: 'm1', title: '파묘', sub: '2024 · 미스터리, 오컬트', country: '한국', runtime: 134, director: '장재현', actors: ['최민식', '김고은', '유해진'], overview: '풍수사와 장의사, 무속인이 거액의 의뢰를 받고 조상의 묘를 이장하며 벌어지는 이야기.', trailerUrl: '#', rating: 5, wishlist: false, count: 2, status: '2번 봄', medium: '극장', date: '2024-03-10', review: '후반부 톤 전환이 과감했지만 설정이 탄탄해서 끝까지 몰입했다.' },
+    { id: 'm2', title: '듄: 파트 2', sub: '2024 · SF, 어드벤처', country: '미국', runtime: 166, director: '드니 빌뇌브', actors: ['티모시 샬라메', '젠데이아'], overview: '아라키스의 사막에서 폴 아트레이데스가 프레멘과 함께 복수에 나선다.', trailerUrl: '#', rating: 4, wishlist: false, count: 1, status: '1번 봄', medium: 'IMAX', date: '2024-03-02', review: '' },
+    { id: 'm3', title: '기생충', sub: '2019 · 드라마, 스릴러', country: '한국', runtime: 132, director: '봉준호', actors: ['송강호', '이선균', '조여정'], overview: '전원 백수인 기택네 장남이 박 사장 집 과외를 맡으며 두 가족이 얽힌다.', trailerUrl: null, rating: 5, wishlist: false, count: 3, status: '3번 봄', medium: 'OTT', date: '2023-11-20', review: '세 번째로 다시 봐도 매 장면이 촘촘하다.' },
+    { id: 'm4', title: '가여운 것들', sub: '2023 · 판타지, 블랙코미디', country: '영국', runtime: 141, director: '요르고스 란티모스', actors: ['엠마 스톤', '마크 러팔로'], overview: '되살아난 벨라 백스터가 세상을 배우며 자유를 찾아 나선다.', trailerUrl: null, rating: 0, wishlist: true, count: 0, status: '보고 싶어요', medium: '', date: '', review: '' },
+  ],
+  series: [
+    { id: 's1', title: '더 베어', sub: '2022', country: '미국', seasons: [
+        { number: 1, episodes: 8, runtime: 30, director: '크리스토퍼 스토러', actors: ['제레미 앨런 화이트', '아요 에데비리'], overview: '파인다이닝 셰프가 형이 남긴 샌드위치 가게를 물려받아 주방을 다시 세운다.', trailerUrl: '#' },
+        { number: 2, episodes: 10, runtime: 32, director: '크리스토퍼 스토러', actors: ['제레미 앨런 화이트', '아요 에데비리'], overview: '새 레스토랑 오픈을 앞두고 팀 전체가 압박 속에서 손발을 맞춘다.', trailerUrl: '#' },
+        { number: 3, episodes: 10, runtime: 34, director: '크리스토퍼 스토러', actors: ['제레미 앨런 화이트', '아요 에데비리'], overview: '완벽을 향한 강박이 주방과 관계 모두를 시험한다.', trailerUrl: '#' },
+      ], rating: 5, wishlist: false, count: 2, status: '2번 봄', medium: 'OTT', date: '2024-07-04', review: '주방 소음이 그대로 긴장감이 된다.' },
+    { id: 's2', title: '오징어 게임', sub: '2021', country: '한국', seasons: [
+        { number: 1, episodes: 9, runtime: 55, director: '황동혁', actors: ['이정재', '박해수'], overview: '거액의 상금을 두고 벌어지는 서바이벌 게임에 참가자들이 모여든다.', trailerUrl: '#' },
+        { number: 2, episodes: 7, runtime: 58, director: '황동혁', actors: ['이정재', '이병헌'], overview: '게임을 끝내려는 성기훈이 다시 그 안으로 돌아간다.', trailerUrl: '#' },
+      ], rating: 4, wishlist: false, count: 1, status: '1번 봄', medium: 'OTT', date: '2024-12-30', review: '' },
+    { id: 's3', title: '삼체', sub: '2024', country: '미국', seasons: [
+        { number: 1, episodes: 8, runtime: 52, director: '데이비드 베니오프', actors: ['제스 홍', '지스 저우'], overview: '한 물리학자의 죽음에서 시작된 사건이 인류와 외계 문명의 접촉으로 이어진다.', trailerUrl: '#' },
+      ], rating: 0, wishlist: true, count: 0, status: '보고 싶어요', medium: '', date: '', review: '' },
+  ],
+  webtoon: [
+    { id: 'w1', title: '화산귀환', sub: '비가, LICO · 네이버웹툰', author: '비가, LICO', genre: '무협', tags: ['무협', '액션', '환생'], episodes: 162, sourceUrl: '#', overview: '화산파 13대 제자 청명이 백 년 뒤에 되살아나 무너진 문파를 다시 일으킨다.', rating: 5, wishlist: false, count: 2, status: '2번 봄', medium: '네이버웹툰 앱', date: '2025-01-18', review: '연출이 시원해서 회차가 빨리 넘어간다.' },
+    { id: 'w2', title: '나 혼자만 레벨업', sub: '추공, DUBU · 카카오웹툰', author: '추공, DUBU', genre: '액션', tags: ['판타지', '먼치킨', '액션'], episodes: 179, sourceUrl: '#', overview: '최약체 헌터 성진우가 홀로 레벨업하는 능력을 얻는다.', rating: 4, wishlist: false, count: 1, status: '1번 봄', medium: '카카오웹툰 앱', date: '2024-09-02', review: '' },
+    { id: 'w3', title: '여신강림', sub: '야옹이 · 네이버웹툰', author: '야옹이', genre: '로맨스', tags: ['로맨스', '학원', '일상'], episodes: 209, sourceUrl: '#', overview: '메이크업으로 달라진 임주경의 학교 생활과 비밀.', rating: 0, wishlist: true, count: 0, status: '보고 싶어요', medium: '', date: '', review: '' },
+  ],
+  book: [
+    { id: 'b1', title: '소년이 온다', sub: '한강 · 창비', author: '한강', pageCount: 216, publisher: '창비', year: 2014, category: '국내도서>소설/시/희곡>한국소설', sourceUrl: '#', overview: '1980년 광주, 그날의 목소리를 여러 사람의 시점으로 잇는 소설.', rating: 5, wishlist: false, count: 2, status: '2번 봄', medium: '종이책', date: '2024-10-12', review: '문장을 오래 붙들게 되는 책.' },
+    { id: 'b2', title: '지구 끝의 온실', sub: '김초엽 · 자이언트북스', author: '김초엽', pageCount: 392, publisher: '자이언트북스', year: 2021, category: '국내도서>소설/시/희곡>SF소설', sourceUrl: '#', overview: '더스트 시대 이후의 세계를 추적하는 연구자의 기록.', rating: 4, wishlist: false, count: 1, status: '1번 봄', medium: 'eBook', date: '2024-05-21', review: '' },
+    { id: 'b3', title: '급류', sub: '정대건 · 민음사', author: '정대건', pageCount: 324, publisher: '민음사', year: 2022, category: '국내도서>소설/시/희곡>한국소설', sourceUrl: '#', overview: '같은 강에서 부모를 잃은 두 사람이 서로에게 휘말리는 이야기.', rating: 0, wishlist: true, count: 0, status: '보고 싶어요', medium: '', date: '', review: '' },
+  ],
+};
+
+const SEARCH_RESULTS = {
+  movie: [
+    { id: 'sr-m1', title: '그녀', sub: '2013 · 드라마, 로맨스' },
+    { id: 'sr-m2', title: '문라이트', sub: '2016 · 드라마' },
+    { id: 'sr-m3', title: '헤어질 결심', sub: '2022 · 미스터리, 로맨스', archived: true },
+  ],
+  series: [
+    { id: 'sr-s1', title: '슬로 호시스', sub: '2022 · 스릴러, 드라마' },
+    { id: 'sr-s2', title: '무빙', sub: '2023 · 액션, SF', archived: true },
+  ],
+  webtoon: [
+    { id: 'sr-w1', title: '전지적 독자 시점', sub: '싱숑, 슬리피-C · 액션', archived: true },
+    { id: 'sr-w2', title: '외모지상주의', sub: '박태준 · 액션' },
+    { id: 'sr-w3', title: '사내맞선', sub: '해화, 나이스진영 · 로맨스' },
+  ],
+  book: [
+    { id: 'sr-b1', title: '작별하지 않는다', sub: '한강 · 소설', archived: true },
+    { id: 'sr-b2', title: '불안 세대', sub: '조너선 하이트 · 사회과학' },
+  ],
+};
+
+const LABELS = {
+  movie: { count: '시청 횟수', medium: '시청 매체', date: '마지막 시청일', mediumPh: '극장 / OTT / 블루레이 등' },
+  series: { count: '시청 횟수', medium: '시청 매체', date: '마지막 시청일', mediumPh: '극장 / OTT / 블루레이 등' },
+  webtoon: { count: '읽은 횟수', medium: '읽은 매체', date: '마지막 읽은 날', mediumPh: '네이버웹툰 앱 / PC 등' },
+  book: { count: '읽은 횟수', medium: '읽은 매체', date: '마지막 읽은 날', mediumPh: '종이책 / eBook 등' },
+};
+
+class Component extends DCLogic {
+  state = { screen: 'library', type: 'movie', selectedId: 'm1', searchType: 'movie', overrides: {}, seasonIndex: {}, seasonMenuOpenId: null, searchArchived: {} };
+
+  decorateCommon(rawIn, type) {
+    const override = this.state.overrides[rawIn.id];
+    const raw = override === undefined ? rawIn : {
+      ...rawIn,
+      wishlist: override,
+      status: override ? '보고 싶어요' : rawIn.status,
+    };
+    const labels = LABELS[type];
+    return {
+      ...raw,
+      starsFilled: Array.from({ length: raw.rating }),
+      starsEmpty: Array.from({ length: 5 - raw.rating }),
+      isWishlist: raw.wishlist,
+      heartIcon: raw.wishlist ? 'ph-fill ph-heart' : 'ph ph-heart',
+      countLabel: labels.count,
+      mediumLabel: labels.medium,
+      dateLabel: labels.date,
+      mediumPlaceholder: labels.mediumPh,
+      countValue: String(raw.count),
+      statusValue: raw.status,
+      wishlistBtnClass: raw.wishlist ? 'btn-primary' : 'btn-secondary',
+      wishlistBtnStyle: raw.wishlist ? '' : 'background: color-mix(in srgb, var(--color-text) 8%, transparent)',
+      mediumValue: raw.medium || '',
+      dateValue: raw.date || '',
+      select: () => this.setState({ selectedId: raw.id, screen: 'detail' }),
+      toggleWishlist: (e) => {
+        if (e) e.stopPropagation();
+        this.setState({ overrides: { ...this.state.overrides, [raw.id]: !raw.wishlist } });
+      },
+    };
+  }
+
+  decorate(raw, type) {
+    const common = this.decorateCommon(raw, type);
+    if (type === 'movie') {
+      return {
+        ...common,
+        isMovie: true, hasChips: true, hasStandardMeta: true, overviewLabel: '줄거리',
+        chips: [{ label: raw.country, cls: 'tag-outline' }, { label: `${raw.runtime}분`, cls: 'tag-outline' }],
+        actors: raw.actors.join(', '),
+      };
+    }
+    if (type === 'series') {
+      const seasons = raw.seasons;
+      const isMulti = seasons.length >= 2;
+      const idx = Math.min(this.state.seasonIndex[raw.id] ?? 0, seasons.length - 1);
+      const current = seasons[idx];
+      const totalEpisodes = seasons.reduce((sum, s) => sum + s.episodes, 0);
+      return {
+        ...common,
+        isSeries: true, hasChips: true, hasStandardMeta: true, overviewLabel: '줄거리',
+        isMultiSeason: isMulti,
+        chips: isMulti
+          ? [{ label: raw.country, cls: 'tag-outline' }, { label: `시즌 ${seasons.length}개`, cls: 'tag-outline' }, { label: `${totalEpisodes}부`, cls: 'tag-outline' }]
+          : [{ label: raw.country, cls: 'tag-outline' }, { label: `${current.episodes}부`, cls: 'tag-outline' }, { label: `${current.runtime}분`, cls: 'tag-outline' }],
+        seasonLabel: `시즌 ${current.number}`,
+        seasonEpisodesChip: `${current.episodes}부`,
+        seasonMenuOpen: this.state.seasonMenuOpenId === raw.id,
+        toggleSeasonMenu: () => this.setState({ seasonMenuOpenId: this.state.seasonMenuOpenId === raw.id ? null : raw.id }),
+        seasonOptions: seasons.map((s, i) => ({
+          label: `시즌 ${s.number}`,
+          style: i === idx ? 'color: var(--color-accent)' : '',
+          select: () => this.setState({ seasonIndex: { ...this.state.seasonIndex, [raw.id]: i }, seasonMenuOpenId: null }),
+        })),
+        director: current.director,
+        actors: current.actors.join(', '),
+        overview: current.overview,
+        trailerUrl: current.trailerUrl || null,
+      };
+    }
+    if (type === 'webtoon') {
+      return {
+        ...common,
+        isWebtoon: true, hasChips: false, hasStandardMeta: false, overviewLabel: '줄거리',
+        webtoonHeader: `${raw.author} · ${raw.genre} | ${raw.episodes}화`,
+        webtoonTags: raw.tags.map(t => ({ label: t, cls: 'tag-neutral' })),
+      };
+    }
+    return {
+      ...common,
+      isBook: true, hasChips: false, hasStandardMeta: false, overviewLabel: '요약',
+      bookHeader: `${raw.author} (지은이) | ${raw.pageCount}페이지`,
+      publisherYear: `${raw.publisher}·${raw.year}`,
+    };
+  }
+
+  renderVals() {
+    const type = this.state.type;
+    const items = ITEMS[type].map(raw => this.decorate(raw, type));
+    const all = Object.keys(ITEMS).flatMap(k => ITEMS[k].map(raw => [k, raw]));
+    const found = all.find(([, raw]) => raw.id === this.state.selectedId) || all[0];
+    const selected = this.decorate(found[1], found[0]);
+    const activeType = TYPES.find(t => t.key === type) || TYPES[0];
+    const activeSearch = TYPES.find(t => t.key === this.state.searchType) || TYPES[0];
+
+    return {
+      items,
+      selected,
+      typeTitle: activeType.label,
+      filterLabel: type === 'book' ? '카테고리' : '장르',
+      isWebtoonLib: type === 'webtoon',
+      isBookLib: type === 'book',
+      bottomTabs: [
+        ...TYPES.map(t => ({
+          label: t.label,
+          icon: t.key === type && this.state.screen === 'library' ? t.icon.replace('ph ph-', 'ph-fill ph-') : t.icon,
+          style: this.state.screen === 'library' && t.key === type ? 'color: var(--color-accent)' : 'color: var(--color-neutral-500)',
+          select: () => this.setState({ screen: 'library', type: t.key }),
+        })),
+        {
+          label: '검색 · 추가',
+          icon: this.state.screen === 'add' ? 'ph-fill ph-magnifying-glass' : 'ph ph-magnifying-glass',
+          style: this.state.screen === 'add' ? 'color: var(--color-accent)' : 'color: var(--color-neutral-500)',
+          select: () => this.setState({ screen: 'add', searchType: type }),
+        },
+      ],
+      searchTabs: TYPES.map(t => ({
+        label: t.label,
+        checked: t.key === this.state.searchType,
+        style: t.key === this.state.searchType
+          ? 'color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 15%, transparent)'
+          : '',
+        select: () => this.setState({ searchType: t.key }),
+      })),
+      searchPlaceholder: activeSearch.placeholder,
+      searchResults: (SEARCH_RESULTS[this.state.searchType] || []).map(r => {
+        const archived = this.state.searchArchived[r.id] ?? r.archived ?? false;
+        return {
+          ...r,
+          addIcon: archived ? 'ph-fill ph-check' : 'ph ph-plus',
+          addBtnStyle: archived ? 'color: var(--color-text); background: transparent' : 'color: var(--color-accent); background: transparent',
+          toggleArchived: archived ? undefined : () => this.setState({ searchArchived: { ...this.state.searchArchived, [r.id]: true } }),
+        };
+      }),
+      isLibrary: this.state.screen === 'library',
+      isDetail: this.state.screen === 'detail',
+      isAdd: this.state.screen === 'add',
+      isLogin: this.state.screen === 'login',
+      isSettings: this.state.screen === 'settings',
+      typeCounts: TYPES.map(t => ({ label: t.label, icon: t.icon, countText: `${ITEMS[t.key].length}개` })),
+      goToLibrary: () => this.setState({ screen: 'library' }),
+      goToAdd: () => this.setState({ screen: 'add', searchType: this.state.type }),
+      goToLogin: () => this.setState({ screen: 'login' }),
+      goToSettings: () => this.setState({ screen: 'settings' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

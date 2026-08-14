@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "아키디아",
+    "slug": "archiedia",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "scheme": "archiedia",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.archiedia.app"
+    },
+    "android": {
+      "package": "com.archiedia.app",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": ["expo-status-bar"]
+  }
+}
