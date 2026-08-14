@@ -4,6 +4,9 @@ interface ArchiediaApi {
   webtoon: {
     request: (url: string) => Promise<unknown>
   }
+  aladin: {
+    request: (url: string) => Promise<unknown>
+  }
 }
 
 declare global {

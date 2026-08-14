@@ -78,6 +78,18 @@ app.whenReady().then(() => {
     return res.json()
   })
 
+  // 알라딘 Open API는 서버사이드 호출을 전제로 만들어져 있어 CORS 헤더가 없을 수 있으니,
+  // 웹툰과 같은 이유로 메인 프로세스에서 대신 요청한다.
+  ipcMain.handle('aladin:request', async (_event, url: string) => {
+    const parsed = new URL(url)
+    if (parsed.hostname !== 'www.aladin.co.kr') {
+      throw new Error('허용되지 않은 도메인입니다')
+    }
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`알라딘 API 요청 실패 (${res.status})`)
+    return res.json()
+  })
+
   createWindow()
 
   app.on('activate', function () {

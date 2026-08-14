@@ -52,6 +52,19 @@ export interface WebtoonMetadata {
   lastSyncedAt: string | null
 }
 
+export interface BookMetadata {
+  author: string | null
+  originalTitle: string | null
+  publisher: string | null
+  releaseYear: number | null
+  pageCount: number | null
+  // 알라딘 카테고리 전체 경로 문자열 (예: "국내도서>소설/시/희곡>한국소설"). 목록/검색
+  // 카드처럼 짧게 보여줄 땐 마지막 구간만 뽑아 쓴다.
+  category: string | null
+  overview: string | null
+  sourceUrl: string | null
+}
+
 interface ContentItemBase {
   id: string
   userId: string
@@ -62,10 +75,9 @@ interface ContentItemBase {
   createdAt: string
 }
 
-// 책의 metadata 필드는 아직 미정 (ARCHITECTURE.md 7절 참고) — 확정되면 MovieMetadata처럼 구체 타입을 채운다.
 export type ContentItem =
   | (ContentItemBase & { type: 'movie'; metadata: MovieMetadata })
-  | (ContentItemBase & { type: 'book'; metadata: Record<string, unknown> })
+  | (ContentItemBase & { type: 'book'; metadata: BookMetadata })
   | (ContentItemBase & { type: 'webtoon'; metadata: WebtoonMetadata })
   | (ContentItemBase & { type: 'drama'; metadata: DramaMetadata })
 

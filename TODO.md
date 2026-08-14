@@ -1,4 +1,4 @@
-# TODO — 1차 목표: 데스크톱 앱 + 영화·시리즈·웹툰 콘텐츠 관리
+# TODO — 1차 목표: 데스크톱 앱 + 영화·시리즈·웹툰·책 콘텐츠 관리
 
 > 기준 문서: [ARCHITECTURE.md](./ARCHITECTURE.md)
 > 왓챠피디아는 공식 API/내보내기 기능이 없어 로그인 세션 크롤링(Playwright 등)을 1차 범위에서 제외하고, 우선 **TMDB API + 수동 입력**으로 영화 관리 MVP를 완성했다. 이후 왓챠 데이터 이전은 크롤링 대신, 커뮤니티 북마클릿 스크립트로 사용자가 직접 CSV로 내보낸 뒤 앱에서 가져오는 방식(Phase 9)으로 해결.
@@ -95,6 +95,16 @@
 - [x] 카카오웹툰은 네이버와 달리 완성된 포스터 이미지가 없고 배경색(`backgroundColor`) 위에 캐릭터 컷아웃(투명 PNG)을 얹는 카드 구조라, `WebtoonMetadata.backgroundColor`에 배경색을 저장하고 `features/webtoons/poster.ts`에서 배경색+`background-size: contain` 합성으로 렌더링 (네이버는 이 필드가 항상 null, 기존 cover 방식 유지)
 - [x] 검색·추가 화면에서 네이버/카카오를 동시에 검색해서 한 목록에 합쳐서 보여줌(각 카드에 출처 배지 표시) — `WebtoonSearch.tsx`가 `NaverSearch.tsx`/`KakaoSearch.tsx`(소스별 탭 방식)를 대체
 - [ ] 카카오웹툰 왓챠 가져오기 지원은 아직 미착수 (제목 매칭이 네이버와 카카오 양쪽에 걸칠 수 있어서 별도 논의 필요)
+
+## Phase 12 — 책 지원
+
+- [x] 도서 API 조사 — 네이버/카카오 책 검색 API는 공식 JSON을 제공하지만 장르/카테고리 필드가 없음. 알라딘 Open API가 유일하게 카테고리(전체 경로)·줄거리·목차·평점까지 제공해서 채택. 무료 TTBKey 발급 필요, 하루 5,000회 제한
+- [x] `BookMetadata` 타입 추가 (`packages/schema`) — author/originalTitle/publisher/releaseYear/pageCount/category/overview/sourceUrl. 기존에 미정이던 `book` 타입의 `Record<string, unknown>` metadata를 이걸로 교체
+- [x] 알라딘 API도 서버사이드 호출을 전제로 만들어져 CORS가 막힐 수 있어, 웹툰과 같은 방식으로 메인 프로세스 IPC 핸들러(`aladin:request`, `www.aladin.co.kr`만 허용)를 통해 요청 — `src/main/index.ts`, `preload`, `lib/aladin.ts`
+- [x] 검색(`ItemSearch.aspx`)에서 이미 `categoryName`(전체 경로 문자열)이 내려와서 상세 조회 없이도 카드에 카테고리 표시 가능. 상세(`ItemLookUp.aspx`)는 `OptResult=fullDescription,categoryIdList`로 줄거리와 카테고리 재확인
+- [x] `content_items.type = 'book'`, `source: 'aladin'` (스키마에 이미 허용돼 있어 DB 마이그레이션 불필요) — `features/books/api.ts`
+- [x] 책 라이브러리/검색·추가/상세팝업(`features/books/LibraryView.tsx`, `AladinSearch.tsx`, `AddBookScreen.tsx`, `BookDetail.tsx`) — 영화/시리즈와 같은 틀, 도서 표지는 업계 표준 2:3 비율(영화 포스터와 동일)이라 별도 비율 계산 불필요. 상세팝업은 원제·작가·페이지수 / 출판사·연도·원본링크 / 카테고리(전체 경로) / 줄거리 순으로 구성
+- [x] 사이드바에 "책" 섹션 추가 (라이브러리 + 검색·추가). 웹툰 섹션 아이콘은 만화를 더 잘 연상시키는 `ImagesSquare`로 교체, `BookOpen`은 책 섹션으로 이동
 
 ## Phase 7 — 패키징
 

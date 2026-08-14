@@ -5,6 +5,9 @@ import { electronAPI } from '@electron-toolkit/preload'
 const api = {
   webtoon: {
     request: (url: string): Promise<unknown> => ipcRenderer.invoke('webtoon:request', url)
+  },
+  aladin: {
+    request: (url: string): Promise<unknown> => ipcRenderer.invoke('aladin:request', url)
   }
 }
 

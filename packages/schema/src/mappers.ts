@@ -12,7 +12,7 @@ export function toContentItem(row: ContentItemRow): ContentItem {
     posterUrl: row.poster_url,
     createdAt: row.created_at,
     metadata: row.metadata
-  } as ContentItem
+  } as unknown as ContentItem
 }
 
 export function toUserRecord(row: UserRecordRow): UserRecord {

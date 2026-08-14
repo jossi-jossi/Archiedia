@@ -12,6 +12,9 @@ import { SeriesDetail } from './features/series/SeriesDetail'
 import { AddWebtoonScreen } from './features/webtoons/AddWebtoonScreen'
 import { LibraryView as WebtoonLibraryView } from './features/webtoons/LibraryView'
 import { WebtoonDetail } from './features/webtoons/WebtoonDetail'
+import { AddBookScreen } from './features/books/AddBookScreen'
+import { LibraryView as BookLibraryView } from './features/books/LibraryView'
+import { BookDetail } from './features/books/BookDetail'
 
 function App(): React.JSX.Element {
   const { session, loading } = useSession()
@@ -19,10 +22,12 @@ function App(): React.JSX.Element {
   const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null)
   const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null)
   const [selectedWebtoonId, setSelectedWebtoonId] = useState<string | null>(null)
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [movieCount, setMovieCount] = useState(0)
   const [seriesCount, setSeriesCount] = useState(0)
   const [webtoonCount, setWebtoonCount] = useState(0)
+  const [bookCount, setBookCount] = useState(0)
 
   if (loading) {
     return (
@@ -41,6 +46,7 @@ function App(): React.JSX.Element {
         movieCount={movieCount}
         seriesCount={seriesCount}
         webtoonCount={webtoonCount}
+        bookCount={bookCount}
         onNavigate={(next) => setScreen(next)}
       />
       <div
@@ -80,6 +86,14 @@ function App(): React.JSX.Element {
         {screen === 'webtoon-add' && (
           <AddWebtoonScreen onArchived={() => setRefreshKey((k) => k + 1)} />
         )}
+        {screen === 'book' && (
+          <BookLibraryView
+            refreshKey={refreshKey}
+            onCountChange={setBookCount}
+            onSelect={(id) => setSelectedBookId(id)}
+          />
+        )}
+        {screen === 'book-add' && <AddBookScreen onArchived={() => setRefreshKey((k) => k + 1)} />}
         {screen === 'import' && (
           <WatchaImportScreen onImported={() => setRefreshKey((k) => k + 1)} />
         )}
@@ -119,6 +133,19 @@ function App(): React.JSX.Element {
           }}
           onDeleted={() => {
             setSelectedWebtoonId(null)
+            setRefreshKey((k) => k + 1)
+          }}
+        />
+      )}
+      {selectedBookId && (
+        <BookDetail
+          bookId={selectedBookId}
+          onClose={() => {
+            setSelectedBookId(null)
+            setRefreshKey((k) => k + 1)
+          }}
+          onDeleted={() => {
+            setSelectedBookId(null)
             setRefreshKey((k) => k + 1)
           }}
         />
