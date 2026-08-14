@@ -2,7 +2,7 @@ import { Heart, ListBullets, MagnifyingGlass, SquaresFour, Star } from '@phospho
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { listBooks, BookListItem } from './api'
 import { errorMessage } from '../../lib/errors'
-import { authorNames, categoryGroup } from '../../lib/aladin'
+import { authorNames, categoryGroup, categoryOrigin } from '../../lib/aladin'
 import { FilterDropdown } from '../../components/FilterDropdown'
 import { StatusQuickEdit } from '../../components/StatusQuickEdit'
 import { displayTag, isWishlisted } from '../../lib/wishlist'
@@ -86,6 +86,9 @@ function unique(values: (string | null | undefined)[]): string[] {
 
 const SHOW_FILTERS = true
 
+// 알라딘 카테고리 경로의 맨 앞 구간과 그대로 일치해야 한다.
+const ORIGINS = ['국내도서', '외국도서']
+
 const POSTER_WIDTH = 150
 const GRID_GAP = 18
 // 헤더 행(제목/검색/토글, 필터/정렬)의 오른쪽 여백과 같은 값. 마지막 카드가 여기 맞춰진다.
@@ -143,6 +146,8 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   const [query, setQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string[]>([])
   const [wishlistOnly, setWishlistOnly] = useState(false)
+  // 둘 다 켜져 있거나 둘 다 꺼져 있으면 전체를 보여준다.
+  const [originFilter, setOriginFilter] = useState<string[]>([])
   const [sort, setSort] = useState<SortKey>('added_desc')
   const [gridRef, columns, gutter] = useGridColumns(POSTER_WIDTH)
 
@@ -191,6 +196,11 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
         categoryFilter.includes(categoryGroup(item.metadata.category) ?? '')
       )
     }
+    if (originFilter.length > 0 && originFilter.length < ORIGINS.length) {
+      result = result.filter(({ item }) =>
+        originFilter.includes(categoryOrigin(item.metadata.category) ?? '')
+      )
+    }
     if (wishlistOnly) {
       result = result.filter(({ record }) => record && isWishlisted(record.tags))
     }
@@ -211,7 +221,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
       return a.item.title.localeCompare(b.item.title, 'ko')
     })
     return sorted
-  }, [books, query, categoryFilter, wishlistOnly, sort])
+  }, [books, query, categoryFilter, originFilter, wishlistOnly, sort])
 
   return (
     <div
@@ -326,6 +336,23 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                 <Heart size={12} weight={wishlistOnly ? 'fill' : 'regular'} />
                 보고 싶어요
               </button>
+              {ORIGINS.map((origin) => (
+                <button
+                  key={origin}
+                  type="button"
+                  className={
+                    originFilter.includes(origin) ? 'btn btn-primary' : 'btn btn-secondary'
+                  }
+                  style={{ minHeight: 28, padding: '0 12px', fontSize: 12 }}
+                  onClick={() =>
+                    setOriginFilter((prev) =>
+                      prev.includes(origin) ? prev.filter((o) => o !== origin) : [...prev, origin]
+                    )
+                  }
+                >
+                  {origin}
+                </button>
+              ))}
             </div>
           ) : (
             <div />

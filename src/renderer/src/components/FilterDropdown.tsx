@@ -35,6 +35,8 @@ export function FilterDropdown({ label, options, selected, onChange }: Props): R
           cursor: 'pointer',
           padding: '0 12px',
           minHeight: 28,
+          // .tag 기본값(11px)이 아니라 옆에 놓이는 필터 버튼과 같은 크기로 맞춘다.
+          fontSize: 12,
           boxSizing: 'border-box',
           display: 'flex',
           alignItems: 'center',

@@ -118,6 +118,12 @@ export function authorNames(author: string | null): string | null {
   return picked.flatMap((g) => g.names).join(', ') || null
 }
 
+// 카테고리 경로의 맨 앞 구간("국내도서"/"외국도서") — 원서 여부 필터에 쓴다.
+export function categoryOrigin(category: string | null): string | null {
+  if (!category) return null
+  return category.split('>')[0]?.trim() || null
+}
+
 // 국내/외국이 같은 분야를 다르게 부르는 것들. 한쪽 이름으로 통일한다.
 const CATEGORY_ALIASES: Record<string, string> = {
   해외잡지: '잡지',
