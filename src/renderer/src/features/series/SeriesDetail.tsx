@@ -244,15 +244,22 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
               style={{
                 flex: 1,
                 minWidth: 0,
+                height: POSTER_HEIGHT,
+                alignSelf: 'center',
                 overflowY: 'auto',
+                // 스크롤바 유무로 본문 너비가 달라지지 않도록 항상 자리를 비워둔다.
+                scrollbarGutter: 'stable',
                 paddingLeft: 2,
-                paddingRight: 4,
+                // 스크롤바(8px)가 우측 상단 X 버튼(중심이 팝업 오른쪽 끝에서 23px) 바로
+                // 아래에 오도록 컨테이너를 팝업 여백까지 넓히고(-10.6), 같은 양만큼
+                // 패딩을 늘려 본문 자체의 위치는 그대로 유지한다.
+                paddingRight: 14.6,
                 marginLeft: -2,
+                marginRight: -10.6,
                 display: 'flex',
                 flexDirection: 'column'
               }}
             >
-              <div style={{ flex: 1, minHeight: 0 }} />
               <div>
                 <h2 style={{ margin: 0, paddingRight: 24, fontSize: 26 }}>{series.title}</h2>
                 <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 4 }}>
@@ -461,33 +468,29 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                   </div>
                 )}
               </div>
-              <div
-                style={{
-                  flex: 1,
-                  minHeight: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-end'
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    fontSize: 13,
-                    color: 'var(--color-neutral-500)',
-                    textDecoration: 'underline',
-                    cursor: 'pointer'
-                  }}
-                >
-                  삭제
-                </button>
-              </div>
             </div>
           </div>
+        )}
+
+        {!loading && !error && series && meta && (
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            style={{
+              position: 'absolute',
+              bottom: 8,
+              right: 33.6,
+              background: 'none',
+              border: 'none',
+              padding: 6,
+              fontSize: 13,
+              color: 'var(--color-neutral-500)',
+              textDecoration: 'underline',
+              cursor: 'pointer'
+            }}
+          >
+            삭제
+          </button>
         )}
 
         {showDeleteConfirm && series && (
