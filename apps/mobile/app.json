@@ -14,7 +14,6 @@
     "android": {
       "package": "com.archiedia.app",
       "edgeToEdgeEnabled": true
-    },
-    "plugins": ["expo-status-bar"]
+    }
   }
 }
