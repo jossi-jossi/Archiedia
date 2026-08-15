@@ -1,4 +1,4 @@
-import { CaretDown, CaretUp, Eye, Heart, Star, X } from '@phosphor-icons/react'
+import { ArrowSquareOut, CaretDown, CaretUp, Eye, Heart, Star, X } from '@phosphor-icons/react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { deleteBook, getBook, Book, updateUserRecord } from './api'
 import { EditBookModal } from './EditBookModal'
@@ -209,13 +209,15 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                   {meta.category ?? '—'}
                 </div>
                 {meta.sourceUrl && (
-                  <div style={{ color: 'var(--color-neutral-500)', fontSize: 13, marginTop: 2 }}>
+                  <div style={{ marginTop: 6 }}>
                     <a
+                      className="tag tag-neutral"
                       href={meta.sourceUrl}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ color: 'inherit', textDecoration: 'underline' }}
+                      style={{ gap: 4, textDecoration: 'none', cursor: 'pointer' }}
                     >
+                      <ArrowSquareOut size={12} style={{ display: 'block' }} />
                       알라딘 바로가기
                     </a>
                   </div>
