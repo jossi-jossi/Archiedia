@@ -7,6 +7,15 @@ import {
   SquaresFour,
   Star
 } from '@phosphor-icons/react'
+import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { listSeries, updateSeriesDisplayOrder, updateUserRecord, SeriesListItem } from './api'
 import { errorMessage } from '../../lib/errors'
@@ -114,6 +123,134 @@ function unique(values: (string | null | undefined)[]): string[] {
   return Array.from(new Set(values.filter((v): v is string => Boolean(v)))).sort()
 }
 
+// 목록 표의 한 행. 순서 변경 모드일 때만 dnd-kit의 정렬 드래그가 걸린다 — 다른 행이
+// 드래그 중일 때도 transform으로 부드럽게 밀려나는 자리 이동이 자동으로 계산된다.
+function SeriesRow({
+  item,
+  record,
+  reorderMode,
+  onSelect,
+  toggleStatus
+}: {
+  item: SeriesListItem['item']
+  record: SeriesListItem['record']
+  reorderMode: boolean
+  onSelect: (id: string) => void
+  toggleStatus: (
+    itemId: string,
+    record: NonNullable<SeriesListItem['record']>,
+    tag: '보고 싶음' | '보는 중',
+    active: boolean
+  ) => void
+}): React.JSX.Element {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+    disabled: !reorderMode
+  })
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    cursor: reorderMode ? 'grab' : 'pointer',
+    position: 'relative',
+    zIndex: isDragging ? 1 : undefined,
+    opacity: isDragging ? 0.6 : 1,
+    background: isDragging ? 'var(--color-surface)' : undefined
+  }
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      onClick={reorderMode ? undefined : () => onSelect(item.id)}
+      {...(reorderMode ? attributes : {})}
+      {...(reorderMode ? listeners : {})}
+    >
+      <td style={{ width: 40 }}>
+        <div
+          style={{
+            width: 32,
+            height: 45,
+            borderRadius: 4,
+            margin: '0 auto',
+            ...poster(item.posterUrl),
+            aspectRatio: undefined
+          }}
+        />
+      </td>
+      <td>
+        <div
+          title={item.title}
+          style={{
+            fontWeight: 500,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}
+        >
+          {item.title}
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--color-neutral-500)' }}>
+          {item.metadata.releaseYear ?? '—'}
+        </div>
+      </td>
+      <td
+        style={{
+          color: 'var(--color-neutral-400)',
+          maxWidth: 0,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}
+        title={item.metadata.genres.join(', ') || undefined}
+      >
+        {item.metadata.genres.join(', ') || '—'}
+      </td>
+      <td style={{ color: 'var(--color-neutral-400)', padding: 0 }}>
+        <span style={{ marginLeft: -6, display: 'inline-block' }}>
+          {item.metadata.seasons.length
+            ? `${item.metadata.seasons.reduce((sum, s) => sum + s.episodeCount, 0)}부`
+            : '—'}
+        </span>
+      </td>
+      <td>
+        <StarRating rating={record?.myRating ?? null} />
+      </td>
+      <td>
+        {record?.tags.map((tag) => (
+          <span key={tag} className="tag tag-neutral" style={{ marginRight: 4 }}>
+            {displayTag(tag)}
+          </span>
+        )) || '—'}
+      </td>
+      <td style={{ color: 'var(--color-neutral-500)' }}>{record?.lastWatchedAt ?? '—'}</td>
+      <td>
+        {record && (
+          <StatusIconButton
+            icon={Heart}
+            active={isWishlisted(record.tags)}
+            onClick={(e) => {
+              e.stopPropagation()
+              toggleStatus(item.id, record, '보고 싶음', isWishlisted(record.tags))
+            }}
+          />
+        )}
+      </td>
+      <td>
+        {record && (
+          <StatusIconButton
+            icon={Eye}
+            active={isWatching(record.tags)}
+            onClick={(e) => {
+              e.stopPropagation()
+              toggleStatus(item.id, record, '보는 중', isWatching(record.tags))
+            }}
+          />
+        )}
+      </td>
+    </tr>
+  )
+}
+
 const SHOW_FILTERS = true
 
 const POSTER_WIDTH = 150
@@ -176,9 +313,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   const [watchingOnly, setWatchingOnly] = useState(false)
   const [sort, setSort] = useState<SortKey>('custom')
   const [reorderMode, setReorderMode] = useState(false)
-  const [dragIndex, setDragIndex] = useState<number | null>(null)
-  const [orderPreview, setOrderPreview] = useState<SeriesListItem[] | null>(null)
-  const draggedItemId = useRef<string | null>(null)
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))
   const [gridRef, columns, gutter] = useGridColumns(POSTER_WIDTH)
 
   useEffect(() => {
@@ -281,40 +416,27 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     if (!reorderable) setReorderMode(false)
   }, [reorderable])
 
-  function handleDragOver(index: number): void {
-    if (dragIndex === null || dragIndex === index) return
-    setOrderPreview((prev) => {
-      if (!prev) return prev
-      const next = [...prev]
-      const [moved] = next.splice(dragIndex, 1)
-      next.splice(index, 0, moved)
-      return next
-    })
-    setDragIndex(index)
-  }
-
-  async function commitReorder(): Promise<void> {
-    const list = orderPreview
-    setDragIndex(null)
-    setOrderPreview(null)
-    if (!list) return
-    const movedIndex = list.findIndex((s) => s.item.id === draggedItemId.current)
-    if (movedIndex === -1) return
-    const orderedValues = list
-      .filter((_, i) => i !== movedIndex)
+  function handleDragEnd(event: DragEndEvent): void {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = filtered.findIndex((s) => s.item.id === active.id)
+    const newIndex = filtered.findIndex((s) => s.item.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+    const reordered = arrayMove(filtered, oldIndex, newIndex)
+    const orderedValues = reordered
+      .filter((_, i) => i !== newIndex)
       .map((s) => s.item.displayOrder ?? MISSING_ORDER)
-    const nextOrder = computeDisplayOrderForInsert(orderedValues, movedIndex)
-    const movedId = list[movedIndex].item.id
-    try {
-      await updateSeriesDisplayOrder(movedId, nextOrder)
-      setSeries((prev) =>
-        prev.map((s) =>
-          s.item.id === movedId ? { ...s, item: { ...s.item, displayOrder: nextOrder } } : s
+    const nextOrder = computeDisplayOrderForInsert(orderedValues, newIndex)
+    const movedId = active.id as string
+    updateSeriesDisplayOrder(movedId, nextOrder)
+      .then(() => {
+        setSeries((prev) =>
+          prev.map((s) =>
+            s.item.id === movedId ? { ...s, item: { ...s.item, displayOrder: nextOrder } } : s
+          )
         )
-      )
-    } catch (err) {
-      setError(errorMessage(err))
-    }
+      })
+      .catch((err) => setError(errorMessage(err)))
   }
 
   return (
@@ -634,145 +756,60 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             ))}
           </div>
         ) : (
-          <table
-            className="table"
-            style={{ tableLayout: 'fixed', width: `calc(100% - ${gutter}px)` }}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
           >
-            <colgroup>
-              <col style={{ width: '6%' }} />
-              <col style={{ width: '17%' }} />
-              <col style={{ width: '21%' }} />
-              <col style={{ width: '8%' }} />
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '5%' }} />
-              <col style={{ width: '5%' }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th></th>
-                <th>제목</th>
-                <th>장르</th>
-                <th style={{ padding: 0 }}>
-                  <span style={{ marginLeft: -6, display: 'inline-block' }}>회차</span>
-                </th>
-                <th>나의 평점</th>
-                <th>상태</th>
-                <th>마지막 시청</th>
-                <th></th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {(orderPreview ?? filtered).map(({ item, record }, index) => (
-                <tr
-                  key={item.id}
-                  onClick={reorderMode ? undefined : () => onSelect(item.id)}
-                  draggable={reorderMode}
-                  onDragStart={() => {
-                    draggedItemId.current = item.id
-                    setOrderPreview(filtered)
-                    setDragIndex(index)
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault()
-                    handleDragOver(index)
-                  }}
-                  onDrop={(e) => e.preventDefault()}
-                  onDragEnd={() => {
-                    void commitReorder()
-                  }}
-                  style={{ cursor: reorderMode ? 'grab' : 'pointer' }}
-                >
-                  <td style={{ width: 40 }}>
-                    <div
-                      style={{
-                        width: 32,
-                        height: 45,
-                        borderRadius: 4,
-                        margin: '0 auto',
-                        ...poster(item.posterUrl),
-                        aspectRatio: undefined
-                      }}
-                    />
-                  </td>
-                  <td>
-                    <div
-                      title={item.title}
-                      style={{
-                        fontWeight: 500,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}
-                    >
-                      {item.title}
-                    </div>
-                    <div style={{ fontSize: 11, color: 'var(--color-neutral-500)' }}>
-                      {item.metadata.releaseYear ?? '—'}
-                    </div>
-                  </td>
-                  <td
-                    style={{
-                      color: 'var(--color-neutral-400)',
-                      maxWidth: 0,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                    title={item.metadata.genres.join(', ') || undefined}
-                  >
-                    {item.metadata.genres.join(', ') || '—'}
-                  </td>
-                  <td style={{ color: 'var(--color-neutral-400)', padding: 0 }}>
-                    <span style={{ marginLeft: -6, display: 'inline-block' }}>
-                      {item.metadata.seasons.length
-                        ? `${item.metadata.seasons.reduce((sum, s) => sum + s.episodeCount, 0)}부`
-                        : '—'}
-                    </span>
-                  </td>
-                  <td>
-                    <StarRating rating={record?.myRating ?? null} />
-                  </td>
-                  <td>
-                    {record?.tags.map((tag) => (
-                      <span key={tag} className="tag tag-neutral" style={{ marginRight: 4 }}>
-                        {displayTag(tag)}
-                      </span>
-                    )) || '—'}
-                  </td>
-                  <td style={{ color: 'var(--color-neutral-500)' }}>
-                    {record?.lastWatchedAt ?? '—'}
-                  </td>
-                  <td>
-                    {record && (
-                      <StatusIconButton
-                        icon={Heart}
-                        active={isWishlisted(record.tags)}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleStatus(item.id, record, '보고 싶음', isWishlisted(record.tags))
-                        }}
-                      />
-                    )}
-                  </td>
-                  <td>
-                    {record && (
-                      <StatusIconButton
-                        icon={Eye}
-                        active={isWatching(record.tags)}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleStatus(item.id, record, '보는 중', isWatching(record.tags))
-                        }}
-                      />
-                    )}
-                  </td>
+            <table
+              className="table"
+              style={{ tableLayout: 'fixed', width: `calc(100% - ${gutter}px)` }}
+            >
+              <colgroup>
+                <col style={{ width: '6%' }} />
+                <col style={{ width: '17%' }} />
+                <col style={{ width: '21%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '5%' }} />
+                <col style={{ width: '5%' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>제목</th>
+                  <th>장르</th>
+                  <th style={{ padding: 0 }}>
+                    <span style={{ marginLeft: -6, display: 'inline-block' }}>회차</span>
+                  </th>
+                  <th>나의 평점</th>
+                  <th>상태</th>
+                  <th>마지막 시청</th>
+                  <th></th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                <SortableContext
+                  items={filtered.map(({ item }) => item.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {filtered.map(({ item, record }) => (
+                    <SeriesRow
+                      key={item.id}
+                      item={item}
+                      record={record}
+                      reorderMode={reorderMode}
+                      onSelect={onSelect}
+                      toggleStatus={toggleStatus}
+                    />
+                  ))}
+                </SortableContext>
+              </tbody>
+            </table>
+          </DndContext>
         )}
       </div>
     </div>

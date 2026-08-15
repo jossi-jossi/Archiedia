@@ -7,6 +7,15 @@ import {
   SquaresFour,
   Star
 } from '@phosphor-icons/react'
+import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   listBooks,
@@ -112,6 +121,71 @@ const poster = (url: string | null): React.CSSProperties => ({
     : 'repeating-linear-gradient(45deg, var(--color-neutral-800), var(--color-neutral-800) 8px, var(--color-neutral-900) 8px, var(--color-neutral-900) 16px)'
 })
 
+// 알라딘이 자동으로 채워준 표지는 항상 이 경로 패턴(cover500 등)을 갖는다. 사용자가
+// 정보 수정 팝업에서 표지 URL을 직접 바꾸면 이 패턴을 벗어나므로, 그 여부로 "직접 바꾼
+// 표지인지"를 구분한다.
+function isManualPosterUrl(url: string | null): boolean {
+  return Boolean(url) && !/\/cover\d+\//.test(url as string)
+}
+
+// 사용자가 직접 붙여넣은 표지는 원본 해상도를 알 수 없어서, 그리드 카드에 CSS로 그대로
+// 욱여넣으면 세밀한 이미지일 때 다운스케일 아티팩트(뭉개짐/모아레)가 생기기 쉽다. canvas에
+// 카드 크기 그대로 그려서(imageSmoothingQuality: 'high') CSS background-size:cover보다
+// 나은 품질로 미리 축소해 보여준다.
+//
+// canvas 해상도는 목표 크기(150px)를 고정값으로 가정하지 않고, ResizeObserver로 실제
+// 렌더링된 카드 크기를 그대로 읽어서 맞춘다 — 고정값을 쓰면 실제 카드 폭이 그 값과 달라질
+// 때(창 크기에 따라 열 수·카드 폭이 바뀌므로) 브라우저가 이미 그린 canvas 결과물을 또
+// 한 번 늘리거나 줄이게 되어, 멀쩡한 이미지까지 다시 뭉개지는 이중 스케일링이 생긴다.
+function CanvasPoster({ url }: { url: string }): React.JSX.Element {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const img = new Image()
+
+    function draw(): void {
+      const ctx = canvas!.getContext('2d')
+      if (!ctx || !img.complete || img.naturalWidth === 0) return
+      const width = canvas!.clientWidth
+      const height = canvas!.clientHeight
+      if (width === 0 || height === 0) return
+      const dpr = window.devicePixelRatio || 1
+      canvas!.width = width * dpr
+      canvas!.height = height * dpr
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+      const scale = Math.max(width / img.naturalWidth, height / img.naturalHeight)
+      const drawWidth = img.naturalWidth * scale
+      const drawHeight = img.naturalHeight * scale
+      ctx.clearRect(0, 0, width, height)
+      ctx.drawImage(img, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight)
+    }
+
+    img.onload = draw
+    img.src = url
+
+    const observer = new ResizeObserver(draw)
+    observer.observe(canvas)
+    return () => observer.disconnect()
+  }, [url])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        width: '100%',
+        aspectRatio: '2 / 3',
+        borderRadius: 'var(--radius-md)',
+        display: 'block'
+      }}
+    />
+  )
+}
+
 function parseWatchedAt(value: string | null | undefined): number {
   if (!value) return 0
   const parsed = Date.parse(value)
@@ -120,6 +194,132 @@ function parseWatchedAt(value: string | null | undefined): number {
 
 function unique(values: (string | null | undefined)[]): string[] {
   return Array.from(new Set(values.filter((v): v is string => Boolean(v)))).sort()
+}
+
+// 목록 표의 한 행. 순서 변경 모드일 때만 dnd-kit의 정렬 드래그가 걸린다 — 다른 행이
+// 드래그 중일 때도 transform으로 부드럽게 밀려나는 자리 이동이 자동으로 계산된다.
+function BookRow({
+  item,
+  record,
+  reorderMode,
+  onSelect,
+  toggleStatus
+}: {
+  item: BookListItem['item']
+  record: BookListItem['record']
+  reorderMode: boolean
+  onSelect: (id: string) => void
+  toggleStatus: (
+    itemId: string,
+    record: NonNullable<BookListItem['record']>,
+    tag: '보고 싶음' | '보는 중',
+    active: boolean
+  ) => void
+}): React.JSX.Element {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+    disabled: !reorderMode
+  })
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    cursor: reorderMode ? 'grab' : 'pointer',
+    position: 'relative',
+    zIndex: isDragging ? 1 : undefined,
+    opacity: isDragging ? 0.6 : 1,
+    background: isDragging ? 'var(--color-surface)' : undefined
+  }
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      onClick={reorderMode ? undefined : () => onSelect(item.id)}
+      {...(reorderMode ? attributes : {})}
+      {...(reorderMode ? listeners : {})}
+    >
+      <td style={{ width: 40 }}>
+        <div
+          style={{
+            width: 32,
+            height: 48,
+            borderRadius: 4,
+            margin: '0 auto',
+            ...poster(item.posterUrl),
+            aspectRatio: undefined
+          }}
+        />
+      </td>
+      <td>
+        <div
+          title={item.title}
+          style={{
+            fontWeight: 500,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}
+        >
+          {item.title}
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--color-neutral-500)' }}>
+          {authorNames(item.metadata.author) ?? '—'}
+        </div>
+      </td>
+      <td
+        style={{
+          color: 'var(--color-neutral-400)',
+          maxWidth: 0,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}
+        title={item.metadata.category ?? undefined}
+      >
+        {categoryGroup(item.metadata.category) ?? '—'}
+      </td>
+      <td style={{ color: 'var(--color-neutral-400)', padding: 0 }}>
+        <span style={{ marginLeft: -6, display: 'inline-block' }}>
+          {item.metadata.pageCount ? `${item.metadata.pageCount}쪽` : '—'}
+        </span>
+      </td>
+      <td>
+        <StarRating rating={record?.myRating ?? null} />
+      </td>
+      <td>
+        {record?.tags.map((tag) => (
+          <span key={tag} className="tag tag-neutral" style={{ marginRight: 4 }}>
+            {displayTag(tag)}
+          </span>
+        )) || '—'}
+      </td>
+      <td style={{ color: 'var(--color-neutral-500)' }}>{record?.lastWatchedAt ?? '—'}</td>
+      <td>
+        {record && (
+          <StatusIconButton
+            icon={Heart}
+            active={isWishlisted(record.tags)}
+            onClick={(e) => {
+              e.stopPropagation()
+              toggleStatus(item.id, record, '보고 싶음', isWishlisted(record.tags))
+            }}
+          />
+        )}
+      </td>
+      <td>
+        {record && (
+          <StatusIconButton
+            icon={Eye}
+            active={isWatching(record.tags)}
+            onClick={(e) => {
+              e.stopPropagation()
+              toggleStatus(item.id, record, '보는 중', isWatching(record.tags))
+            }}
+          />
+        )}
+      </td>
+    </tr>
+  )
 }
 
 const SHOW_FILTERS = true
@@ -189,9 +389,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   const [originFilter, setOriginFilter] = useState<string[]>([])
   const [sort, setSort] = useState<SortKey>('custom')
   const [reorderMode, setReorderMode] = useState(false)
-  const [dragIndex, setDragIndex] = useState<number | null>(null)
-  const [orderPreview, setOrderPreview] = useState<BookListItem[] | null>(null)
-  const draggedItemId = useRef<string | null>(null)
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))
   const [gridRef, columns, gutter] = useGridColumns(POSTER_WIDTH)
 
   useEffect(() => {
@@ -320,40 +518,27 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     if (!reorderable) setReorderMode(false)
   }, [reorderable])
 
-  function handleDragOver(index: number): void {
-    if (dragIndex === null || dragIndex === index) return
-    setOrderPreview((prev) => {
-      if (!prev) return prev
-      const next = [...prev]
-      const [moved] = next.splice(dragIndex, 1)
-      next.splice(index, 0, moved)
-      return next
-    })
-    setDragIndex(index)
-  }
-
-  async function commitReorder(): Promise<void> {
-    const list = orderPreview
-    setDragIndex(null)
-    setOrderPreview(null)
-    if (!list) return
-    const movedIndex = list.findIndex((b) => b.item.id === draggedItemId.current)
-    if (movedIndex === -1) return
-    const orderedValues = list
-      .filter((_, i) => i !== movedIndex)
+  function handleDragEnd(event: DragEndEvent): void {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = filtered.findIndex((b) => b.item.id === active.id)
+    const newIndex = filtered.findIndex((b) => b.item.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+    const reordered = arrayMove(filtered, oldIndex, newIndex)
+    const orderedValues = reordered
+      .filter((_, i) => i !== newIndex)
       .map((b) => b.item.displayOrder ?? MISSING_ORDER)
-    const nextOrder = computeDisplayOrderForInsert(orderedValues, movedIndex)
-    const movedId = list[movedIndex].item.id
-    try {
-      await updateBookDisplayOrder(movedId, nextOrder)
-      setBooks((prev) =>
-        prev.map((b) =>
-          b.item.id === movedId ? { ...b, item: { ...b.item, displayOrder: nextOrder } } : b
+    const nextOrder = computeDisplayOrderForInsert(orderedValues, newIndex)
+    const movedId = active.id as string
+    updateBookDisplayOrder(movedId, nextOrder)
+      .then(() => {
+        setBooks((prev) =>
+          prev.map((b) =>
+            b.item.id === movedId ? { ...b, item: { ...b.item, displayOrder: nextOrder } } : b
+          )
         )
-      )
-    } catch (err) {
-      setError(errorMessage(err))
-    }
+      })
+      .catch((err) => setError(errorMessage(err)))
   }
 
   return (
@@ -628,7 +813,11 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                   minWidth: 0
                 }}
               >
-                <div style={poster(item.posterUrl)} />
+                {isManualPosterUrl(item.posterUrl) ? (
+                  <CanvasPoster url={item.posterUrl as string} />
+                ) : (
+                  <div style={poster(item.posterUrl)} />
+                )}
                 <div>
                   <div
                     title={item.title}
@@ -691,143 +880,60 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
             ))}
           </div>
         ) : (
-          <table
-            className="table"
-            style={{ tableLayout: 'fixed', width: `calc(100% - ${gutter}px)` }}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
           >
-            <colgroup>
-              <col style={{ width: '6%' }} />
-              <col style={{ width: '31%' }} />
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '8%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '13%' }} />
-              <col style={{ width: '5%' }} />
-              <col style={{ width: '5%' }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th></th>
-                <th>제목</th>
-                <th>카테고리</th>
-                <th style={{ padding: 0 }}>
-                  <span style={{ marginLeft: -6, display: 'inline-block' }}>페이지</span>
-                </th>
-                <th>나의 평점</th>
-                <th>상태</th>
-                <th>마지막 읽음</th>
-                <th></th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {(orderPreview ?? filtered).map(({ item, record }, index) => (
-                <tr
-                  key={item.id}
-                  onClick={reorderMode ? undefined : () => onSelect(item.id)}
-                  draggable={reorderMode}
-                  onDragStart={() => {
-                    draggedItemId.current = item.id
-                    setOrderPreview(filtered)
-                    setDragIndex(index)
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault()
-                    handleDragOver(index)
-                  }}
-                  onDrop={(e) => e.preventDefault()}
-                  onDragEnd={() => {
-                    void commitReorder()
-                  }}
-                  style={{ cursor: reorderMode ? 'grab' : 'pointer' }}
-                >
-                  <td style={{ width: 40 }}>
-                    <div
-                      style={{
-                        width: 32,
-                        height: 48,
-                        borderRadius: 4,
-                        margin: '0 auto',
-                        ...poster(item.posterUrl),
-                        aspectRatio: undefined
-                      }}
-                    />
-                  </td>
-                  <td>
-                    <div
-                      title={item.title}
-                      style={{
-                        fontWeight: 500,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}
-                    >
-                      {item.title}
-                    </div>
-                    <div style={{ fontSize: 11, color: 'var(--color-neutral-500)' }}>
-                      {authorNames(item.metadata.author) ?? '—'}
-                    </div>
-                  </td>
-                  <td
-                    style={{
-                      color: 'var(--color-neutral-400)',
-                      maxWidth: 0,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                    title={item.metadata.category ?? undefined}
-                  >
-                    {categoryGroup(item.metadata.category) ?? '—'}
-                  </td>
-                  <td style={{ color: 'var(--color-neutral-400)', padding: 0 }}>
-                    <span style={{ marginLeft: -6, display: 'inline-block' }}>
-                      {item.metadata.pageCount ? `${item.metadata.pageCount}쪽` : '—'}
-                    </span>
-                  </td>
-                  <td>
-                    <StarRating rating={record?.myRating ?? null} />
-                  </td>
-                  <td>
-                    {record?.tags.map((tag) => (
-                      <span key={tag} className="tag tag-neutral" style={{ marginRight: 4 }}>
-                        {displayTag(tag)}
-                      </span>
-                    )) || '—'}
-                  </td>
-                  <td style={{ color: 'var(--color-neutral-500)' }}>
-                    {record?.lastWatchedAt ?? '—'}
-                  </td>
-                  <td>
-                    {record && (
-                      <StatusIconButton
-                        icon={Heart}
-                        active={isWishlisted(record.tags)}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleStatus(item.id, record, '보고 싶음', isWishlisted(record.tags))
-                        }}
-                      />
-                    )}
-                  </td>
-                  <td>
-                    {record && (
-                      <StatusIconButton
-                        icon={Eye}
-                        active={isWatching(record.tags)}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleStatus(item.id, record, '보는 중', isWatching(record.tags))
-                        }}
-                      />
-                    )}
-                  </td>
+            <table
+              className="table"
+              style={{ tableLayout: 'fixed', width: `calc(100% - ${gutter}px)` }}
+            >
+              <colgroup>
+                <col style={{ width: '6%' }} />
+                <col style={{ width: '31%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '13%' }} />
+                <col style={{ width: '5%' }} />
+                <col style={{ width: '5%' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>제목</th>
+                  <th>카테고리</th>
+                  <th style={{ padding: 0 }}>
+                    <span style={{ marginLeft: -6, display: 'inline-block' }}>페이지</span>
+                  </th>
+                  <th>나의 평점</th>
+                  <th>상태</th>
+                  <th>마지막 읽음</th>
+                  <th></th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                <SortableContext
+                  items={filtered.map(({ item }) => item.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {filtered.map(({ item, record }) => (
+                    <BookRow
+                      key={item.id}
+                      item={item}
+                      record={record}
+                      reorderMode={reorderMode}
+                      onSelect={onSelect}
+                      toggleStatus={toggleStatus}
+                    />
+                  ))}
+                </SortableContext>
+              </tbody>
+            </table>
+          </DndContext>
         )}
       </div>
     </div>
