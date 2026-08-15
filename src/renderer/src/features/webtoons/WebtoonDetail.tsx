@@ -1,7 +1,7 @@
-import { Heart, Star, X } from '@phosphor-icons/react'
+import { CaretDown, CaretUp, Eye, Heart, Star, X } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import { deleteWebtoon, getWebtoon, updateUserRecord, Webtoon } from './api'
-import { isWishlisted, withoutStatusTags } from '../../lib/wishlist'
+import { isWatching, isWishlisted, withoutStatusTags } from '../../lib/wishlist'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
 import { normalizeGenres } from './genres'
@@ -22,9 +22,10 @@ const POSTER_HEIGHT = Math.round((POSTER_WIDTH * 623) / 480)
 const DIALOG_WIDTH = 913.2
 const DIALOG_HEIGHT = POSTER_HEIGHT + 74
 
-// 줄거리/요약 칸은 네 상세팝업 모두 딱 세 줄이 보이는 같은 높이를 쓴다.
-// (본문 13px × line-height 1.7 × 3줄)
-const OVERVIEW_HEIGHT = 66.3
+// 줄거리/요약 칸의 최소 높이(3줄). 평소엔 위쪽 정보량에 따라 남는 공간만큼 늘어나고,
+// 위쪽이 아주 길어져도 이 아래로는 줄어들지 않는다 — 그 이상은 팝업 전체 스크롤
+// (우측 컬럼의 overflowY: auto)이 대신 받아준다.
+const OVERVIEW_MIN_HEIGHT = 66.3
 
 // 카카오웹툰은 해시태그를 "#로맨스"처럼 #을 붙여서 주고 네이버웹툰은 안 붙여서 준다.
 // 표기를 맞추려고 화면에 그릴 때 떼어낸다. (이미 보관된 항목에도 바로 적용된다)
@@ -41,11 +42,13 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [overviewExpanded, setOverviewExpanded] = useState(false)
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on webtoonId change needs to reset the loading/error flags before the async call resolves
     setLoading(true)
     setError(null)
+    setOverviewExpanded(false)
     getWebtoon(webtoonId)
       .then((result) => {
         setWebtoon(result?.item ?? null)
@@ -176,6 +179,10 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                 // 아래에 오도록 컨테이너를 팝업 여백까지 넓히고(-10.6), 같은 양만큼
                 // 패딩을 늘려 본문 자체의 위치는 그대로 유지한다.
                 paddingRight: 14.6,
+                // "나의 후기" 입력창이 이 컬럼의 맨 아래(포스터 하단선)에 바로 붙어 있어서,
+                // 포커스 시 바깥쪽으로 2px 그려지는 포커스 링(outline-offset: 0)이 이
+                // overflow 경계에 잘린다. 그만큼만 여유를 둔다.
+                paddingBottom: 3,
                 marginLeft: -2,
                 marginRight: -10.6,
                 display: 'flex',
@@ -212,27 +219,58 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* 접혀 있을 땐 flex:1로 위쪽 정보량에 따라 남는 공간만큼만 늘어나서(최소
+                  OVERVIEW_MIN_HEIGHT) 아래 개인 기록 영역이 항상 포스터 하단 라인에
+                  맞춰진다. 화살표를 눌러 펼치면 그 제약을 없애 전체 텍스트를 그대로
+                  보여주고, 대신 컬럼 전체(overflowY: auto)가 스크롤된다. */}
+              <div
+                style={{
+                  marginTop: 14,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  ...(overviewExpanded ? {} : { flex: 1, minHeight: OVERVIEW_MIN_HEIGHT })
+                }}
+              >
                 <div
                   style={{
-                    marginTop: 14,
-                    fontSize: 13,
-                    lineHeight: 1.7,
-                    color: 'var(--color-neutral-300)'
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
                   }}
                 >
-                  <span style={{ color: 'var(--color-neutral-500)' }}>줄거리</span>
-                  <div
+                  <span style={{ color: 'var(--color-neutral-500)', fontSize: 13 }}>줄거리</span>
+                  <button
+                    type="button"
+                    onClick={() => setOverviewExpanded((v) => !v)}
                     style={{
-                      marginTop: 4,
-                      height: OVERVIEW_HEIGHT,
-                      overflowY: 'auto',
-                      paddingRight: 4
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: 'none',
+                      border: 'none',
+                      padding: 2,
+                      color: 'var(--color-neutral-500)',
+                      cursor: 'pointer'
                     }}
                   >
-                    {meta.overview || '—'}
-                  </div>
+                    {overviewExpanded ? <CaretUp size={14} /> : <CaretDown size={14} />}
+                  </button>
                 </div>
+                <div
+                  style={{
+                    marginTop: 4,
+                    fontSize: 13,
+                    lineHeight: 1.7,
+                    color: 'var(--color-neutral-300)',
+                    ...(overviewExpanded ? {} : { flex: 1, minHeight: 0, overflow: 'hidden' })
+                  }}
+                >
+                  {meta.overview || '—'}
+                </div>
+              </div>
 
+              <div>
                 <div className="hr" />
 
                 {record && (
@@ -308,29 +346,6 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                         />
                       </div>
                       <div className="field">
-                        <label>상태</label>
-                        <button
-                          type="button"
-                          className={
-                            isWishlisted(record.tags) ? 'btn btn-primary' : 'btn btn-secondary'
-                          }
-                          style={{ width: '100%', minHeight: 36 }}
-                          onClick={() =>
-                            save({
-                              tags: isWishlisted(record.tags)
-                                ? withoutStatusTags(record.tags)
-                                : [...withoutStatusTags(record.tags), '보고 싶음']
-                            })
-                          }
-                        >
-                          <Heart weight={isWishlisted(record.tags) ? 'fill' : 'regular'} />
-                          보고 싶어요
-                        </button>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                      <div className="field">
                         <label>읽은 매체</label>
                         <input
                           className="input"
@@ -339,6 +354,67 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                           onBlur={() => save({ watchMedium: record.watchMedium })}
                           placeholder="네이버웹툰 앱 / PC 등"
                         />
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        // 마지막 읽은 날 칸이 위 행(3등분)의 칸 하나와 정확히 같은 너비가
+                        // 되도록, fr 대신 그 행과 같은 계산식을 그대로 옮겨 쓴다.
+                        gridTemplateColumns: '1fr calc((100% - 20px) / 3)',
+                        gap: 10
+                      }}
+                    >
+                      <div className="field">
+                        <label>상태</label>
+                        <div style={{ display: 'flex' }}>
+                          <button
+                            type="button"
+                            className={
+                              isWishlisted(record.tags) ? 'btn btn-primary' : 'btn btn-secondary'
+                            }
+                            style={{
+                              flex: 1,
+                              minHeight: 36,
+                              borderTopRightRadius: 0,
+                              borderBottomRightRadius: 0
+                            }}
+                            onClick={() =>
+                              save({
+                                tags: isWishlisted(record.tags)
+                                  ? withoutStatusTags(record.tags)
+                                  : [...withoutStatusTags(record.tags), '보고 싶음']
+                              })
+                            }
+                          >
+                            <Heart weight={isWishlisted(record.tags) ? 'fill' : 'regular'} />
+                            보고 싶어요
+                          </button>
+                          <button
+                            type="button"
+                            className={
+                              isWatching(record.tags) ? 'btn btn-primary' : 'btn btn-secondary'
+                            }
+                            style={{
+                              flex: 1,
+                              minHeight: 36,
+                              marginLeft: -1,
+                              borderTopLeftRadius: 0,
+                              borderBottomLeftRadius: 0
+                            }}
+                            onClick={() =>
+                              save({
+                                tags: isWatching(record.tags)
+                                  ? withoutStatusTags(record.tags)
+                                  : [...withoutStatusTags(record.tags), '보는 중']
+                              })
+                            }
+                          >
+                            <Eye weight={isWatching(record.tags) ? 'fill' : 'regular'} />
+                            보는 중
+                          </button>
+                        </div>
                       </div>
                       <div className="field">
                         <label>마지막 읽은 날</label>
@@ -359,7 +435,7 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                       <label>나의 후기</label>
                       <textarea
                         className="input"
-                        style={{ minHeight: 70 }}
+                        style={{ resize: 'none' }}
                         value={record.myReview ?? ''}
                         onChange={(e) => setRecord({ ...record, myReview: e.target.value })}
                         onBlur={() => save({ myReview: record.myReview })}

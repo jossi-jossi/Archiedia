@@ -1,8 +1,8 @@
-import { CaretDown, Heart, PlayCircle, Star, X } from '@phosphor-icons/react'
+import { CaretDown, CaretUp, Eye, Heart, PlayCircle, Star, X } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
 import { deleteSeries, getSeries, Series, updateUserRecord } from './api'
 import { EditSeasonModal } from './EditSeasonModal'
-import { isWishlisted, withoutStatusTags } from '../../lib/wishlist'
+import { isWatching, isWishlisted, withoutStatusTags } from '../../lib/wishlist'
 import type { DramaSeasonMetadata, UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
 
@@ -20,9 +20,10 @@ const POSTER_WIDTH = Math.round((POSTER_HEIGHT * 2) / 3)
 const DIALOG_WIDTH = 913.2
 const DIALOG_HEIGHT = 624
 
-// 줄거리/요약 칸은 네 상세팝업 모두 딱 세 줄이 보이는 같은 높이를 쓴다.
-// (본문 13px × line-height 1.7 × 3줄)
-const OVERVIEW_HEIGHT = 66.3
+// 줄거리/요약 칸의 최소 높이(3줄). 평소엔 위쪽 정보량에 따라 남는 공간만큼 늘어나고,
+// 위쪽이 아주 길어져도 이 아래로는 줄어들지 않는다 — 그 이상은 팝업 전체 스크롤
+// (우측 컬럼의 overflowY: auto)이 대신 받아준다.
+const OVERVIEW_MIN_HEIGHT = 66.3
 
 function seasonLabel(season: DramaSeasonMetadata): string {
   return `시즌 ${season.seasonNumber}`
@@ -124,6 +125,7 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [overviewExpanded, setOverviewExpanded] = useState(false)
   const [selectedSeasonIndex, setSelectedSeasonIndex] = useState(0)
 
   useEffect(() => {
@@ -131,6 +133,7 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
     setLoading(true)
     setError(null)
     setSelectedSeasonIndex(0)
+    setOverviewExpanded(false)
     getSeries(seriesId)
       .then((result) => {
         setSeries(result?.item ?? null)
@@ -154,6 +157,11 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onClose, showDeleteConfirm, showEditModal])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 시즌을 바꾸면 그 시즌의 줄거리가 바뀌므로 펼침 상태를 초기화한다
+    setOverviewExpanded(false)
+  }, [selectedSeasonIndex])
 
   async function save(patch: Partial<UserRecord>): Promise<void> {
     if (!record) return
@@ -262,6 +270,10 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                 // 아래에 오도록 컨테이너를 팝업 여백까지 넓히고(-10.6), 같은 양만큼
                 // 패딩을 늘려 본문 자체의 위치는 그대로 유지한다.
                 paddingRight: 14.6,
+                // "나의 후기" 입력창이 이 컬럼의 맨 아래(포스터 하단선)에 바로 붙어 있어서,
+                // 포커스 시 바깥쪽으로 2px 그려지는 포커스 링(outline-offset: 0)이 이
+                // overflow 경계에 잘린다. 그만큼만 여유를 둔다.
+                paddingBottom: 3,
                 marginLeft: -2,
                 marginRight: -10.6,
                 display: 'flex',
@@ -320,21 +332,59 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                     <span style={{ color: 'var(--color-neutral-500)' }}>출연</span> &nbsp;
                     {selectedSeason?.actors.length ? selectedSeason.actors.join(', ') : '—'}
                   </div>
-                  <div style={{ marginTop: 8 }}>
-                    <span style={{ color: 'var(--color-neutral-500)' }}>줄거리</span>
-                    <div
-                      style={{
-                        marginTop: 4,
-                        height: OVERVIEW_HEIGHT,
-                        overflowY: 'auto',
-                        paddingRight: 4
-                      }}
-                    >
-                      {selectedSeason?.overview || '—'}
-                    </div>
-                  </div>
                 </div>
+              </div>
 
+              {/* 접혀 있을 땐 flex:1로 위쪽 정보량에 따라 남는 공간만큼만 늘어나서(최소
+                  OVERVIEW_MIN_HEIGHT) 아래 개인 기록 영역이 항상 포스터 하단 라인에
+                  맞춰진다. 화살표를 눌러 펼치면 그 제약을 없애 전체 텍스트를 그대로
+                  보여주고, 대신 컬럼 전체(overflowY: auto)가 스크롤된다. */}
+              <div
+                style={{
+                  marginTop: 14,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  ...(overviewExpanded ? {} : { flex: 1, minHeight: OVERVIEW_MIN_HEIGHT })
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <span style={{ color: 'var(--color-neutral-500)', fontSize: 13 }}>줄거리</span>
+                  <button
+                    type="button"
+                    onClick={() => setOverviewExpanded((v) => !v)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: 'none',
+                      border: 'none',
+                      padding: 2,
+                      color: 'var(--color-neutral-500)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {overviewExpanded ? <CaretUp size={14} /> : <CaretDown size={14} />}
+                  </button>
+                </div>
+                <div
+                  style={{
+                    marginTop: 4,
+                    fontSize: 13,
+                    lineHeight: 1.7,
+                    color: 'var(--color-neutral-300)',
+                    ...(overviewExpanded ? {} : { flex: 1, minHeight: 0, overflow: 'hidden' })
+                  }}
+                >
+                  {selectedSeason?.overview || '—'}
+                </div>
+              </div>
+
+              <div>
                 <div className="hr" />
 
                 {record && (
@@ -410,29 +460,6 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                         />
                       </div>
                       <div className="field">
-                        <label>상태</label>
-                        <button
-                          type="button"
-                          className={
-                            isWishlisted(record.tags) ? 'btn btn-primary' : 'btn btn-secondary'
-                          }
-                          style={{ width: '100%', minHeight: 36 }}
-                          onClick={() =>
-                            save({
-                              tags: isWishlisted(record.tags)
-                                ? withoutStatusTags(record.tags)
-                                : [...withoutStatusTags(record.tags), '보고 싶음']
-                            })
-                          }
-                        >
-                          <Heart weight={isWishlisted(record.tags) ? 'fill' : 'regular'} />
-                          보고 싶어요
-                        </button>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                      <div className="field">
                         <label>시청 매체</label>
                         <input
                           className="input"
@@ -441,6 +468,67 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                           onBlur={() => save({ watchMedium: record.watchMedium })}
                           placeholder="극장 / OTT / 블루레이 등"
                         />
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        // 마지막 시청일 칸이 위 행(3등분)의 칸 하나와 정확히 같은 너비가
+                        // 되도록, fr 대신 그 행과 같은 계산식을 그대로 옮겨 쓴다.
+                        gridTemplateColumns: '1fr calc((100% - 20px) / 3)',
+                        gap: 10
+                      }}
+                    >
+                      <div className="field">
+                        <label>상태</label>
+                        <div style={{ display: 'flex' }}>
+                          <button
+                            type="button"
+                            className={
+                              isWishlisted(record.tags) ? 'btn btn-primary' : 'btn btn-secondary'
+                            }
+                            style={{
+                              flex: 1,
+                              minHeight: 36,
+                              borderTopRightRadius: 0,
+                              borderBottomRightRadius: 0
+                            }}
+                            onClick={() =>
+                              save({
+                                tags: isWishlisted(record.tags)
+                                  ? withoutStatusTags(record.tags)
+                                  : [...withoutStatusTags(record.tags), '보고 싶음']
+                              })
+                            }
+                          >
+                            <Heart weight={isWishlisted(record.tags) ? 'fill' : 'regular'} />
+                            보고 싶어요
+                          </button>
+                          <button
+                            type="button"
+                            className={
+                              isWatching(record.tags) ? 'btn btn-primary' : 'btn btn-secondary'
+                            }
+                            style={{
+                              flex: 1,
+                              minHeight: 36,
+                              marginLeft: -1,
+                              borderTopLeftRadius: 0,
+                              borderBottomLeftRadius: 0
+                            }}
+                            onClick={() =>
+                              save({
+                                tags: isWatching(record.tags)
+                                  ? withoutStatusTags(record.tags)
+                                  : [...withoutStatusTags(record.tags), '보는 중']
+                              })
+                            }
+                          >
+                            <Eye weight={isWatching(record.tags) ? 'fill' : 'regular'} />
+                            보는 중
+                          </button>
+                        </div>
                       </div>
                       <div className="field">
                         <label>마지막 시청일</label>
@@ -461,7 +549,7 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                       <label>나의 후기</label>
                       <textarea
                         className="input"
-                        style={{ minHeight: 70 }}
+                        style={{ resize: 'none' }}
                         value={record.myReview ?? ''}
                         onChange={(e) => setRecord({ ...record, myReview: e.target.value })}
                         onBlur={() => save({ myReview: record.myReview })}
