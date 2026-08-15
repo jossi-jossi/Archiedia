@@ -167,6 +167,10 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                 // 아래에 오도록 컨테이너를 팝업 여백까지 넓히고(-10.6), 같은 양만큼
                 // 패딩을 늘려 본문 자체의 위치는 그대로 유지한다.
                 paddingRight: 14.6,
+                // "나의 후기" 입력창이 이 컬럼의 맨 아래(포스터 하단선)에 바로 붙어 있어서,
+                // 포커스 시 바깥쪽으로 2px 그려지는 포커스 링(outline-offset: 0)이 이
+                // overflow 경계에 잘린다. 그만큼만 여유를 둔다.
+                paddingBottom: 3,
                 marginLeft: -2,
                 marginRight: -10.6,
                 display: 'flex',
