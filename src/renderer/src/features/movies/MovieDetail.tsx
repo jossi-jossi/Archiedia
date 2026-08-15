@@ -1,5 +1,5 @@
 import { CaretDown, CaretUp, Eye, Heart, PlayCircle, Star, X } from '@phosphor-icons/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { deleteMovie, getMovie, Movie, updateUserRecord } from './api'
 import { EditMovieModal } from './EditMovieModal'
 import { isWatching, isWishlisted, withoutStatusTags } from '../../lib/wishlist'
@@ -39,6 +39,8 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [overviewExpanded, setOverviewExpanded] = useState(false)
+  const [overviewOverflows, setOverviewOverflows] = useState(false)
+  const overviewRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on movieId change needs to reset the loading/error flags before the async call resolves
@@ -53,6 +55,15 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
       .catch((err) => setError(errorMessage(err)))
       .finally(() => setLoading(false))
   }, [movieId])
+
+  // 접힌 상태 기준으로 줄거리가 실제로 잘리는지 측정해서, 안 잘리면 펼치기 화살표
+  // 자체를 감춘다. (펼쳐진 뒤에는 다시 측정하지 않는다 — 잘리지 않던 텍스트는 계속
+  // 잘리지 않는다)
+  useLayoutEffect(() => {
+    const el = overviewRef.current
+    if (!el) return
+    setOverviewOverflows(el.scrollHeight > el.clientHeight + 1)
+  }, [movie])
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent): void {
@@ -254,27 +265,30 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                   }}
                 >
                   <span style={{ color: 'var(--color-neutral-500)', fontSize: 13 }}>줄거리</span>
-                  <button
-                    type="button"
-                    onClick={() => setOverviewExpanded((v) => !v)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      background: 'none',
-                      border: 'none',
-                      padding: 2,
-                      color: 'var(--color-neutral-500)',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {overviewExpanded ? (
-                      <CaretUp size={14} weight="bold" style={{ display: 'block' }} />
-                    ) : (
-                      <CaretDown size={14} weight="bold" style={{ display: 'block' }} />
-                    )}
-                  </button>
+                  {overviewOverflows && (
+                    <button
+                      type="button"
+                      onClick={() => setOverviewExpanded((v) => !v)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        background: 'none',
+                        border: 'none',
+                        padding: 2,
+                        color: 'var(--color-neutral-500)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {overviewExpanded ? (
+                        <CaretUp size={14} weight="bold" style={{ display: 'block' }} />
+                      ) : (
+                        <CaretDown size={14} weight="bold" style={{ display: 'block' }} />
+                      )}
+                    </button>
+                  )}
                 </div>
                 <div
+                  ref={overviewRef}
                   style={{
                     marginTop: 4,
                     fontSize: 13,
