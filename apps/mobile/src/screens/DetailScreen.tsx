@@ -318,6 +318,7 @@ function buildEditFields(item: ContentItem, seasonIndex: number): EditField[] | 
   if (item.type === 'book') {
     return [
       { key: 'title', label: '제목', value: item.title },
+      { key: 'author', label: '지은이', value: item.metadata.author ?? '' },
       { key: 'overview', label: '요약', value: item.metadata.overview ?? '', multiline: true }
     ]
   }
@@ -359,7 +360,14 @@ function buildEditPatch(
   if (item.type === 'book') {
     const title = values.title.trim()
     if (!title) throw new Error('제목을 입력해주세요')
-    return { title, metadata: { ...item.metadata, overview: values.overview.trim() || null } }
+    return {
+      title,
+      metadata: {
+        ...item.metadata,
+        author: values.author.trim() || null,
+        overview: values.overview.trim() || null
+      }
+    }
   }
   throw new Error('수정할 수 없는 항목이에요')
 }
