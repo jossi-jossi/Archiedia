@@ -101,14 +101,18 @@ export async function createBook(input: CreateBookInput): Promise<string> {
   return itemRow.id as string
 }
 
-// 제목과 요약(사용자 직접 수정)만 덮어쓴다. 그 외 metadata 필드는 호출하는 쪽에서
+// 제목·표지·요약(사용자 직접 수정)만 덮어쓴다. 그 외 metadata 필드는 호출하는 쪽에서
 // 기존 값을 그대로 채워 넘겨야 한다.
 export async function updateBookInfo(
   id: string,
   title: string,
+  posterUrl: string | null,
   metadata: BookMetadata
 ): Promise<void> {
-  const { error } = await supabase.from('content_items').update({ title, metadata }).eq('id', id)
+  const { error } = await supabase
+    .from('content_items')
+    .update({ title, poster_url: posterUrl, metadata })
+    .eq('id', id)
   if (error) throw error
 }
 

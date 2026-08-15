@@ -179,7 +179,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
       const cleaned = stripSoleAuthorTag(item.metadata.author)
       if (cleaned === item.metadata.author) continue
       const nextMetadata = { ...item.metadata, author: cleaned }
-      updateBookInfo(item.id, item.title, nextMetadata)
+      updateBookInfo(item.id, item.title, item.posterUrl, nextMetadata)
         .then(() => {
           setBooks((prev) =>
             prev.map((b) =>

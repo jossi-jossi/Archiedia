@@ -16,7 +16,9 @@ const EDIT_MODAL_HEIGHT = 540
 
 export function EditBookModal({ book, onClose, onSaved }: Props): React.JSX.Element {
   const [title, setTitle] = useState(book.title)
+  const [posterUrl, setPosterUrl] = useState(book.posterUrl ?? '')
   const [author, setAuthor] = useState(book.metadata.author ?? '')
+  const [publisher, setPublisher] = useState(book.metadata.publisher ?? '')
   const [overview, setOverview] = useState(book.metadata.overview ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,14 +39,16 @@ export function EditBookModal({ book, onClose, onSaved }: Props): React.JSX.Elem
     }
     setSaving(true)
     setError(null)
+    const nextPosterUrl = posterUrl.trim() || null
     const nextMetadata = {
       ...book.metadata,
       author: author.trim() || null,
+      publisher: publisher.trim() || null,
       overview: overview.trim() || null
     }
     try {
-      await updateBookInfo(book.id, nextTitle, nextMetadata)
-      onSaved({ ...book, title: nextTitle, metadata: nextMetadata })
+      await updateBookInfo(book.id, nextTitle, nextPosterUrl, nextMetadata)
+      onSaved({ ...book, title: nextTitle, posterUrl: nextPosterUrl, metadata: nextMetadata })
     } catch (err) {
       setError(errorMessage(err))
       setSaving(false)
@@ -85,8 +89,25 @@ export function EditBookModal({ book, onClose, onSaved }: Props): React.JSX.Elem
             <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
           <div className="field" style={{ flex: 'none' }}>
+            <label>표지 이미지 URL</label>
+            <input
+              className="input"
+              value={posterUrl}
+              onChange={(e) => setPosterUrl(e.target.value)}
+              placeholder="https://..."
+            />
+          </div>
+          <div className="field" style={{ flex: 'none' }}>
             <label>지은이</label>
             <input className="input" value={author} onChange={(e) => setAuthor(e.target.value)} />
+          </div>
+          <div className="field" style={{ flex: 'none' }}>
+            <label>출판사</label>
+            <input
+              className="input"
+              value={publisher}
+              onChange={(e) => setPublisher(e.target.value)}
+            />
           </div>
           <div className="field" style={{ flex: 'none' }}>
             <label>요약</label>
