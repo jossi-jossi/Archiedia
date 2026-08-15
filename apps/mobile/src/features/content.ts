@@ -92,6 +92,21 @@ export async function createContent(input: CreateContentInput): Promise<string> 
   return itemRow.id as string
 }
 
+export interface UpdateContentInput {
+  title?: string
+  metadata: unknown
+}
+
+// 영화/시리즈의 감독·출연·줄거리, 책의 제목·요약처럼 콘텐츠 자체의 정보를 사용자가
+// 직접 고칠 때 쓴다. title은 넘길 때만 같이 바뀐다 — 책만 제목을 고치고 나머지는
+// metadata만 바뀐다.
+export async function updateContent(id: string, input: UpdateContentInput): Promise<void> {
+  const patch: Record<string, unknown> = { metadata: input.metadata }
+  if (input.title !== undefined) patch.title = input.title
+  const { error } = await supabase.from('content_items').update(patch).eq('id', id)
+  if (error) throw error
+}
+
 export async function deleteContent(id: string): Promise<void> {
   // user_records.content_item_id는 on delete cascade라 같이 지워진다.
   const { error } = await supabase.from('content_items').delete().eq('id', id)

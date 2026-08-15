@@ -15,6 +15,7 @@ import {
   ArrowSquareOut,
   CaretDown,
   Heart,
+  PencilSimple,
   PlayCircle,
   Trash
 } from 'phosphor-react-native'
@@ -22,10 +23,12 @@ import type { ContentItem, UserRecord } from '@archiedia/schema'
 import { colors, radius } from '../theme'
 import { Chip, Field, Input, Poster, StarRating } from '../components/ui'
 import { PickerSheet } from '../components/PickerSheet'
+import { EditField, EditFieldsModal } from '../components/EditFieldsModal'
 import {
   ContentListItem,
   deleteContent,
   getContent,
+  updateContent,
   updateUserRecord,
   UserRecordPatch
 } from '../features/content'
@@ -48,6 +51,7 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
   const [error, setError] = useState<string | null>(null)
   const [seasonIndex, setSeasonIndex] = useState(0)
   const [seasonSheet, setSeasonSheet] = useState(false)
+  const [editSheet, setEditSheet] = useState(false)
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- id가 바뀌면 비동기 조회가 끝나기 전에 로딩/에러/시즌 상태를 먼저 되돌려야 한다
@@ -116,6 +120,22 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
   const { item, record } = entry
   const config = typeConfig(item.type)
   const wish = record ? isWishlisted(record.tags) : false
+  const editFields = buildEditFields(item, seasonIndex)
+
+  async function handleSaveEdit(values: Record<string, string>): Promise<void> {
+    if (!entry) return
+    const patch = buildEditPatch(entry.item, seasonIndex, values)
+    await updateContent(entry.item.id, patch)
+    setEntry({
+      ...entry,
+      item: {
+        ...entry.item,
+        ...(patch.title !== undefined ? { title: patch.title } : {}),
+        metadata: patch.metadata
+      } as ContentItem
+    })
+    setEditSheet(false)
+  }
 
   return (
     <ScrollView
@@ -128,6 +148,11 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
           <Text style={{ color: colors.text, fontSize: 14 }}>{config.label}</Text>
         </Pressable>
         <View style={{ flex: 1 }} />
+        {editFields ? (
+          <Pressable style={styles.iconButton} onPress={() => setEditSheet(true)}>
+            <PencilSimple size={16} color={colors.text} />
+          </Pressable>
+        ) : null}
         <Pressable style={styles.iconButton} onPress={confirmDelete}>
           <Trash size={17} color={colors.text} />
         </Pressable>
@@ -252,8 +277,91 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
           onClose={() => setSeasonSheet(false)}
         />
       ) : null}
+
+      {editFields ? (
+        <EditFieldsModal
+          visible={editSheet}
+          title={
+            item.type === 'drama' && item.metadata.seasons.length >= 2
+              ? `시즌 ${item.metadata.seasons[seasonIndex]?.seasonNumber ?? 1} 정보 수정`
+              : `${config.label} 정보 수정`
+          }
+          fields={editFields}
+          onSave={handleSaveEdit}
+          onClose={() => setEditSheet(false)}
+        />
+      ) : null}
     </ScrollView>
   )
+}
+
+// 영화/시리즈는 감독·출연·줄거리, 책은 제목·요약만 고칠 수 있다. 웹툰은 편집 항목이
+// 없어서 null — 호출부에서 이 값으로 수정 버튼 자체를 숨긴다.
+function buildEditFields(item: ContentItem, seasonIndex: number): EditField[] | null {
+  if (item.type === 'movie') {
+    const m = item.metadata
+    return [
+      { key: 'director', label: '감독', value: m.director ?? '' },
+      { key: 'actors', label: '출연', value: m.actors.join(', '), placeholder: '쉼표로 구분' },
+      { key: 'overview', label: '줄거리', value: m.overview ?? '', multiline: true }
+    ]
+  }
+  if (item.type === 'drama') {
+    const season = item.metadata.seasons[seasonIndex]
+    if (!season) return null
+    return [
+      { key: 'director', label: '감독', value: season.director ?? '' },
+      { key: 'actors', label: '출연', value: season.actors.join(', '), placeholder: '쉼표로 구분' },
+      { key: 'overview', label: '줄거리', value: season.overview ?? '', multiline: true }
+    ]
+  }
+  if (item.type === 'book') {
+    return [
+      { key: 'title', label: '제목', value: item.title },
+      { key: 'overview', label: '요약', value: item.metadata.overview ?? '', multiline: true }
+    ]
+  }
+  return null
+}
+
+function buildEditPatch(
+  item: ContentItem,
+  seasonIndex: number,
+  values: Record<string, string>
+): { title?: string; metadata: unknown } {
+  if (item.type === 'movie') {
+    return {
+      metadata: {
+        ...item.metadata,
+        director: values.director.trim() || null,
+        actors: values.actors
+          .split(',')
+          .map((a) => a.trim())
+          .filter(Boolean),
+        overview: values.overview.trim() || null
+      }
+    }
+  }
+  if (item.type === 'drama') {
+    const season = item.metadata.seasons[seasonIndex]
+    const nextSeason = {
+      ...season,
+      director: values.director.trim() || null,
+      actors: values.actors
+        .split(',')
+        .map((a) => a.trim())
+        .filter(Boolean),
+      overview: values.overview.trim() || null
+    }
+    const seasons = item.metadata.seasons.map((s, i) => (i === seasonIndex ? nextSeason : s))
+    return { metadata: { ...item.metadata, seasons } }
+  }
+  if (item.type === 'book') {
+    const title = values.title.trim()
+    if (!title) throw new Error('제목을 입력해주세요')
+    return { title, metadata: { ...item.metadata, overview: values.overview.trim() || null } }
+  }
+  throw new Error('수정할 수 없는 항목이에요')
 }
 
 function Header({ item }: { item: ContentItem }): React.JSX.Element | null {
