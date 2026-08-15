@@ -400,6 +400,7 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                     fontSize: 13,
                     lineHeight: 1.7,
                     color: 'var(--color-neutral-300)',
+                    textAlign: 'justify',
                     ...(overviewExpanded ? {} : { flex: 1, minHeight: 0, overflow: 'hidden' })
                   }}
                 >

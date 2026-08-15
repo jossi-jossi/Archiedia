@@ -272,6 +272,7 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                     lineHeight: 1.7,
                     color: 'var(--color-neutral-300)',
                     whiteSpace: 'pre-line',
+                    textAlign: 'justify',
                     ...(overviewExpanded ? {} : { flex: 1, minHeight: 0, overflow: 'hidden' })
                   }}
                 >
