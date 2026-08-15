@@ -147,7 +147,9 @@ const CATEGORY_ALIASES: Record<string, string> = {
   해외잡지: '잡지',
   '컴퓨터/모바일': '컴퓨터',
   '만화/라이트노벨': '만화',
-  'ELT/어학/사전': '외국어'
+  'ELT/어학/사전': '외국어',
+  어린이: '어린이/청소년',
+  청소년: '어린이/청소년'
 }
 
 const LANGUAGE_BUCKETS = new Set(['일본 도서', '중국 도서'])
