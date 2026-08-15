@@ -38,7 +38,7 @@ export function EditMovieModal({ movie, onClose, onSaved }: Props): React.JSX.El
   }
 
   return (
-    <div className="dialog-backdrop" onClick={() => !saving && onClose()}>
+    <div className="dialog-backdrop">
       <div
         className="dialog"
         style={{ width: 440, textAlign: 'left', boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65)' }}
@@ -74,7 +74,7 @@ export function EditMovieModal({ movie, onClose, onSaved }: Props): React.JSX.El
           </div>
         </div>
         {error && <div style={{ fontSize: 13, color: '#e08a8a', marginTop: 10 }}>{error}</div>}
-        <div className="dialog-actions">
+        <div className="dialog-actions" style={{ justifyContent: 'center' }}>
           <button type="button" className="btn btn-secondary" disabled={saving} onClick={onClose}>
             취소
           </button>

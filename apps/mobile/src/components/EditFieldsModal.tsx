@@ -6,7 +6,8 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text
+  Text,
+  View
 } from 'react-native'
 import { colors, radius } from '../theme'
 import { Field, Input } from './ui'
@@ -63,12 +64,12 @@ export function EditFieldsModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={() => !saving && onClose()}>
+      <View style={styles.backdrop}>
         <KeyboardAvoidingView
           style={{ width: '100%' }}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+          <View style={styles.sheet}>
             <Text style={styles.title}>{title}</Text>
             <ScrollView
               style={{ maxHeight: 420 }}
@@ -99,9 +100,9 @@ export function EditFieldsModal({
             >
               <Text style={styles.primaryText}>{saving ? '저장 중...' : '저장'}</Text>
             </Pressable>
-          </Pressable>
+          </View>
         </KeyboardAvoidingView>
-      </Pressable>
+      </View>
     </Modal>
   )
 }
