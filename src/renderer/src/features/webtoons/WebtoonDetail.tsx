@@ -376,7 +376,7 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                           value={record.watchMedium ?? ''}
                           onChange={(e) => setRecord({ ...record, watchMedium: e.target.value })}
                           onBlur={() => save({ watchMedium: record.watchMedium })}
-                          placeholder="네이버웹툰 앱 / PC 등"
+                          placeholder="앱 / 단행본 등"
                         />
                       </div>
                     </div>

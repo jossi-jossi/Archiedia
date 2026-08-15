@@ -490,7 +490,7 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                           value={record.watchMedium ?? ''}
                           onChange={(e) => setRecord({ ...record, watchMedium: e.target.value })}
                           onBlur={() => save({ watchMedium: record.watchMedium })}
-                          placeholder="극장 / OTT / 블루레이 등"
+                          placeholder="극장 / OTT 등"
                         />
                       </div>
                     </div>
