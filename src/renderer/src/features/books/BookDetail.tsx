@@ -1,8 +1,8 @@
-import { CaretDown, CaretUp, Heart, Star, X } from '@phosphor-icons/react'
+import { CaretDown, CaretUp, Eye, Heart, Star, X } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import { deleteBook, getBook, Book, updateUserRecord } from './api'
 import { EditBookModal } from './EditBookModal'
-import { isWishlisted, withoutStatusTags } from '../../lib/wishlist'
+import { isWatching, isWishlisted, withoutStatusTags } from '../../lib/wishlist'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
 
@@ -332,29 +332,6 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                         />
                       </div>
                       <div className="field">
-                        <label>상태</label>
-                        <button
-                          type="button"
-                          className={
-                            isWishlisted(record.tags) ? 'btn btn-primary' : 'btn btn-secondary'
-                          }
-                          style={{ width: '100%', minHeight: 36 }}
-                          onClick={() =>
-                            save({
-                              tags: isWishlisted(record.tags)
-                                ? withoutStatusTags(record.tags)
-                                : [...withoutStatusTags(record.tags), '보고 싶음']
-                            })
-                          }
-                        >
-                          <Heart weight={isWishlisted(record.tags) ? 'fill' : 'regular'} />
-                          보고 싶어요
-                        </button>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                      <div className="field">
                         <label>읽은 매체</label>
                         <input
                           className="input"
@@ -363,6 +340,48 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                           onBlur={() => save({ watchMedium: record.watchMedium })}
                           placeholder="종이책 / eBook 등"
                         />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+                      <div className="field">
+                        <label>상태</label>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            type="button"
+                            className={
+                              isWishlisted(record.tags) ? 'btn btn-primary' : 'btn btn-secondary'
+                            }
+                            style={{ flex: 1, minHeight: 36 }}
+                            onClick={() =>
+                              save({
+                                tags: isWishlisted(record.tags)
+                                  ? withoutStatusTags(record.tags)
+                                  : [...withoutStatusTags(record.tags), '보고 싶음']
+                              })
+                            }
+                          >
+                            <Heart weight={isWishlisted(record.tags) ? 'fill' : 'regular'} />
+                            보고 싶어요
+                          </button>
+                          <button
+                            type="button"
+                            className={
+                              isWatching(record.tags) ? 'btn btn-primary' : 'btn btn-secondary'
+                            }
+                            style={{ flex: 1, minHeight: 36 }}
+                            onClick={() =>
+                              save({
+                                tags: isWatching(record.tags)
+                                  ? withoutStatusTags(record.tags)
+                                  : [...withoutStatusTags(record.tags), '보는 중']
+                              })
+                            }
+                          >
+                            <Eye weight={isWatching(record.tags) ? 'fill' : 'regular'} />
+                            보는 중
+                          </button>
+                        </div>
                       </div>
                       <div className="field">
                         <label>마지막 읽은 날</label>

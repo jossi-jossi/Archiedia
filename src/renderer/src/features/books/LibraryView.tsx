@@ -1,11 +1,10 @@
-import { Heart, ListBullets, MagnifyingGlass, SquaresFour, Star } from '@phosphor-icons/react'
+import { Eye, Heart, ListBullets, MagnifyingGlass, SquaresFour, Star } from '@phosphor-icons/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { listBooks, BookListItem } from './api'
+import { listBooks, updateUserRecord, BookListItem } from './api'
 import { errorMessage } from '../../lib/errors'
 import { authorNames, categoryGroup, categoryOrigin } from '../../lib/aladin'
 import { FilterDropdown } from '../../components/FilterDropdown'
-import { StatusQuickEdit } from '../../components/StatusQuickEdit'
-import { displayTag, isWishlisted } from '../../lib/wishlist'
+import { displayTag, isWatching, isWishlisted, withoutStatusTags } from '../../lib/wishlist'
 
 interface Props {
   onSelect: (id: string) => void
@@ -60,6 +59,23 @@ function StarRating({ rating }: { rating: number | null }): React.JSX.Element {
         )
       })}
     </div>
+  )
+}
+
+// 그리드 카드·목록 표에서 쓰는 아이콘 전용 상태 버튼(보고 싶어요/보는 중 공용).
+function StatusIconButton({
+  icon: Icon,
+  active,
+  onClick
+}: {
+  icon: React.ComponentType<{ size?: number; weight?: 'regular' | 'fill' }>
+  active: boolean
+  onClick: (e: React.MouseEvent) => void
+}): React.JSX.Element {
+  return (
+    <button type="button" className="btn btn-ghost" style={{ padding: 4 }} onClick={onClick}>
+      <Icon size={14} weight={active ? 'fill' : 'regular'} />
+    </button>
   )
 }
 
@@ -173,6 +189,19 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     setBooks((prev) =>
       prev.map((b) => (b.item.id === contentItemId ? { ...b, record: updated } : b))
     )
+  }
+
+  // 보고 싶어요/보는 중은 배타적인 상태라, withoutStatusTags로 둘 다 지운 뒤 필요하면 하나만
+  // 다시 넣는다. 이미 켜져 있던 태그를 다시 누르면 "둘 다 아님"으로 돌아간다.
+  async function toggleStatus(
+    itemId: string,
+    record: NonNullable<BookListItem['record']>,
+    tag: '보고 싶음' | '보는 중',
+    active: boolean
+  ): Promise<void> {
+    const tags = active ? withoutStatusTags(record.tags) : [...withoutStatusTags(record.tags), tag]
+    await updateUserRecord(record.id, { tags })
+    updateRecordInList(itemId, { ...record, tags })
   }
 
   const categoryOptions = useMemo(
@@ -508,11 +537,27 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                       justifyContent: 'space-between'
                     }}
                   >
-                    <StarRating rating={record?.myRating ?? null} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <StarRating rating={record?.myRating ?? null} />
+                      {record && (
+                        <StatusIconButton
+                          icon={Heart}
+                          active={isWishlisted(record.tags)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleStatus(item.id, record, '보고 싶음', isWishlisted(record.tags))
+                          }}
+                        />
+                      )}
+                    </div>
                     {record && (
-                      <StatusQuickEdit
-                        record={record}
-                        onChange={(r) => updateRecordInList(item.id, r)}
+                      <StatusIconButton
+                        icon={Eye}
+                        active={isWatching(record.tags)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleStatus(item.id, record, '보는 중', isWatching(record.tags))
+                        }}
                       />
                     )}
                   </div>
@@ -527,12 +572,13 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
           >
             <colgroup>
               <col style={{ width: '6%' }} />
-              <col style={{ width: '33%' }} />
-              <col style={{ width: '13%' }} />
+              <col style={{ width: '31%' }} />
+              <col style={{ width: '12%' }} />
               <col style={{ width: '8%' }} />
-              <col style={{ width: '11%' }} />
-              <col style={{ width: '11%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '10%' }} />
               <col style={{ width: '13%' }} />
+              <col style={{ width: '5%' }} />
               <col style={{ width: '5%' }} />
             </colgroup>
             <thead>
@@ -546,6 +592,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                 <th>나의 평점</th>
                 <th>상태</th>
                 <th>마지막 읽음</th>
+                <th></th>
                 <th></th>
               </tr>
             </thead>
@@ -612,9 +659,25 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                   </td>
                   <td>
                     {record && (
-                      <StatusQuickEdit
-                        record={record}
-                        onChange={(r) => updateRecordInList(item.id, r)}
+                      <StatusIconButton
+                        icon={Heart}
+                        active={isWishlisted(record.tags)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleStatus(item.id, record, '보고 싶음', isWishlisted(record.tags))
+                        }}
+                      />
+                    )}
+                  </td>
+                  <td>
+                    {record && (
+                      <StatusIconButton
+                        icon={Eye}
+                        active={isWatching(record.tags)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleStatus(item.id, record, '보는 중', isWatching(record.tags))
+                        }}
                       />
                     )}
                   </td>
