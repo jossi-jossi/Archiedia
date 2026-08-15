@@ -29,7 +29,7 @@ export function FilterDropdown({ label, options, selected, onChange }: Props): R
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <div
-        className="tag tag-outline"
+        className={selected.length > 0 ? 'tag tag-outline' : 'tag'}
         onClick={() => setOpen((o) => !o)}
         style={{
           cursor: 'pointer',
@@ -41,7 +41,12 @@ export function FilterDropdown({ label, options, selected, onChange }: Props): R
           display: 'flex',
           alignItems: 'center',
           gap: 5,
-          whiteSpace: 'nowrap'
+          whiteSpace: 'nowrap',
+          // 아무것도 선택 안 됐을 땐 tag-outline의 연두색 대신 중립 테두리로 표시한다.
+          ...(selected.length === 0 && {
+            border: '1px solid var(--color-divider)',
+            color: 'var(--color-neutral-500)'
+          })
         }}
       >
         {label}
