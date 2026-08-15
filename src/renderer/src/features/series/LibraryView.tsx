@@ -476,16 +476,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                   minWidth: 0
                 }}
               >
-                <div style={poster(item.posterUrl)}>
-                  {record && isWishlisted(record.tags) && (
-                    <div
-                      className="tag tag-accent-2"
-                      style={{ position: 'absolute', top: 8, left: 8 }}
-                    >
-                      보고 싶어요
-                    </div>
-                  )}
-                </div>
+                <div style={poster(item.posterUrl)} />
                 <div>
                   <div
                     title={item.title}

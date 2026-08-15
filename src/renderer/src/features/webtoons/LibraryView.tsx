@@ -519,14 +519,6 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                     size={22}
                     style={{ position: 'absolute', top: 8, left: 8 }}
                   />
-                  {record && isWishlisted(record.tags) && (
-                    <div
-                      className="tag tag-accent-2"
-                      style={{ position: 'absolute', top: 8, left: 36 }}
-                    >
-                      보고 싶어요
-                    </div>
-                  )}
                 </div>
                 <div>
                   <div
