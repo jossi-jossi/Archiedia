@@ -68,13 +68,13 @@ function StatusIconButton({
   active,
   onClick
 }: {
-  icon: React.ComponentType<{ size?: number; weight?: 'regular' | 'fill' }>
+  icon: React.ComponentType<{ size?: number; weight?: 'regular' | 'fill'; color?: string }>
   active: boolean
   onClick: (e: React.MouseEvent) => void
 }): React.JSX.Element {
   return (
     <button type="button" className="btn btn-ghost" style={{ padding: 4 }} onClick={onClick}>
-      <Icon size={14} weight={active ? 'fill' : 'regular'} />
+      <Icon size={14} weight={active ? 'fill' : 'regular'} color={active ? undefined : '#fff'} />
     </button>
   )
 }
