@@ -162,6 +162,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   const [query, setQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string[]>([])
   const [wishlistOnly, setWishlistOnly] = useState(false)
+  const [watchingOnly, setWatchingOnly] = useState(false)
   // 둘 다 켜져 있거나 둘 다 꺼져 있으면 전체를 보여준다.
   const [originFilter, setOriginFilter] = useState<string[]>([])
   const [sort, setSort] = useState<SortKey>('added_desc')
@@ -233,6 +234,9 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     if (wishlistOnly) {
       result = result.filter(({ record }) => record && isWishlisted(record.tags))
     }
+    if (watchingOnly) {
+      result = result.filter(({ record }) => record && isWatching(record.tags))
+    }
 
     const primaryCompare: Record<SortKey, (a: BookListItem, b: BookListItem) => number> = {
       added_desc: (a, b) => Date.parse(b.item.createdAt) - Date.parse(a.item.createdAt),
@@ -250,7 +254,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
       return a.item.title.localeCompare(b.item.title, 'ko')
     })
     return sorted
-  }, [books, query, categoryFilter, originFilter, wishlistOnly, sort])
+  }, [books, query, categoryFilter, originFilter, wishlistOnly, watchingOnly, sort])
 
   return (
     <div
@@ -364,6 +368,15 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
               >
                 <Heart size={12} weight={wishlistOnly ? 'fill' : 'regular'} />
                 보고 싶어요
+              </button>
+              <button
+                type="button"
+                className={watchingOnly ? 'btn btn-primary' : 'btn btn-secondary'}
+                style={{ minHeight: 28, padding: '0 12px', fontSize: 12 }}
+                onClick={() => setWatchingOnly((v) => !v)}
+              >
+                <Eye size={12} weight={watchingOnly ? 'fill' : 'regular'} />
+                보는 중
               </button>
               {ORIGINS.map((origin) => (
                 <button
@@ -537,9 +550,9 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                       justifyContent: 'space-between'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <StarRating rating={record?.myRating ?? null} />
-                      {record && (
+                    <StarRating rating={record?.myRating ?? null} />
+                    {record && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <StatusIconButton
                           icon={Heart}
                           active={isWishlisted(record.tags)}
@@ -548,17 +561,15 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                             toggleStatus(item.id, record, '보고 싶음', isWishlisted(record.tags))
                           }}
                         />
-                      )}
-                    </div>
-                    {record && (
-                      <StatusIconButton
-                        icon={Eye}
-                        active={isWatching(record.tags)}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleStatus(item.id, record, '보는 중', isWatching(record.tags))
-                        }}
-                      />
+                        <StatusIconButton
+                          icon={Eye}
+                          active={isWatching(record.tags)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleStatus(item.id, record, '보는 중', isWatching(record.tags))
+                          }}
+                        />
+                      </div>
                     )}
                   </div>
                 </div>

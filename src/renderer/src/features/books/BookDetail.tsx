@@ -343,16 +343,29 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                       </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+                    <div
+                      style={{
+                        display: 'grid',
+                        // 마지막 읽은 날 칸이 위 행(3등분)의 칸 하나와 정확히 같은 너비가
+                        // 되도록, fr 대신 그 행과 같은 계산식을 그대로 옮겨 쓴다.
+                        gridTemplateColumns: '1fr calc((100% - 20px) / 3)',
+                        gap: 10
+                      }}
+                    >
                       <div className="field">
                         <label>상태</label>
-                        <div style={{ display: 'flex', gap: 8 }}>
+                        <div style={{ display: 'flex' }}>
                           <button
                             type="button"
                             className={
                               isWishlisted(record.tags) ? 'btn btn-primary' : 'btn btn-secondary'
                             }
-                            style={{ flex: 1, minHeight: 36 }}
+                            style={{
+                              flex: 1,
+                              minHeight: 36,
+                              borderTopRightRadius: 0,
+                              borderBottomRightRadius: 0
+                            }}
                             onClick={() =>
                               save({
                                 tags: isWishlisted(record.tags)
@@ -369,7 +382,13 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                             className={
                               isWatching(record.tags) ? 'btn btn-primary' : 'btn btn-secondary'
                             }
-                            style={{ flex: 1, minHeight: 36 }}
+                            style={{
+                              flex: 1,
+                              minHeight: 36,
+                              marginLeft: -1,
+                              borderTopLeftRadius: 0,
+                              borderBottomLeftRadius: 0
+                            }}
                             onClick={() =>
                               save({
                                 tags: isWatching(record.tags)
