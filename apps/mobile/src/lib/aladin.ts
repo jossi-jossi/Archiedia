@@ -87,11 +87,16 @@ export async function searchBooks(keyword: string): Promise<BookSearchResult[]> 
   return [...domestic, ...foreign]
 }
 
-// "호메로스 (지은이), 천병희 (옮긴이)"에서 지은이만 남기고 꼬리표를 뗀다.
-export function authorNames(author: string | null): string | null {
-  if (!author) return null
+interface AuthorGroup {
+  names: string[]
+  role: string | null
+}
 
-  const groups: { names: string[]; role: string | null }[] = []
+// 알라딘 author는 "호메로스 (지은이), 천병희 (옮긴이)"처럼 역할 꼬리표가 붙어서 오고,
+// "롤랑 마르탱 (지은이), 김민화, 이수진 (옮긴이)"처럼 이름 여러 개가 역할 하나를
+// 공유하기도 한다. 역할 단위로 묶는다.
+function parseAuthorGroups(author: string): AuthorGroup[] {
+  const groups: AuthorGroup[] = []
   let pending: string[] = []
   for (const raw of author.split(',')) {
     const part = raw.trim()
@@ -106,10 +111,31 @@ export function authorNames(author: string | null): string | null {
     }
   }
   if (pending.length > 0) groups.push({ names: pending, role: null })
+  return groups
+}
 
+// 목록·카드처럼 좁은 자리에 쓸 지은이명에서 꼬리표를 뗀다.
+export function authorNames(author: string | null): string | null {
+  if (!author) return null
+
+  const groups = parseAuthorGroups(author)
   const authors = groups.filter((g) => g.role === null || g.role === '지은이')
   const picked = authors.length > 0 ? authors : groups.slice(0, 1)
   return picked.flatMap((g) => g.names).join(', ') || null
+}
+
+// author 문자열이 "(지은이)"로 끝나고 그림/옮긴이 등 다른 역할이 섞여 있지 않다면,
+// 역할이 하나뿐이라 구분할 필요가 없으므로 꼬리표를 뗀다.
+export function stripSoleAuthorTag(author: string | null): string | null {
+  if (!author) return author
+  const trimmed = author.trim()
+  if (!/\(지은이\)\s*$/.test(trimmed)) return author
+
+  const groups = parseAuthorGroups(trimmed)
+  const hasOtherRole = groups.some((g) => g.role !== null && g.role !== '지은이')
+  if (hasOtherRole) return author
+
+  return groups.flatMap((g) => g.names).join(', ') || author
 }
 
 export function categoryOrigin(category: string | null): string | null {
@@ -240,7 +266,7 @@ export async function getBookDetails(itemId: number): Promise<BookDetails> {
     title: decodeHtmlEntities(item.title),
     posterUrl: upscaleCover(item.cover || null),
     metadata: {
-      author: item.author ? decodeHtmlEntities(item.author) : null,
+      author: item.author ? stripSoleAuthorTag(decodeHtmlEntities(item.author)) : null,
       originalTitle: originalTitle ? decodeHtmlEntities(originalTitle) : null,
       publisher: item.publisher ? decodeHtmlEntities(item.publisher) : null,
       releaseYear: item.pubDate ? Number(item.pubDate.slice(0, 4)) : null,

@@ -1,8 +1,8 @@
 import { Eye, Heart, ListBullets, MagnifyingGlass, SquaresFour, Star } from '@phosphor-icons/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { listBooks, updateUserRecord, BookListItem } from './api'
+import { listBooks, updateBookInfo, updateUserRecord, BookListItem } from './api'
 import { errorMessage } from '../../lib/errors'
-import { authorNames, categoryGroup, categoryOrigin } from '../../lib/aladin'
+import { authorNames, categoryGroup, categoryOrigin, stripSoleAuthorTag } from '../../lib/aladin'
 import { FilterDropdown } from '../../components/FilterDropdown'
 import { displayTag, isWatching, isWishlisted, withoutStatusTags } from '../../lib/wishlist'
 
@@ -172,6 +172,25 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     localStorage.setItem(VIEW_KEY, view)
   }, [view])
 
+  // 예전에 저장된 책 중 "(지은이)" 꼬리표가 불필요하게 남아 있는 것들을 조용히 정리한다.
+  // 이미 깔끔한 책은 매번 건너뛰므로 라이브러리를 열 때마다 실행해도 비용이 거의 없다.
+  function cleanupSoleAuthorTags(items: BookListItem[]): void {
+    for (const { item } of items) {
+      const cleaned = stripSoleAuthorTag(item.metadata.author)
+      if (cleaned === item.metadata.author) continue
+      const nextMetadata = { ...item.metadata, author: cleaned }
+      updateBookInfo(item.id, item.title, nextMetadata)
+        .then(() => {
+          setBooks((prev) =>
+            prev.map((b) =>
+              b.item.id === item.id ? { ...b, item: { ...b.item, metadata: nextMetadata } } : b
+            )
+          )
+        })
+        .catch(() => {})
+    }
+  }
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on refreshKey change needs to reset the loading/error flags before the async call resolves
     setLoading(true)
@@ -180,6 +199,7 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
       .then((result) => {
         setBooks(result)
         onCountChange(result.length)
+        cleanupSoleAuthorTags(result)
       })
       .catch((err) => setError(errorMessage(err)))
       .finally(() => setLoading(false))

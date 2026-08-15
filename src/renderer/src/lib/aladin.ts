@@ -87,15 +87,16 @@ export async function searchBooks(keyword: string): Promise<BookSearchResult[]> 
   return [...domestic, ...foreign]
 }
 
-// 목록 필터·카드·표처럼 좁은 자리에 쓸 지은이명. (상세팝업은 원문을 그대로 보여준다)
-//
+interface AuthorGroup {
+  names: string[]
+  role: string | null
+}
+
 // 알라딘 author는 "호메로스 (지은이), 천병희 (옮긴이)"처럼 역할 꼬리표가 붙어서 오고,
 // "롤랑 마르탱 (지은이), 김민화, 이수진 (옮긴이)"처럼 이름 여러 개가 역할 하나를
-// 공유하기도 한다. 그래서 역할 단위로 묶은 뒤 지은이만 남기고 꼬리표는 떼어낸다.
-export function authorNames(author: string | null): string | null {
-  if (!author) return null
-
-  const groups: { names: string[]; role: string | null }[] = []
+// 공유하기도 한다. 역할 단위로 묶는다.
+function parseAuthorGroups(author: string): AuthorGroup[] {
+  const groups: AuthorGroup[] = []
   let pending: string[] = []
   for (const raw of author.split(',')) {
     const part = raw.trim()
@@ -110,12 +111,35 @@ export function authorNames(author: string | null): string | null {
     }
   }
   if (pending.length > 0) groups.push({ names: pending, role: null })
+  return groups
+}
+
+// 목록 필터·카드·표처럼 좁은 자리에 쓸 지은이명. (상세팝업은 원문을 그대로 보여준다)
+export function authorNames(author: string | null): string | null {
+  if (!author) return null
+
+  const groups = parseAuthorGroups(author)
 
   // 역할 꼬리표가 아예 없는 경우(role === null)도 지은이로 본다. 지은이가 하나도 없으면
   // (엮음/원작만 있는 책 등) 빈칸으로 두지 말고 맨 앞 역할을 대신 쓴다.
   const authors = groups.filter((g) => g.role === null || g.role === '지은이')
   const picked = authors.length > 0 ? authors : groups.slice(0, 1)
   return picked.flatMap((g) => g.names).join(', ') || null
+}
+
+// author 문자열이 "(지은이)"로 끝나고 그림/옮긴이 등 다른 역할이 섞여 있지 않다면,
+// 역할이 하나뿐이라 구분할 필요가 없으므로 꼬리표를 뗀다. 원문을 그대로 저장하는
+// metadata.author 자체에 적용해서, 지은이만 있는 책은 이름만 깔끔하게 남긴다.
+export function stripSoleAuthorTag(author: string | null): string | null {
+  if (!author) return author
+  const trimmed = author.trim()
+  if (!/\(지은이\)\s*$/.test(trimmed)) return author
+
+  const groups = parseAuthorGroups(trimmed)
+  const hasOtherRole = groups.some((g) => g.role !== null && g.role !== '지은이')
+  if (hasOtherRole) return author
+
+  return groups.flatMap((g) => g.names).join(', ') || author
 }
 
 // 카테고리 경로의 맨 앞 구간("국내도서"/"외국도서") — 원서 여부 필터에 쓴다.
@@ -265,7 +289,7 @@ export async function getBookDetails(itemId: number): Promise<BookDetails> {
     title: decodeHtmlEntities(item.title),
     posterUrl: upscaleCover(item.cover || null),
     metadata: {
-      author: item.author ? decodeHtmlEntities(item.author) : null,
+      author: item.author ? stripSoleAuthorTag(decodeHtmlEntities(item.author)) : null,
       // 알라딘 subInfo.originalTitle에는 종종 끝에 "(1919년)"처럼 출간연도가 괄호로
       // 붙어 있는데, 화면에는 원제만 보여준다.
       originalTitle: originalTitle ? decodeHtmlEntities(originalTitle) : null,
