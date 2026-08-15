@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { updateSeriesMetadata, Series } from './api'
 import { errorMessage } from '../../lib/errors'
 
@@ -10,9 +10,9 @@ interface Props {
 }
 
 // 팝업 높이를 고정하고(예전 auto-height의 대략 2배), 제목과 취소/저장 버튼만 항상
-// 보이게 고정한 채 그 사이 내용만 스크롤되게 한다. 줄거리 textarea는 이 여유 공간을
-// 그대로 흡수해서 자기 몫의 높이를 갖는 대신, 남는 세로 공간을 채우며 늘어난다 —
-// 그래서 textarea 자체의 리사이즈/스크롤바가 필요 없다.
+// 보이게 고정한 채 그 사이 내용만 스크롤되게 한다. 줄거리 textarea는 내부 스크롤 없이
+// 내용 길이에 맞춰 그대로 늘어나고(resize 핸들도 없음), 다 못 담으면 그 아래 팝업
+// 전체(가운데 영역)가 대신 스크롤된다.
 const EDIT_MODAL_HEIGHT = 540
 
 // 감독/출연/줄거리는 시즌마다 따로 저장돼서, 현재 화면에 선택된 시즌 하나만 수정한다.
@@ -29,6 +29,14 @@ export function EditSeasonModal({
   const [overview, setOverview] = useState(season.overview ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const overviewRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    const el = overviewRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [overview])
 
   const isMultiSeason = meta.seasons.length >= 2
 
@@ -80,7 +88,8 @@ export function EditSeasonModal({
             display: 'flex',
             flexDirection: 'column',
             gap: 12,
-            marginTop: 4
+            marginTop: 4,
+            padding: 4
           }}
         >
           <div className="field" style={{ flex: 'none' }}>
@@ -100,14 +109,12 @@ export function EditSeasonModal({
               placeholder="쉼표로 구분"
             />
           </div>
-          <div
-            className="field"
-            style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
-          >
+          <div className="field" style={{ flex: 'none' }}>
             <label>줄거리</label>
             <textarea
+              ref={overviewRef}
               className="input"
-              style={{ flex: 1, minHeight: 0, resize: 'none', overflowY: 'hidden' }}
+              style={{ resize: 'none', overflow: 'hidden' }}
               value={overview}
               onChange={(e) => setOverview(e.target.value)}
             />
