@@ -82,7 +82,9 @@ export async function createWebtoon(input: CreateWebtoonInput): Promise<string> 
       source: input.source,
       external_id: input.externalId,
       poster_url: input.posterUrl,
-      metadata: input.metadata
+      metadata: input.metadata,
+      // 사용자 지정순에서 항상 맨 위에 오도록, 시간이 지날수록 더 작아지는 값을 준다.
+      display_order: -Date.now()
     })
     .select()
     .single()
@@ -114,6 +116,14 @@ export async function refetchWebtoon(id: string, input: RefetchWebtoonInput): Pr
   const { error } = await supabase
     .from('content_items')
     .update({ title: input.title, poster_url: input.posterUrl, metadata: input.metadata })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function updateWebtoonDisplayOrder(id: string, displayOrder: number): Promise<void> {
+  const { error } = await supabase
+    .from('content_items')
+    .update({ display_order: displayOrder })
     .eq('id', id)
   if (error) throw error
 }

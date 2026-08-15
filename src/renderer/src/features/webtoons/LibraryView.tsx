@@ -1,6 +1,14 @@
-import { Eye, Heart, ListBullets, MagnifyingGlass, SquaresFour, Star } from '@phosphor-icons/react'
+import {
+  ArrowsDownUp,
+  Eye,
+  Heart,
+  ListBullets,
+  MagnifyingGlass,
+  SquaresFour,
+  Star
+} from '@phosphor-icons/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { listWebtoons, updateUserRecord, WebtoonListItem } from './api'
+import { listWebtoons, updateWebtoonDisplayOrder, updateUserRecord, WebtoonListItem } from './api'
 import { errorMessage } from '../../lib/errors'
 import { FilterDropdown } from '../../components/FilterDropdown'
 import { displayTag, isWatching, isWishlisted, withoutStatusTags } from '../../lib/wishlist'
@@ -8,6 +16,7 @@ import { normalizeGenres } from './genres'
 import { webtoonPosterFill } from './poster'
 import { syncStaleOngoingWebtoons } from './autoSync'
 import { SourceLogo } from './sourceLogo'
+import { computeDisplayOrderForInsert, MISSING_ORDER } from '../../lib/reorder'
 
 interface Props {
   onSelect: (id: string) => void
@@ -16,9 +25,16 @@ interface Props {
 }
 
 type SortKey =
-  'added_desc' | 'added_asc' | 'rating_desc' | 'rating_asc' | 'watched_desc' | 'watch_count_desc'
+  | 'custom'
+  | 'added_desc'
+  | 'added_asc'
+  | 'rating_desc'
+  | 'rating_asc'
+  | 'watched_desc'
+  | 'watch_count_desc'
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'custom', label: '사용자 지정순' },
   { value: 'added_desc', label: '보관 최신순' },
   { value: 'added_asc', label: '보관 오래된순' },
   { value: 'rating_desc', label: '나의 평점 높은순' },
@@ -165,7 +181,11 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
   const [wishlistOnly, setWishlistOnly] = useState(false)
   const [watchingOnly, setWatchingOnly] = useState(false)
   const [finishedOnly, setFinishedOnly] = useState(false)
-  const [sort, setSort] = useState<SortKey>('added_desc')
+  const [sort, setSort] = useState<SortKey>('custom')
+  const [reorderMode, setReorderMode] = useState(false)
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [orderPreview, setOrderPreview] = useState<WebtoonListItem[] | null>(null)
+  const draggedItemId = useRef<string | null>(null)
   const [gridRef, columns, gutter] = useGridColumns(POSTER_WIDTH)
 
   useEffect(() => {
@@ -256,6 +276,8 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     }
 
     const primaryCompare: Record<SortKey, (a: WebtoonListItem, b: WebtoonListItem) => number> = {
+      custom: (a, b) =>
+        (a.item.displayOrder ?? MISSING_ORDER) - (b.item.displayOrder ?? MISSING_ORDER),
       added_desc: (a, b) => Date.parse(b.item.createdAt) - Date.parse(a.item.createdAt),
       added_asc: (a, b) => Date.parse(a.item.createdAt) - Date.parse(b.item.createdAt),
       rating_desc: (a, b) => (b.record?.myRating ?? 0) - (a.record?.myRating ?? 0),
@@ -272,6 +294,58 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
     })
     return sorted
   }, [webtoons, query, genreFilter, wishlistOnly, watchingOnly, finishedOnly, sort])
+
+  // 순서 변경은 사용자 지정순 + 목록 보기 + 아무 필터도 안 걸려 있을 때만 허용한다.
+  // 필터링된 부분집합만 보이는 상태에서 드래그하면 전체 순서와 어긋나 보이기 때문.
+  const reorderable =
+    sort === 'custom' &&
+    view === 'list' &&
+    !query.trim() &&
+    genreFilter.length === 0 &&
+    !wishlistOnly &&
+    !watchingOnly &&
+    !finishedOnly
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 검색/필터로 reorderable이 꺼지면 순서 변경 모드도 즉시 꺼야 한다
+    if (!reorderable) setReorderMode(false)
+  }, [reorderable])
+
+  function handleDragOver(index: number): void {
+    if (dragIndex === null || dragIndex === index) return
+    setOrderPreview((prev) => {
+      if (!prev) return prev
+      const next = [...prev]
+      const [moved] = next.splice(dragIndex, 1)
+      next.splice(index, 0, moved)
+      return next
+    })
+    setDragIndex(index)
+  }
+
+  async function commitReorder(): Promise<void> {
+    const list = orderPreview
+    setDragIndex(null)
+    setOrderPreview(null)
+    if (!list) return
+    const movedIndex = list.findIndex((w) => w.item.id === draggedItemId.current)
+    if (movedIndex === -1) return
+    const orderedValues = list
+      .filter((_, i) => i !== movedIndex)
+      .map((w) => w.item.displayOrder ?? MISSING_ORDER)
+    const nextOrder = computeDisplayOrderForInsert(orderedValues, movedIndex)
+    const movedId = list[movedIndex].item.id
+    try {
+      await updateWebtoonDisplayOrder(movedId, nextOrder)
+      setWebtoons((prev) =>
+        prev.map((w) =>
+          w.item.id === movedId ? { ...w, item: { ...w.item, displayOrder: nextOrder } } : w
+        )
+      )
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
 
   return (
     <div
@@ -407,34 +481,57 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
           ) : (
             <div />
           )}
-          <select
-            className="input"
-            style={{
-              width: 'auto',
-              flex: 'none',
-              minHeight: 28,
-              paddingTop: 3,
-              paddingBottom: 3,
-              paddingLeft: 10,
-              paddingRight: 20,
-              fontSize: 12,
-              appearance: 'none',
-              WebkitAppearance: 'none',
-              backgroundImage:
-                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%239397ab' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 8l5 5 5-5'/%3E%3C/svg%3E\")",
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 2px center',
-              backgroundSize: '8px 8px'
-            }}
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-          >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
+            <button
+              type="button"
+              className={reorderMode ? 'btn btn-primary' : 'btn btn-secondary'}
+              disabled={!reorderable}
+              style={{
+                minHeight: 28,
+                padding: '0 12px',
+                fontSize: 12,
+                opacity: reorderable ? 1 : 0.45,
+                cursor: reorderable ? 'pointer' : 'not-allowed'
+              }}
+              onClick={() => setReorderMode((v) => !v)}
+              title={
+                reorderable
+                  ? undefined
+                  : '사용자 지정순 · 목록 보기이고, 검색어나 필터가 없을 때만 순서를 바꿀 수 있어요'
+              }
+            >
+              <ArrowsDownUp size={12} />
+              순서 변경
+            </button>
+            <select
+              className="input"
+              style={{
+                width: 'auto',
+                flex: 'none',
+                minHeight: 28,
+                paddingTop: 3,
+                paddingBottom: 3,
+                paddingLeft: 10,
+                paddingRight: 20,
+                fontSize: 12,
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                backgroundImage:
+                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%239397ab' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 8l5 5 5-5'/%3E%3C/svg%3E\")",
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 2px center',
+                backgroundSize: '8px 8px'
+              }}
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -613,8 +710,26 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
               </tr>
             </thead>
             <tbody>
-              {filtered.map(({ item, record }) => (
-                <tr key={item.id} onClick={() => onSelect(item.id)} style={{ cursor: 'pointer' }}>
+              {(orderPreview ?? filtered).map(({ item, record }, index) => (
+                <tr
+                  key={item.id}
+                  onClick={reorderMode ? undefined : () => onSelect(item.id)}
+                  draggable={reorderMode}
+                  onDragStart={() => {
+                    draggedItemId.current = item.id
+                    setOrderPreview(filtered)
+                    setDragIndex(index)
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    handleDragOver(index)
+                  }}
+                  onDrop={(e) => e.preventDefault()}
+                  onDragEnd={() => {
+                    void commitReorder()
+                  }}
+                  style={{ cursor: reorderMode ? 'grab' : 'pointer' }}
+                >
                   <td style={{ width: 40 }}>
                     <div
                       style={{

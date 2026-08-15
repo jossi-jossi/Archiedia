@@ -21,9 +21,10 @@ import { authorNames, categoryGroup, categoryOrigin } from '../lib/aladin'
 import { normalizeGenres } from '../lib/webtoonGenres'
 import { errorMessage } from '../lib/errors'
 
-type SortKey = 'added_desc' | 'added_asc' | 'rating_desc' | 'watched_desc'
+type SortKey = 'custom' | 'added_desc' | 'added_asc' | 'rating_desc' | 'watched_desc'
 
 const SORTS: { value: SortKey; label: string }[] = [
+  { value: 'custom', label: '사용자 지정순' },
   { value: 'added_desc', label: '보관 최신순' },
   { value: 'added_asc', label: '보관 오래된순' },
   { value: 'rating_desc', label: '나의 평점 높은순' },
@@ -31,6 +32,10 @@ const SORTS: { value: SortKey; label: string }[] = [
 ]
 
 const ORIGINS = ['국내도서', '외국도서']
+
+// display_order가 없는(마이그레이션 전) 항목은 맨 뒤로 보낸다. 순서 변경 자체는
+// 데스크톱에서만 가능하고, 모바일은 정해진 순서를 그대로 읽기만 한다.
+const MISSING_ORDER = Number.MAX_SAFE_INTEGER
 
 // 목록 카드에 쓰는 분류값 — 종류마다 출처가 다르다.
 function itemGenres(entry: ContentListItem): string[] {
@@ -90,7 +95,7 @@ export function LibraryScreen({
   const [originFilter, setOriginFilter] = useState<string[]>([])
   const [wishlistOnly, setWishlistOnly] = useState(false)
   const [finishedOnly, setFinishedOnly] = useState(false)
-  const [sort, setSort] = useState<SortKey>('added_desc')
+  const [sort, setSort] = useState<SortKey>('custom')
   const [sheet, setSheet] = useState<'genre' | 'sort' | null>(null)
 
   const load = useCallback(async (): Promise<void> => {
@@ -149,6 +154,8 @@ export function LibraryScreen({
       return Number.isNaN(parsed) ? 0 : parsed
     }
     const compare: Record<SortKey, (a: ContentListItem, b: ContentListItem) => number> = {
+      custom: (a, b) =>
+        (a.item.displayOrder ?? MISSING_ORDER) - (b.item.displayOrder ?? MISSING_ORDER),
       added_desc: (a, b) => Date.parse(b.item.createdAt) - Date.parse(a.item.createdAt),
       added_asc: (a, b) => Date.parse(a.item.createdAt) - Date.parse(b.item.createdAt),
       rating_desc: (a, b) => (b.record?.myRating ?? 0) - (a.record?.myRating ?? 0),

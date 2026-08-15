@@ -73,6 +73,10 @@ interface ContentItemBase {
   title: string
   posterUrl: string | null
   createdAt: string
+  // 사용자 지정순 정렬 기준값. 오름차순이 화면 표시 순서다. 새 항목은 항상 가장 작은
+  // 값(-Date.now())으로 들어가서 맨 위에 온다. 드래그로 순서를 바꾸면 이웃한 두 값의
+  // 중간값을 부여한다.
+  displayOrder: number | null
 }
 
 export type ContentItem =

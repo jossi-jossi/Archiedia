@@ -10,6 +10,7 @@ export interface ContentItemRow {
   poster_url: string | null
   metadata: Record<string, unknown>
   created_at: string
+  display_order: number | null
 }
 
 export interface UserRecordRow {

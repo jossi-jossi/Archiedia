@@ -72,7 +72,10 @@ export async function createContent(input: CreateContentInput): Promise<string> 
       source: input.source,
       external_id: input.externalId,
       poster_url: input.posterUrl,
-      metadata: input.metadata
+      metadata: input.metadata,
+      // 사용자 지정순에서 항상 맨 위에 오도록, 시간이 지날수록 더 작아지는 값을 준다.
+      // (데스크톱과 동일한 규칙 — 순서 변경 자체는 데스크톱에서만 가능하다)
+      display_order: -Date.now()
     })
     .select()
     .single()

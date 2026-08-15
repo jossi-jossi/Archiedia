@@ -10,7 +10,9 @@ create table content_items (
   external_id text,
   poster_url text,
   metadata jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- 사용자 지정순 정렬 기준값(오름차순 표시). 콘텐츠 타입별로 독립적이다.
+  display_order double precision
 );
 
 create table user_records (

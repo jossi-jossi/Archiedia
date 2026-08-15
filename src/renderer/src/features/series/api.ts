@@ -81,7 +81,9 @@ export async function createSeries(input: CreateSeriesInput): Promise<string> {
       source: 'tmdb',
       external_id: input.externalId,
       poster_url: input.posterUrl,
-      metadata: input.metadata
+      metadata: input.metadata,
+      // 사용자 지정순에서 항상 맨 위에 오도록, 시간이 지날수록 더 작아지는 값을 준다.
+      display_order: -Date.now()
     })
     .select()
     .single()
@@ -139,6 +141,14 @@ export async function updateSeriesMetadata(
   const { error } = await supabase
     .from('content_items')
     .update({ metadata, poster_url: posterUrl })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function updateSeriesDisplayOrder(id: string, displayOrder: number): Promise<void> {
+  const { error } = await supabase
+    .from('content_items')
+    .update({ display_order: displayOrder })
     .eq('id', id)
   if (error) throw error
 }

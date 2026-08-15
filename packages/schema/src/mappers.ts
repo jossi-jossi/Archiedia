@@ -11,6 +11,7 @@ export function toContentItem(row: ContentItemRow): ContentItem {
     title: row.title,
     posterUrl: row.poster_url,
     createdAt: row.created_at,
+    displayOrder: row.display_order,
     metadata: row.metadata
   } as unknown as ContentItem
 }
