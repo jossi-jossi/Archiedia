@@ -259,7 +259,11 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
                       cursor: 'pointer'
                     }}
                   >
-                    {overviewExpanded ? <CaretUp size={14} /> : <CaretDown size={14} />}
+                    {overviewExpanded ? (
+                      <CaretUp size={14} weight="bold" style={{ display: 'block' }} />
+                    ) : (
+                      <CaretDown size={14} weight="bold" style={{ display: 'block' }} />
+                    )}
                   </button>
                 </div>
                 <div

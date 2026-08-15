@@ -267,7 +267,11 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                       cursor: 'pointer'
                     }}
                   >
-                    {overviewExpanded ? <CaretUp size={14} /> : <CaretDown size={14} />}
+                    {overviewExpanded ? (
+                      <CaretUp size={14} weight="bold" style={{ display: 'block' }} />
+                    ) : (
+                      <CaretDown size={14} weight="bold" style={{ display: 'block' }} />
+                    )}
                   </button>
                 </div>
                 <div
