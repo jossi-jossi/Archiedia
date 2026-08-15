@@ -1,4 +1,4 @@
-import { Heart, Star, X } from '@phosphor-icons/react'
+import { CaretDown, CaretUp, Heart, Star, X } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import { deleteBook, getBook, Book, updateUserRecord } from './api'
 import { EditBookModal } from './EditBookModal'
@@ -18,9 +18,10 @@ const POSTER_WIDTH = Math.round((POSTER_HEIGHT * 2) / 3)
 const DIALOG_WIDTH = 913.2
 const DIALOG_HEIGHT = 624
 
-// 줄거리/요약 칸은 네 상세팝업 모두 딱 세 줄이 보이는 같은 높이를 쓴다.
-// (본문 13px × line-height 1.7 × 3줄)
-const OVERVIEW_HEIGHT = 66.3
+// 요약 칸의 최소 높이(3줄, 본문 13px × line-height 1.7 × 3줄). 평소엔 위쪽 정보량에 따라
+// 남는 공간만큼 늘어나고, 위쪽이 아주 길어져도 이 아래로는 줄어들지 않는다 — 그 이상은
+// 팝업 전체 스크롤(우측 컬럼의 overflowY: auto)이 대신 받아준다.
+const OVERVIEW_MIN_HEIGHT = 66.3
 
 export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Element {
   const [book, setBook] = useState<Book | null>(null)
@@ -30,11 +31,13 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [overviewExpanded, setOverviewExpanded] = useState(false)
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on bookId change needs to reset the loading/error flags before the async call resolves
     setLoading(true)
     setError(null)
+    setOverviewExpanded(false)
     getBook(bookId)
       .then((result) => {
         setBook(result?.item ?? null)
@@ -197,28 +200,59 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                     </a>
                   </div>
                 )}
+              </div>
+
+              {/* 접혀 있을 땐 flex:1로 위쪽 정보량에 따라 남는 공간만큼만 늘어나서(최소
+                  OVERVIEW_MIN_HEIGHT) 아래 개인 기록 영역이 항상 포스터 하단 라인에
+                  맞춰진다. 화살표를 눌러 펼치면 그 제약을 없애 전체 텍스트를 그대로
+                  보여주고, 대신 컬럼 전체(overflowY: auto)가 스크롤된다. */}
+              <div
+                style={{
+                  marginTop: 14,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  ...(overviewExpanded ? {} : { flex: 1, minHeight: OVERVIEW_MIN_HEIGHT })
+                }}
+              >
                 <div
                   style={{
-                    marginTop: 14,
-                    fontSize: 13,
-                    lineHeight: 1.7,
-                    color: 'var(--color-neutral-300)'
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
                   }}
                 >
-                  <span style={{ color: 'var(--color-neutral-500)' }}>요약</span>
-                  <div
+                  <span style={{ color: 'var(--color-neutral-500)', fontSize: 13 }}>요약</span>
+                  <button
+                    type="button"
+                    onClick={() => setOverviewExpanded((v) => !v)}
                     style={{
-                      marginTop: 4,
-                      height: OVERVIEW_HEIGHT,
-                      overflowY: 'auto',
-                      paddingRight: 4,
-                      whiteSpace: 'pre-line'
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: 'none',
+                      border: 'none',
+                      padding: 2,
+                      color: 'var(--color-neutral-500)',
+                      cursor: 'pointer'
                     }}
                   >
-                    {meta.overview || '—'}
-                  </div>
+                    {overviewExpanded ? <CaretUp size={14} /> : <CaretDown size={14} />}
+                  </button>
                 </div>
+                <div
+                  style={{
+                    marginTop: 4,
+                    fontSize: 13,
+                    lineHeight: 1.7,
+                    color: 'var(--color-neutral-300)',
+                    whiteSpace: 'pre-line',
+                    ...(overviewExpanded ? {} : { flex: 1, minHeight: 0, overflow: 'hidden' })
+                  }}
+                >
+                  {meta.overview || '—'}
+                </div>
+              </div>
 
+              <div>
                 <div className="hr" />
 
                 {record && (
@@ -345,7 +379,6 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                       <label>나의 후기</label>
                       <textarea
                         className="input"
-                        style={{ minHeight: 70 }}
                         value={record.myReview ?? ''}
                         onChange={(e) => setRecord({ ...record, myReview: e.target.value })}
                         onBlur={() => save({ myReview: record.myReview })}

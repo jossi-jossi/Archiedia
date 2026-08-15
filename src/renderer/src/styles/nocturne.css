@@ -287,6 +287,9 @@ figcaption {
 textarea.input {
   min-height: 90px;
   resize: vertical;
+  /* textarea는 기본이 inline이라 baseline 아래 descender만큼 여백이 딸려온다.
+     .field 안에서 그 여백이 상자 아래 빈 공간으로 남아서 block으로 바꿔 없앤다. */
+  display: block;
 }
 .radio {
   display: inline-flex;
