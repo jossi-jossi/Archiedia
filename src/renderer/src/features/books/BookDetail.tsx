@@ -423,7 +423,7 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
             >
               <div className="dialog-title">책 삭제</div>
               <div className="dialog-body">
-                &quot;{book.title}&quot;을(를) 라이브러리에서 삭제할까요?
+                &quot;{book.title}&quot;을(를) 보관함에서 삭제할까요?
               </div>
               <div className="dialog-actions" style={{ justifyContent: 'center' }}>
                 <button

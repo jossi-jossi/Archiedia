@@ -78,7 +78,7 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
 
   function confirmDelete(): void {
     if (!entry) return
-    Alert.alert('삭제', `"${entry.item.title}"을(를) 라이브러리에서 삭제할까요?`, [
+    Alert.alert('삭제', `"${entry.item.title}"을(를) 보관함에서 삭제할까요?`, [
       { text: '취소', style: 'cancel' },
       {
         text: '삭제',

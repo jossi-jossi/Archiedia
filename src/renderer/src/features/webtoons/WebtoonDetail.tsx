@@ -403,7 +403,7 @@ export function WebtoonDetail({ webtoonId, onClose, onDeleted }: Props): React.J
             >
               <div className="dialog-title">웹툰 삭제</div>
               <div className="dialog-body">
-                &quot;{webtoon.title}&quot;을(를) 라이브러리에서 삭제할까요?
+                &quot;{webtoon.title}&quot;을(를) 보관함에서 삭제할까요?
               </div>
               <div className="dialog-actions" style={{ justifyContent: 'center' }}>
                 <button

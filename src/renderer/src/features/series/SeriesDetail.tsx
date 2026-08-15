@@ -540,7 +540,7 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
             >
               <div className="dialog-title">시리즈 삭제</div>
               <div className="dialog-body">
-                &quot;{series.title}&quot;을(를) 라이브러리에서 삭제할까요?
+                &quot;{series.title}&quot;을(를) 보관함에서 삭제할까요?
               </div>
               <div className="dialog-actions" style={{ justifyContent: 'center' }}>
                 <button
