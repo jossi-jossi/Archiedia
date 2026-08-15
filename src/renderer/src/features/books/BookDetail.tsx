@@ -189,7 +189,7 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                   {meta.author ?? '—'} | {meta.pageCount ? `${meta.pageCount}페이지` : '—'}
                 </div>
                 <div style={{ color: 'var(--color-neutral-300)', fontSize: 13, marginTop: 2 }}>
-                  <span style={{ color: 'var(--color-neutral-500)' }}>출판사·연도</span> &nbsp;
+                  <span style={{ color: 'var(--color-neutral-500)' }}>출판사 · 연도</span> &nbsp;
                   {meta.publisher ?? '—'}
                   {meta.releaseYear ? ` · ${meta.releaseYear}` : ''}
                 </div>
