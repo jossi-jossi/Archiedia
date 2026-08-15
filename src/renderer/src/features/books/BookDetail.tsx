@@ -421,6 +421,7 @@ export function BookDetail({ bookId, onClose, onDeleted }: Props): React.JSX.Ele
                       <label>나의 후기</label>
                       <textarea
                         className="input"
+                        style={{ resize: 'none' }}
                         value={record.myReview ?? ''}
                         onChange={(e) => setRecord({ ...record, myReview: e.target.value })}
                         onBlur={() => save({ myReview: record.myReview })}
