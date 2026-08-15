@@ -25,6 +25,11 @@ const DIALOG_HEIGHT = 624
 // (우측 컬럼의 overflowY: auto)이 대신 받아준다.
 const OVERVIEW_MIN_HEIGHT = 66.3
 
+// "나의 후기" 입력창이 딱 3줄만 보이는 높이. textarea는 box-sizing: border-box라
+// 테두리(1px×2)와 안쪽 여백(6px×2)까지 포함해서 계산해야 정확히 3줄이 된다.
+// (본문 14px × line-height 1.55 × 3줄 + 테두리 2px + 안쪽 여백 12px)
+const REVIEW_HEIGHT = 79.1
+
 export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.Element {
   const [movie, setMovie] = useState<Movie | null>(null)
   const [record, setRecord] = useState<UserRecord | null>(null)
@@ -443,7 +448,9 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
                       <label>나의 후기</label>
                       <textarea
                         className="input"
-                        style={{ resize: 'none' }}
+                        // 전역 CSS(textarea.input)의 min-height: 90px가 height보다 우선
+                        // 적용돼서 minHeight도 같이 덮어써야 실제로 줄어든다.
+                        style={{ resize: 'none', height: REVIEW_HEIGHT, minHeight: REVIEW_HEIGHT }}
                         value={record.myReview ?? ''}
                         onChange={(e) => setRecord({ ...record, myReview: e.target.value })}
                         onBlur={() => save({ myReview: record.myReview })}
