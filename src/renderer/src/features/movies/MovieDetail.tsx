@@ -1,6 +1,7 @@
 import { Heart, PlayCircle, Star, X } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import { deleteMovie, getMovie, Movie, updateUserRecord } from './api'
+import { EditMovieModal } from './EditMovieModal'
 import { isWishlisted, withoutStatusTags } from '../../lib/wishlist'
 import type { UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
@@ -30,6 +31,7 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on movieId change needs to reset the loading/error flags before the async call resolves
@@ -49,13 +51,15 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
       if (e.key !== 'Escape') return
       if (showDeleteConfirm) {
         setShowDeleteConfirm(false)
+      } else if (showEditModal) {
+        setShowEditModal(false)
       } else {
         onClose()
       }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onClose, showDeleteConfirm])
+  }, [onClose, showDeleteConfirm, showEditModal])
 
   async function save(patch: Partial<UserRecord>): Promise<void> {
     if (!record) return
@@ -371,24 +375,58 @@ export function MovieDetail({ movieId, onClose, onDeleted }: Props): React.JSX.E
         )}
 
         {!loading && !error && movie && meta && (
-          <button
-            type="button"
-            onClick={() => setShowDeleteConfirm(true)}
+          <div
             style={{
               position: 'absolute',
               bottom: 8,
               right: 33.6,
-              background: 'none',
-              border: 'none',
-              padding: 6,
-              fontSize: 13,
-              color: 'var(--color-neutral-500)',
-              textDecoration: 'underline',
-              cursor: 'pointer'
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14
             }}
           >
-            삭제
-          </button>
+            <button
+              type="button"
+              onClick={() => setShowEditModal(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 6,
+                fontSize: 13,
+                color: 'var(--color-neutral-500)',
+                textDecoration: 'underline',
+                cursor: 'pointer'
+              }}
+            >
+              수정
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 6,
+                fontSize: 13,
+                color: 'var(--color-neutral-500)',
+                textDecoration: 'underline',
+                cursor: 'pointer'
+              }}
+            >
+              삭제
+            </button>
+          </div>
+        )}
+
+        {showEditModal && movie && (
+          <EditMovieModal
+            movie={movie}
+            onClose={() => setShowEditModal(false)}
+            onSaved={(updated) => {
+              setMovie(updated)
+              setShowEditModal(false)
+            }}
+          />
         )}
 
         {showDeleteConfirm && movie && (

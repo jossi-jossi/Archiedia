@@ -1,6 +1,7 @@
 import { CaretDown, Heart, PlayCircle, Star, X } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
 import { deleteSeries, getSeries, Series, updateUserRecord } from './api'
+import { EditSeasonModal } from './EditSeasonModal'
 import { isWishlisted, withoutStatusTags } from '../../lib/wishlist'
 import type { DramaSeasonMetadata, UserRecord } from '@archiedia/schema'
 import { errorMessage } from '../../lib/errors'
@@ -122,6 +123,7 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
   const [selectedSeasonIndex, setSelectedSeasonIndex] = useState(0)
 
   useEffect(() => {
@@ -143,13 +145,15 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
       if (e.key !== 'Escape') return
       if (showDeleteConfirm) {
         setShowDeleteConfirm(false)
+      } else if (showEditModal) {
+        setShowEditModal(false)
       } else {
         onClose()
       }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onClose, showDeleteConfirm])
+  }, [onClose, showDeleteConfirm, showEditModal])
 
   async function save(patch: Partial<UserRecord>): Promise<void> {
     if (!record) return
@@ -472,24 +476,59 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
         )}
 
         {!loading && !error && series && meta && (
-          <button
-            type="button"
-            onClick={() => setShowDeleteConfirm(true)}
+          <div
             style={{
               position: 'absolute',
               bottom: 8,
               right: 33.6,
-              background: 'none',
-              border: 'none',
-              padding: 6,
-              fontSize: 13,
-              color: 'var(--color-neutral-500)',
-              textDecoration: 'underline',
-              cursor: 'pointer'
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14
             }}
           >
-            삭제
-          </button>
+            <button
+              type="button"
+              onClick={() => setShowEditModal(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 6,
+                fontSize: 13,
+                color: 'var(--color-neutral-500)',
+                textDecoration: 'underline',
+                cursor: 'pointer'
+              }}
+            >
+              수정
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 6,
+                fontSize: 13,
+                color: 'var(--color-neutral-500)',
+                textDecoration: 'underline',
+                cursor: 'pointer'
+              }}
+            >
+              삭제
+            </button>
+          </div>
+        )}
+
+        {showEditModal && series && (
+          <EditSeasonModal
+            series={series}
+            seasonIndex={selectedSeasonIndex}
+            onClose={() => setShowEditModal(false)}
+            onSaved={(updated) => {
+              setSeries(updated)
+              setShowEditModal(false)
+            }}
+          />
         )}
 
         {showDeleteConfirm && series && (

@@ -101,6 +101,17 @@ export async function createBook(input: CreateBookInput): Promise<string> {
   return itemRow.id as string
 }
 
+// 제목과 요약(사용자 직접 수정)만 덮어쓴다. 그 외 metadata 필드는 호출하는 쪽에서
+// 기존 값을 그대로 채워 넘겨야 한다.
+export async function updateBookInfo(
+  id: string,
+  title: string,
+  metadata: BookMetadata
+): Promise<void> {
+  const { error } = await supabase.from('content_items').update({ title, metadata }).eq('id', id)
+  if (error) throw error
+}
+
 export async function deleteBook(id: string): Promise<void> {
   // user_records.content_item_id는 on delete cascade라 같이 지워진다.
   const { error } = await supabase.from('content_items').delete().eq('id', id)
