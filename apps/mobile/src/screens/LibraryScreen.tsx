@@ -237,7 +237,7 @@ export function LibraryScreen({
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <MagnifyingGlass size={14} color={colors.neutral500} style={styles.searchIcon} />
