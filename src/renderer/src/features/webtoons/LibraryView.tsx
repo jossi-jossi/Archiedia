@@ -17,7 +17,13 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { listWebtoons, updateWebtoonDisplayOrder, updateUserRecord, WebtoonListItem } from './api'
+import {
+  listWebtoons,
+  normalizeStoredWebtoonOverviews,
+  updateWebtoonDisplayOrder,
+  updateUserRecord,
+  WebtoonListItem
+} from './api'
 import { errorMessage } from '../../lib/errors'
 import { FilterDropdown } from '../../components/FilterDropdown'
 import { displayTag, isWatching, isWishlisted, withoutStatusTags } from '../../lib/wishlist'
@@ -362,6 +368,16 @@ export function LibraryView({ onSelect, onCountChange, refreshKey }: Props): Rea
                       metadata: patch.metadata
                     }
                   }
+                : w
+            )
+          )
+        })
+        // 모바일에서 줄거리가 엉뚱한 자리에서 끊기던 기존 저장 데이터를 조용히 정리한다.
+        normalizeStoredWebtoonOverviews(result, (id, overview) => {
+          setWebtoons((prev) =>
+            prev.map((w) =>
+              w.item.id === id
+                ? { ...w, item: { ...w.item, metadata: { ...w.item.metadata, overview } } }
                 : w
             )
           )

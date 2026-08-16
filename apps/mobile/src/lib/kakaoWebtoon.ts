@@ -1,4 +1,5 @@
 import type { WebtoonMetadata } from '@archiedia/schema'
+import { normalizeOverview } from './text'
 
 const API_BASE = 'https://gateway-kw.kakao.com'
 export const KAKAO_REFERER = 'https://webtoon.kakao.com/'
@@ -122,7 +123,7 @@ export async function getWebtoonDetails(result: WebtoonSearchResult): Promise<We
       author: joinAuthors(profile.data.authors) ?? result.authors,
       genres: [result.genre],
       tags: profile.data.seoKeywords ?? [],
-      overview: profile.data.synopsis?.trim() || null,
+      overview: normalizeOverview(profile.data.synopsis),
       isFinished: isFinished(profile.data.badges ?? []),
       totalEpisodes: episodes.meta.pagination.totalCount ?? null,
       sourceUrl: `https://webtoon.kakao.com/content/${result.seoId}/${result.id}`,

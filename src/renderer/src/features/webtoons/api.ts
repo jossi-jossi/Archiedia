@@ -8,6 +8,7 @@ import {
   toUserRecord
 } from '@archiedia/schema'
 import { supabase } from '../../lib/supabase'
+import { normalizeOverview } from '../../lib/text'
 
 export type Webtoon = ContentItem & { type: 'webtoon' }
 
@@ -118,6 +119,27 @@ export async function refetchWebtoon(id: string, input: RefetchWebtoonInput): Pr
     .update({ title: input.title, poster_url: input.posterUrl, metadata: input.metadata })
     .eq('id', id)
   if (error) throw error
+}
+
+// 네이버/카카오 원문에 섞여 있던 강제 개행 문자(\n, U+2028 등) 때문에 모바일에서 줄거리가
+// 엉뚱한 자리에서 끊겨 보이던 기존 저장 데이터를 한 번에 정리한다. 이미 정상인 항목은
+// 비교만 하고 건드리지 않아 매번 라이브러리를 열 때 불러도 비용이 거의 없다.
+export async function normalizeStoredWebtoonOverviews(
+  items: WebtoonListItem[],
+  onUpdated: (id: string, overview: string | null) => void
+): Promise<void> {
+  for (const { item } of items) {
+    const normalized = normalizeOverview(item.metadata.overview)
+    if (normalized === item.metadata.overview) continue
+    try {
+      const metadata = { ...item.metadata, overview: normalized }
+      const { error } = await supabase.from('content_items').update({ metadata }).eq('id', item.id)
+      if (error) throw error
+      onUpdated(item.id, normalized)
+    } catch {
+      // 백그라운드 정리라 개별 실패는 조용히 넘어간다
+    }
+  }
 }
 
 export async function updateWebtoonDisplayOrder(id: string, displayOrder: number): Promise<void> {

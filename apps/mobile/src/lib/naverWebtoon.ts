@@ -1,4 +1,5 @@
 import type { WebtoonMetadata } from '@archiedia/schema'
+import { normalizeOverview } from './text'
 
 // 데스크톱은 CORS 때문에 메인 프로세스 IPC를 거치지만, 네이티브 fetch에는 CORS가 없어서
 // 여기서는 바로 호출한다. Referer는 없어도 API 자체는 응답하지만, 사이트와 같은 헤더를
@@ -76,7 +77,7 @@ export async function searchWebtoons(keyword: string): Promise<WebtoonSearchResu
     title: item.titleName,
     author: item.displayAuthor,
     genres: extractGenresAndTags(item.tagList, item.genreList).genres,
-    synopsis: item.synopsis?.trim() || null,
+    synopsis: normalizeOverview(item.synopsis),
     thumbnailUrl: item.thumbnailUrl
   }))
 }
@@ -115,7 +116,7 @@ export async function getWebtoonDetails(titleId: number): Promise<WebtoonDetails
       author: info.communityArtists.map((a) => a.name).join(', ') || null,
       genres,
       tags,
-      overview: info.synopsis?.trim() || null,
+      overview: normalizeOverview(info.synopsis),
       isFinished: info.finished,
       totalEpisodes: articles.totalCount ?? null,
       sourceUrl: `https://comic.naver.com/webtoon/list?titleId=${titleId}`,
