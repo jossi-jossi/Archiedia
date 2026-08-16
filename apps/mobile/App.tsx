@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ActivityIndicator, Modal, Pressable, StyleSheet, View } from 'react-native'
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
@@ -32,6 +32,15 @@ function AppContent(): React.JSX.Element {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   // 보관/삭제 후 라이브러리를 다시 읽게 만드는 신호.
   const [refreshKey, setRefreshKey] = useState(0)
+
+  useEffect(() => {
+    // 로그아웃하면 설정/상세 팝업이 로그인 화면 위에 그대로 남아있지 않도록 초기화한다.
+    if (!session) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 로그아웃 시점에만 한 번 화면 상태를 되돌린다
+      setScreen('library')
+      setSelectedId(null)
+    }
+  }, [session])
 
   let body: React.ReactNode = null
   if (loading) {
@@ -86,7 +95,7 @@ function AppContent(): React.JSX.Element {
         ) : null}
       </View>
       <PopupModal
-        visible={screen === 'detail' && Boolean(selectedId)}
+        visible={Boolean(session) && screen === 'detail' && Boolean(selectedId)}
         onClose={() => {
           setScreen('library')
           setRefreshKey((k) => k + 1)
@@ -107,7 +116,11 @@ function AppContent(): React.JSX.Element {
           />
         ) : null}
       </PopupModal>
-      <PopupModal visible={screen === 'settings'} onClose={() => setScreen('library')} fitContent>
+      <PopupModal
+        visible={Boolean(session) && screen === 'settings'}
+        onClose={() => setScreen('library')}
+        fitContent
+      >
         <SettingsScreen onClose={() => setScreen('library')} />
       </PopupModal>
     </>
