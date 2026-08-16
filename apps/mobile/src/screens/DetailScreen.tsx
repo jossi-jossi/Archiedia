@@ -268,6 +268,8 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
         <PickerSheet
           visible={seasonSheet}
           title="시즌"
+          columns={1}
+          showCheck
           options={item.metadata.seasons.map((s, i) => ({
             value: String(i),
             label: `시즌 ${s.seasonNumber}`

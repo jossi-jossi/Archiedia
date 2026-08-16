@@ -9,26 +9,35 @@ import {
   View
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { CaretDown, Gear, Heart, MagnifyingGlass } from 'phosphor-react-native'
+import { CaretDown, Eye, Gear, Heart, MagnifyingGlass } from 'phosphor-react-native'
 import type { ContentType } from '@archiedia/schema'
 import { colors, radius } from '../theme'
 import { Chip, Input, Poster, StarRating } from '../components/ui'
 import { PickerSheet } from '../components/PickerSheet'
 import { ContentListItem, listContent, updateUserRecord } from '../features/content'
 import { typeConfig } from '../features/types'
-import { isWishlisted, withoutStatusTags } from '../lib/wishlist'
+import { isWatching, isWishlisted, withoutStatusTags } from '../lib/wishlist'
 import { authorNames, categoryGroup, categoryOrigin } from '../lib/aladin'
 import { normalizeGenres } from '../lib/webtoonGenres'
 import { errorMessage } from '../lib/errors'
 
-type SortKey = 'custom' | 'added_desc' | 'added_asc' | 'rating_desc' | 'watched_desc'
+type SortKey =
+  | 'custom'
+  | 'added_desc'
+  | 'added_asc'
+  | 'rating_desc'
+  | 'rating_asc'
+  | 'watched_desc'
+  | 'watch_count_desc'
 
 const SORTS: { value: SortKey; label: string }[] = [
   { value: 'custom', label: '사용자 지정순' },
   { value: 'added_desc', label: '보관 최신순' },
   { value: 'added_asc', label: '보관 오래된순' },
   { value: 'rating_desc', label: '나의 평점 높은순' },
-  { value: 'watched_desc', label: '최근 본 순' }
+  { value: 'rating_asc', label: '나의 평점 낮은순' },
+  { value: 'watched_desc', label: '최근 시청순' },
+  { value: 'watch_count_desc', label: '시청 횟수 높은순' }
 ]
 
 const ORIGINS = ['국내도서', '외국도서']
@@ -94,6 +103,7 @@ export function LibraryScreen({
   const [genreFilter, setGenreFilter] = useState<string[]>([])
   const [originFilter, setOriginFilter] = useState<string[]>([])
   const [wishlistOnly, setWishlistOnly] = useState(false)
+  const [watchingOnly, setWatchingOnly] = useState(false)
   const [finishedOnly, setFinishedOnly] = useState(false)
   const [sort, setSort] = useState<SortKey>('custom')
   const [sheet, setSheet] = useState<'genre' | 'sort' | null>(null)
@@ -113,6 +123,7 @@ export function LibraryScreen({
     setGenreFilter([])
     setOriginFilter([])
     setWishlistOnly(false)
+    setWatchingOnly(false)
     setFinishedOnly(false)
     setLoading(true)
     load().finally(() => setLoading(false))
@@ -142,6 +153,9 @@ export function LibraryScreen({
     if (wishlistOnly) {
       result = result.filter((entry) => entry.record && isWishlisted(entry.record.tags))
     }
+    if (watchingOnly) {
+      result = result.filter((entry) => entry.record && isWatching(entry.record.tags))
+    }
     if (finishedOnly) {
       result = result.filter(
         (entry) => entry.item.type === 'webtoon' && entry.item.metadata.isFinished
@@ -159,14 +173,16 @@ export function LibraryScreen({
       added_desc: (a, b) => Date.parse(b.item.createdAt) - Date.parse(a.item.createdAt),
       added_asc: (a, b) => Date.parse(a.item.createdAt) - Date.parse(b.item.createdAt),
       rating_desc: (a, b) => (b.record?.myRating ?? 0) - (a.record?.myRating ?? 0),
+      rating_asc: (a, b) => (a.record?.myRating ?? 0) - (b.record?.myRating ?? 0),
       watched_desc: (a, b) =>
-        parseDate(b.record?.lastWatchedAt) - parseDate(a.record?.lastWatchedAt)
+        parseDate(b.record?.lastWatchedAt) - parseDate(a.record?.lastWatchedAt),
+      watch_count_desc: (a, b) => (b.record?.watchCount ?? 0) - (a.record?.watchCount ?? 0)
     }
     return [...result].sort((a, b) => {
       const primary = compare[sort](a, b)
       return primary !== 0 ? primary : a.item.title.localeCompare(b.item.title, 'ko')
     })
-  }, [items, query, genreFilter, originFilter, wishlistOnly, finishedOnly, sort])
+  }, [items, query, genreFilter, originFilter, wishlistOnly, watchingOnly, finishedOnly, sort])
 
   async function toggleWishlist(entry: ContentListItem): Promise<void> {
     const record = entry.record
@@ -174,6 +190,25 @@ export function LibraryScreen({
     const next = isWishlisted(record.tags)
       ? withoutStatusTags(record.tags)
       : [...withoutStatusTags(record.tags), '보고 싶음']
+    setItems((prev) =>
+      prev.map((e) =>
+        e.item.id === entry.item.id ? { ...e, record: { ...record, tags: next } } : e
+      )
+    )
+    try {
+      await updateUserRecord(record.id, { tags: next })
+    } catch (err) {
+      setError(errorMessage(err))
+      load()
+    }
+  }
+
+  async function toggleWatching(entry: ContentListItem): Promise<void> {
+    const record = entry.record
+    if (!record) return
+    const next = isWatching(record.tags)
+      ? withoutStatusTags(record.tags)
+      : [...withoutStatusTags(record.tags), '보는 중']
     setItems((prev) =>
       prev.map((e) =>
         e.item.id === entry.item.id ? { ...e, record: { ...record, tags: next } } : e
@@ -245,9 +280,15 @@ export function LibraryScreen({
               : null}
             <FilterChip
               label="보고 싶어요"
-              icon
+              icon="heart"
               active={wishlistOnly}
               onPress={() => setWishlistOnly((v) => !v)}
+            />
+            <FilterChip
+              label="보는 중"
+              icon="eye"
+              active={watchingOnly}
+              onPress={() => setWatchingOnly((v) => !v)}
             />
           </ScrollView>
           <FilterChip
@@ -291,6 +332,7 @@ export function LibraryScreen({
         >
           {filtered.map((entry) => {
             const wish = entry.record ? isWishlisted(entry.record.tags) : false
+            const watching = entry.record ? isWatching(entry.record.tags) : false
             return (
               <Pressable
                 key={entry.item.id}
@@ -318,9 +360,22 @@ export function LibraryScreen({
                 </Text>
                 <View style={styles.cardFooter}>
                   <StarRating rating={entry.record?.myRating ?? null} size={9.5} />
-                  <Pressable onPress={() => toggleWishlist(entry)} hitSlop={8}>
-                    <Heart size={11} weight={wish ? 'fill' : 'regular'} color={colors.accent} />
-                  </Pressable>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Pressable onPress={() => toggleWishlist(entry)} hitSlop={8}>
+                      <Heart
+                        size={11}
+                        weight={wish ? 'fill' : 'regular'}
+                        color={wish ? colors.accent : '#fff'}
+                      />
+                    </Pressable>
+                    <Pressable onPress={() => toggleWatching(entry)} hitSlop={8}>
+                      <Eye
+                        size={11}
+                        weight={watching ? 'fill' : 'regular'}
+                        color={watching ? colors.accent : '#fff'}
+                      />
+                    </Pressable>
+                  </View>
                 </View>
               </Pressable>
             )
@@ -332,6 +387,7 @@ export function LibraryScreen({
         visible={sheet === 'genre'}
         title={config.filterLabel}
         multiple
+        columns={3}
         options={genreOptions.map((g) => ({ value: g, label: g }))}
         selected={genreFilter}
         onToggle={(value) =>
@@ -344,6 +400,7 @@ export function LibraryScreen({
       <PickerSheet
         visible={sheet === 'sort'}
         title="정렬"
+        columns={2}
         options={SORTS.map((s) => ({ value: s.value, label: s.label }))}
         selected={[sort]}
         onToggle={(value) => setSort(value as SortKey)}
@@ -364,10 +421,11 @@ function FilterChip({
   label: string
   active?: boolean
   caret?: boolean
-  icon?: boolean
+  icon?: 'heart' | 'eye'
   filled?: boolean
   onPress: () => void
 }): React.JSX.Element {
+  const Icon = icon === 'eye' ? Eye : icon === 'heart' ? Heart : null
   return (
     <Pressable
       onPress={onPress}
@@ -377,11 +435,11 @@ function FilterChip({
         active && { borderColor: colors.accent, backgroundColor: colors.accent900 }
       ]}
     >
-      {icon ? (
-        <Heart
+      {Icon ? (
+        <Icon
           size={12}
           weight={active ? 'fill' : 'regular'}
-          color={active ? colors.accent : colors.text}
+          color={active ? colors.accent : '#fff'}
         />
       ) : null}
       <Text style={{ fontSize: 12, color: active ? colors.accent : colors.text }}>{label}</Text>
