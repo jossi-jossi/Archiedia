@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { ActivityIndicator, Modal, StyleSheet, View } from 'react-native'
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import type { ContentType } from '@archiedia/schema'
-import { colors } from './src/theme'
+import { colors, radius } from './src/theme'
 import { useSession } from './src/useSession'
 import { LoginScreen } from './src/screens/LoginScreen'
 import { LibraryScreen } from './src/screens/LibraryScreen'
@@ -15,6 +15,17 @@ import { BottomTabs } from './src/components/BottomTabs'
 type Screen = 'library' | 'detail' | 'add' | 'settings'
 
 export default function App(): React.JSX.Element {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
+  )
+}
+
+// statusBarTranslucent 모달의 marginTop/marginBottom을 safe area 기준으로 잡으려면
+// useSafeAreaInsets가 SafeAreaProvider 하위에서 호출돼야 해서 별도 컴포넌트로 뺐다.
+function AppContent(): React.JSX.Element {
+  const insets = useSafeAreaInsets()
   const { session, loading } = useSession()
 
   const [screen, setScreen] = useState<Screen>('library')
@@ -34,21 +45,6 @@ export default function App(): React.JSX.Element {
     body = <LoginScreen />
   } else if (screen === 'settings') {
     body = <SettingsScreen onBack={() => setScreen('library')} />
-  } else if (screen === 'detail' && selectedId) {
-    body = (
-      <DetailScreen
-        id={selectedId}
-        onBack={() => {
-          setScreen('library')
-          setRefreshKey((k) => k + 1)
-        }}
-        onDeleted={() => {
-          setSelectedId(null)
-          setScreen('library')
-          setRefreshKey((k) => k + 1)
-        }}
-      />
-    )
   } else if (screen === 'add') {
     body = (
       <AddScreen
@@ -75,7 +71,7 @@ export default function App(): React.JSX.Element {
   const showTabs = Boolean(session) && (screen === 'library' || screen === 'add')
 
   return (
-    <SafeAreaProvider>
+    <>
       <StatusBar style="light" />
       <View style={styles.root}>
         <View style={{ flex: 1, minHeight: 0 }}>{body}</View>
@@ -91,11 +87,58 @@ export default function App(): React.JSX.Element {
           />
         ) : null}
       </View>
-    </SafeAreaProvider>
+      <Modal
+        visible={screen === 'detail' && Boolean(selectedId)}
+        animationType="slide"
+        transparent
+        statusBarTranslucent
+        onRequestClose={() => {
+          setScreen('library')
+          setRefreshKey((k) => k + 1)
+        }}
+      >
+        <View style={styles.modalBackdrop}>
+          <View
+            style={[
+              styles.modalCard,
+              {
+                marginTop: (insets.top + 24) * 1.5,
+                marginBottom: (insets.bottom + 24) * 1.5,
+                marginHorizontal: 18
+              }
+            ]}
+          >
+            {selectedId ? (
+              <DetailScreen
+                id={selectedId}
+                onBack={() => {
+                  setScreen('library')
+                  setRefreshKey((k) => k + 1)
+                }}
+                onDeleted={() => {
+                  setSelectedId(null)
+                  setScreen('library')
+                  setRefreshKey((k) => k + 1)
+                }}
+              />
+            ) : null}
+          </View>
+        </View>
+      </Modal>
+    </>
   )
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' }
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  // 상세페이지를 화면 전체가 아니라 위아래로 배경이 비치는 떠 있는 카드로 띄워서 팝업처럼 보이게 한다.
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
+  modalCard: {
+    flex: 1,
+    borderRadius: radius.lg,
+    backgroundColor: colors.bg,
+    overflow: 'hidden',
+    paddingBottom: 20
+  }
 })

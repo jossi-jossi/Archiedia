@@ -9,7 +9,6 @@ import {
   Text,
   View
 } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   ArrowLeft,
   ArrowSquareOut,
@@ -45,7 +44,6 @@ interface Props {
 }
 
 export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Element {
-  const insets = useSafeAreaInsets()
   const [entry, setEntry] = useState<ContentListItem | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -138,10 +136,7 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={[styles.container, { paddingTop: insets.top + 12 }]}
-      keyboardShouldPersistTaps="handled"
-    >
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.topBar}>
         <Pressable style={styles.backButton} onPress={onBack}>
           <ArrowLeft size={16} color={colors.text} />
@@ -535,7 +530,7 @@ function Meta({
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 18, paddingBottom: 40 },
+  container: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 40 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
   backButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6 },
