@@ -1,4 +1,13 @@
-import { Image, Pressable, StyleSheet, Text, TextInput, View, ViewStyle } from 'react-native'
+import {
+  Image,
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  ViewStyle
+} from 'react-native'
 import { Star } from 'phosphor-react-native'
 import { colors, radius } from '../theme'
 
@@ -26,7 +35,9 @@ function posterHeaders(url: string | null): Record<string, string> | undefined {
 // 들어가기만 할 뿐 찌그러지지 않는다.
 const CHARACTER_ZOOM = 1.4
 const CHARACTER_ASPECT = 710 / 600
-const POSTER_ASPECT = 2 / 3
+// backgroundUrl(캐릭터 컷아웃)이 오는 건 웹툰뿐이라, 이 상수는 웹툰의 실측 썸네일
+// 비율(480×623)을 따른다 — 다른 타입의 2:3 박스와는 무관하다.
+const POSTER_ASPECT = 480 / 623
 
 // 카드 너비 대비 캐릭터 상자 크기(%) — 높이는 카드 높이 기준으로 환산한다.
 const CHARACTER_WIDTH_PCT = CHARACTER_ZOOM * 100
@@ -41,7 +52,7 @@ export function Poster({
 }: {
   url: string | null
   backgroundUrl?: string | null
-  style?: ViewStyle
+  style?: StyleProp<ViewStyle>
   children?: React.ReactNode
 }): React.JSX.Element {
   return (
@@ -106,28 +117,10 @@ export function StarRating({
   )
 }
 
-export function Chip({
-  label,
-  variant = 'outline'
-}: {
-  label: string
-  variant?: 'outline' | 'neutral' | 'accent2'
-}): React.JSX.Element {
-  const variantStyle =
-    variant === 'neutral'
-      ? { backgroundColor: colors.neutral800 }
-      : variant === 'accent2'
-        ? { backgroundColor: colors.accent2_800 }
-        : { borderWidth: 1, borderColor: colors.accent }
-  const textColor =
-    variant === 'neutral'
-      ? colors.neutral100
-      : variant === 'accent2'
-        ? colors.accent2_100
-        : colors.accent
+export function Chip({ label }: { label: string }): React.JSX.Element {
   return (
-    <View style={[styles.chip, variantStyle]}>
-      <Text style={{ fontSize: 11, color: textColor }}>{label}</Text>
+    <View style={[styles.chip, { borderWidth: 1, borderColor: colors.accent }]}>
+      <Text style={{ fontSize: 11, color: colors.accent }}>{label}</Text>
     </View>
   )
 }
@@ -165,8 +158,9 @@ const styles = StyleSheet.create({
     position: 'relative'
   },
   chip: {
+    height: 22,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    justifyContent: 'center',
     borderRadius: radius.md * 0.75,
     alignSelf: 'flex-start'
   },

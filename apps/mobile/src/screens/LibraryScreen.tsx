@@ -14,6 +14,7 @@ import type { ContentType } from '@archiedia/schema'
 import { colors, radius } from '../theme'
 import { Input, Poster, StarRating } from '../components/ui'
 import { PickerSheet } from '../components/PickerSheet'
+import { SourceLogo } from '../components/SourceLogo'
 import { ContentListItem, listContent, updateUserRecord } from '../features/content'
 import { typeConfig } from '../features/types'
 import { isWatching, isWishlisted, withoutStatusTags } from '../lib/wishlist'
@@ -357,8 +358,20 @@ export function LibraryScreen({
                   backgroundUrl={
                     entry.item.type === 'webtoon' ? entry.item.metadata.backgroundImageUrl : null
                   }
-                  style={styles.cardPoster}
-                />
+                  style={[
+                    styles.cardPoster,
+                    // 네이버웹툰 썸네일 실측 비율(480×623)에 맞춰 다른 타입보다 세로로 더 길다.
+                    entry.item.type === 'webtoon' ? { aspectRatio: 480 / 623 } : null
+                  ]}
+                >
+                  {entry.item.type === 'webtoon' ? (
+                    <SourceLogo
+                      source={entry.item.source}
+                      size={20}
+                      style={{ position: 'absolute', top: 6, left: 6 }}
+                    />
+                  ) : null}
+                </Poster>
                 <Text style={styles.cardTitle} numberOfLines={1}>
                   {entry.item.title}
                 </Text>

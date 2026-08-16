@@ -23,6 +23,7 @@ import type { ContentItem, UserRecord } from '@archiedia/schema'
 import { colors, radius } from '../theme'
 import { Chip, Field, Input, Poster, StarRating } from '../components/ui'
 import { PickerSheet } from '../components/PickerSheet'
+import { SourceLogo } from '../components/SourceLogo'
 import { EditField, EditFieldsModal } from '../components/EditFieldsModal'
 import {
   ContentListItem,
@@ -163,8 +164,20 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
         <Poster
           url={item.posterUrl}
           backgroundUrl={item.type === 'webtoon' ? item.metadata.backgroundImageUrl : null}
-          style={styles.poster}
-        />
+          style={[
+            styles.poster,
+            // 네이버웹툰 썸네일 실측 비율(480×623)에 맞춰 다른 타입보다 세로로 더 길다.
+            item.type === 'webtoon' ? { aspectRatio: 480 / 623 } : null
+          ]}
+        >
+          {item.type === 'webtoon' ? (
+            <SourceLogo
+              source={item.source}
+              size={32}
+              style={{ position: 'absolute', top: 10, left: 10 }}
+            />
+          ) : null}
+        </Poster>
         <View style={{ marginTop: 14, width: '100%' }}>
           <Text style={styles.title}>{item.title}</Text>
           <Header item={item} />
@@ -452,7 +465,7 @@ function Tags({
     }
   } else if (item.type === 'webtoon') {
     item.metadata.tags.slice(0, 10).forEach((tag) => {
-      chips.push(<Chip key={tag} label={stripHash(tag)} variant="neutral" />)
+      chips.push(<Chip key={tag} label={stripHash(tag)} />)
     })
   }
 
@@ -605,8 +618,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: colors.neutral800
   },
-  metaRow: { fontSize: 13, lineHeight: 20, color: colors.neutral300 },
-  overview: { fontSize: 12.5, lineHeight: 20, color: colors.neutral400, textAlign: 'justify' },
+  metaRow: { fontSize: 13, lineHeight: 20, color: colors.text },
+  overview: { fontSize: 12.5, lineHeight: 20, color: colors.text, textAlign: 'justify' },
   divider: { height: 1, backgroundColor: colors.divider, marginVertical: 16 },
   fieldLabel: { fontSize: 12, color: colors.neutral500 },
   statusSeg: {
