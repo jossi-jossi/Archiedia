@@ -64,45 +64,55 @@ export function EditFieldsModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <KeyboardAvoidingView
-          style={{ width: '100%' }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <View style={styles.sheet}>
-            <Text style={styles.title}>{title}</Text>
-            <ScrollView
-              style={{ maxHeight: 420 }}
-              contentContainerStyle={{ gap: 14 }}
-              keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={styles.backdrop}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={styles.sheet}>
+          <Text style={styles.title}>{title}</Text>
+          {/*
+            스크롤바가 시트 안쪽 padding에 밀려 붕 뜬 자리에 그려지지 않도록, 가로 여백을
+            ScrollView 자신이 아니라 contentContainerStyle(내용)에 줘서 ScrollView는 시트
+            전체 폭을 쓰고 스크롤바는 상세팝업처럼 진짜 가장자리에 딱 붙게 한다.
+          */}
+          <ScrollView
+            style={{ flexShrink: 1, marginHorizontal: -18 }}
+            contentContainerStyle={{ gap: 14, paddingHorizontal: 18 }}
+            keyboardShouldPersistTaps="handled"
+            indicatorStyle="white"
+          >
+            {fields.map((f) => (
+              <Field key={f.key} label={f.label}>
+                <Input
+                  value={values[f.key] ?? ''}
+                  placeholder={f.placeholder}
+                  multiline={f.multiline}
+                  onChangeText={(text) => setValues((prev) => ({ ...prev, [f.key]: text }))}
+                />
+              </Field>
+            ))}
+          </ScrollView>
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Pressable
+              style={[styles.row, { flex: 1 }]}
+              onPress={() => !saving && onClose()}
+              disabled={saving}
             >
-              {fields.map((f) => (
-                <Field key={f.key} label={f.label}>
-                  <Input
-                    value={values[f.key] ?? ''}
-                    placeholder={f.placeholder}
-                    multiline={f.multiline}
-                    onChangeText={(text) => setValues((prev) => ({ ...prev, [f.key]: text }))}
-                  />
-                </Field>
-              ))}
-            </ScrollView>
-
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-
-            <Pressable style={styles.row} onPress={() => !saving && onClose()} disabled={saving}>
               <Text style={{ fontSize: 15, color: colors.text }}>취소</Text>
             </Pressable>
             <Pressable
-              style={[styles.primary, saving && { opacity: 0.6 }]}
+              style={[styles.primary, { flex: 1 }, saving && { opacity: 0.6 }]}
               disabled={saving}
               onPress={handleSave}
             >
               <Text style={styles.primaryText}>{saving ? '저장 중...' : '저장'}</Text>
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
-      </View>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   )
 }
@@ -114,6 +124,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   sheet: {
+    // 키보드가 올라와서 KeyboardAvoidingView가 이 영역을 눌러 줄어들 때, 제목/버튼은
+    // 고정 크기를 유지하고 가운데 ScrollView(flexShrink)만 줄어들어야 제목이 화면 위로
+    // 밀려나지 않는다. maxHeight는 키보드 없이 열렸을 때 너무 길어지는 것만 막는 안전장치.
+    maxHeight: '85%',
+    flexShrink: 1,
     backgroundColor: colors.surface,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
@@ -122,7 +137,7 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     gap: 14
   },
-  title: { fontSize: 16, fontWeight: '500', color: colors.text },
+  title: { fontSize: 16, fontWeight: '500', color: colors.text, textAlign: 'center' },
   error: { fontSize: 13, color: colors.danger },
   row: {
     minHeight: 44,

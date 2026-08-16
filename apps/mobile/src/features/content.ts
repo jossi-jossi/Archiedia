@@ -97,15 +97,17 @@ export async function createContent(input: CreateContentInput): Promise<string> 
 
 export interface UpdateContentInput {
   title?: string
+  posterUrl?: string | null
   metadata: unknown
 }
 
-// 영화/시리즈의 감독·출연·줄거리, 책의 제목·요약처럼 콘텐츠 자체의 정보를 사용자가
-// 직접 고칠 때 쓴다. title은 넘길 때만 같이 바뀐다 — 책만 제목을 고치고 나머지는
-// metadata만 바뀐다.
+// 영화/시리즈의 감독·출연·줄거리, 책의 제목·표지·요약처럼 콘텐츠 자체의 정보를 사용자가
+// 직접 고칠 때 쓴다. title/posterUrl은 넘길 때만 같이 바뀐다 — 책만 제목·표지를 고치고
+// 나머지는 metadata만 바뀐다.
 export async function updateContent(id: string, input: UpdateContentInput): Promise<void> {
   const patch: Record<string, unknown> = { metadata: input.metadata }
   if (input.title !== undefined) patch.title = input.title
+  if (input.posterUrl !== undefined) patch.poster_url = input.posterUrl
   const { error } = await supabase.from('content_items').update(patch).eq('id', id)
   if (error) throw error
 }

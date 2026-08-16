@@ -145,7 +145,11 @@ export function Input(props: React.ComponentProps<typeof TextInput>): React.JSX.
     <TextInput
       placeholderTextColor={colors.neutral600}
       {...props}
-      style={[styles.input, props.multiline && { minHeight: 84, paddingTop: 10 }, props.style]}
+      style={[
+        styles.input,
+        props.multiline && { minHeight: 84, paddingTop: 10, paddingBottom: 10 },
+        props.style
+      ]}
     />
   )
 }

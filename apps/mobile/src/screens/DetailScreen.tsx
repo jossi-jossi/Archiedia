@@ -132,6 +132,7 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
       item: {
         ...entry.item,
         ...(patch.title !== undefined ? { title: patch.title } : {}),
+        ...(patch.posterUrl !== undefined ? { posterUrl: patch.posterUrl } : {}),
         metadata: patch.metadata
       } as ContentItem
     })
@@ -355,7 +356,9 @@ function buildEditFields(item: ContentItem, seasonIndex: number): EditField[] | 
   if (item.type === 'book') {
     return [
       { key: 'title', label: '제목', value: item.title },
+      { key: 'posterUrl', label: '표지 이미지 URL', value: item.posterUrl ?? '' },
       { key: 'author', label: '지은이', value: item.metadata.author ?? '' },
+      { key: 'publisher', label: '출판사', value: item.metadata.publisher ?? '' },
       { key: 'overview', label: '요약', value: item.metadata.overview ?? '', multiline: true }
     ]
   }
@@ -366,7 +369,7 @@ function buildEditPatch(
   item: ContentItem,
   seasonIndex: number,
   values: Record<string, string>
-): { title?: string; metadata: unknown } {
+): { title?: string; posterUrl?: string | null; metadata: unknown } {
   if (item.type === 'movie') {
     return {
       metadata: {
@@ -399,9 +402,11 @@ function buildEditPatch(
     if (!title) throw new Error('제목을 입력해주세요')
     return {
       title,
+      posterUrl: values.posterUrl.trim() || null,
       metadata: {
         ...item.metadata,
         author: values.author.trim() || null,
+        publisher: values.publisher.trim() || null,
         overview: values.overview.trim() || null
       }
     }
