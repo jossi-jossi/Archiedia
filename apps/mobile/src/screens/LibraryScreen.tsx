@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Pressable,
@@ -118,7 +118,8 @@ export function LibraryScreen({
   }, [type])
 
   useEffect(() => {
-    // 종류를 바꾸면 이전 종류의 필터는 의미가 없어서 같이 초기화한다.
+    // 종류를 바꾸면(= load가 새로 만들어지면) 이전 종류의 필터는 의미가 없어서 같이 초기화한다.
+    // 최초 마운트 때도 여기서 한 번 로딩 화면과 함께 불러온다.
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 목록을 다시 읽기 전에 필터와 로딩 상태를 먼저 되돌려야 한다
     setGenreFilter([])
     setOriginFilter([])
@@ -127,7 +128,19 @@ export function LibraryScreen({
     setFinishedOnly(false)
     setLoading(true)
     load().finally(() => setLoading(false))
-  }, [load, refreshKey])
+  }, [load])
+
+  const mountedRef = useRef(false)
+  useEffect(() => {
+    // 상세 팝업을 닫고 돌아올 때처럼 종류는 그대로인 refreshKey 변경은, 로딩 화면을 띄우거나
+    // 필터를 초기화하지 않고 조용히 다시 읽어온다 — 그래야 그리드가 스크롤 위치를 유지한다.
+    if (!mountedRef.current) {
+      mountedRef.current = true
+      return
+    }
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- type 변경(load 재생성)은 위쪽 effect가 이미 처리한다. 여기서까지 반응하면 중복 로딩된다
+  }, [refreshKey])
 
   const genreOptions = useMemo(() => {
     const all = new Set<string>()

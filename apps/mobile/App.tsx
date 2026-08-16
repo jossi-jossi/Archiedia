@@ -67,8 +67,9 @@ function AppContent(): React.JSX.Element {
     )
   }
 
-  // 하단 탭은 라이브러리/검색 화면에서만 보인다 (상세·설정은 뒤로가기로 빠져나온다).
-  const showTabs = Boolean(session) && (screen === 'library' || screen === 'add')
+  // 하단 탭은 설정 화면을 제외하고 계속 보인다. 상세는 이제 팝업이라 뒤에 깔린 라이브러리
+  // 화면과 탭이 배경으로 비쳐 보이는 게 자연스럽다.
+  const showTabs = Boolean(session) && screen !== 'settings'
 
   return (
     <>
