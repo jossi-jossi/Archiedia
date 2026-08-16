@@ -19,6 +19,12 @@
         "foregroundImage": "./assets/thumbnail.png",
         "backgroundColor": "#161826"
       }
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e96312f0-3367-4787-a8c9-09940f61eebf"
+      }
+    },
+    "owner": "jossis-team"
   }
 }
