@@ -422,7 +422,15 @@ export function SeriesDetail({ seriesId, onClose, onDeleted }: Props): React.JSX
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
                       <div className="field">
                         <label>평점</label>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, height: 36 }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 4,
+                            height: 36
+                          }}
+                        >
                           {Array.from({ length: 5 }).map((_, i) => {
                             const fill = Math.max(0, Math.min(1, (record.myRating ?? 0) - i))
                             return (
