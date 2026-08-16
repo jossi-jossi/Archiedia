@@ -56,7 +56,7 @@ export function LoginScreen(): React.JSX.Element {
           }}
         >
           <img src={archiediaLogo} alt="아키디아" style={{ height: 132, width: 'auto' }} />
-          <div style={{ fontSize: 15, color: 'var(--color-text)', textAlign: 'center' }}>
+          <div style={{ fontSize: 16, color: 'var(--color-text)', textAlign: 'center' }}>
             영화 · 시리즈 · 웹툰 · 책 기록을 한곳에
           </div>
         </div>
