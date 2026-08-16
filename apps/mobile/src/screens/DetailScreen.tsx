@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   ArrowSquareOut,
   CaretDown,
+  Eye,
   Heart,
   PencilSimple,
   PlayCircle,
@@ -32,7 +33,7 @@ import {
   UserRecordPatch
 } from '../features/content'
 import { typeConfig } from '../features/types'
-import { isWishlisted, withoutStatusTags } from '../lib/wishlist'
+import { isWatching, isWishlisted, withoutStatusTags } from '../lib/wishlist'
 import { authorNames } from '../lib/aladin'
 import { normalizeGenres, stripHash } from '../lib/webtoonGenres'
 import { errorMessage } from '../lib/errors'
@@ -118,6 +119,7 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
   const { item, record } = entry
   const config = typeConfig(item.type)
   const wish = record ? isWishlisted(record.tags) : false
+  const watching = record ? isWatching(record.tags) : false
   const editFields = buildEditFields(item, seasonIndex)
 
   async function handleSaveEdit(values: Record<string, string>): Promise<void> {
@@ -173,18 +175,17 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
 
       {record ? (
         <View style={{ gap: 12 }}>
-          <View style={{ gap: 5 }}>
-            <Text style={styles.fieldLabel}>평점</Text>
-            <View style={{ paddingVertical: 4 }}>
-              <StarRating
-                rating={record.myRating}
-                size={24}
-                onRate={(value) => save({ myRating: value })}
-              />
-            </View>
-          </View>
-
           <View style={{ flexDirection: 'row', gap: 12 }}>
+            <View style={{ flex: 1, gap: 5 }}>
+              <Text style={styles.fieldLabel}>평점</Text>
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                <StarRating
+                  rating={record.myRating}
+                  size={24}
+                  onRate={(value) => save({ myRating: value })}
+                />
+              </View>
+            </View>
             <Field label={config.countLabel}>
               <Input
                 value={record.watchCount === 0 ? '' : String(record.watchCount)}
@@ -199,9 +200,12 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
                 onBlur={() => save({ watchCount: record.watchCount })}
               />
             </Field>
-            <Field label="상태">
+          </View>
+
+          <Field label="상태">
+            <View style={styles.statusSeg}>
               <Pressable
-                style={[styles.wishButton, wish && { backgroundColor: colors.accent }]}
+                style={[styles.statusSegOpt, wish && styles.statusSegOptActive]}
                 onPress={() =>
                   save({
                     tags: wish
@@ -219,8 +223,28 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
                   보고 싶어요
                 </Text>
               </Pressable>
-            </Field>
-          </View>
+              <View style={styles.statusSegDivider} />
+              <Pressable
+                style={[styles.statusSegOpt, watching && styles.statusSegOptActive]}
+                onPress={() =>
+                  save({
+                    tags: watching
+                      ? withoutStatusTags(record.tags)
+                      : [...withoutStatusTags(record.tags), '보는 중']
+                  })
+                }
+              >
+                <Eye
+                  size={14}
+                  weight={watching ? 'fill' : 'regular'}
+                  color={watching ? colors.accent900 : colors.text}
+                />
+                <Text style={{ fontSize: 13, color: watching ? colors.accent900 : colors.text }}>
+                  보는 중
+                </Text>
+              </Pressable>
+            </View>
+          </Field>
 
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <Field label={config.mediumLabel}>
@@ -579,18 +603,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.neutral800
   },
   metaRow: { fontSize: 13, lineHeight: 20, color: colors.neutral300 },
-  overview: { fontSize: 12.5, lineHeight: 20, color: colors.neutral400 },
+  overview: { fontSize: 12.5, lineHeight: 20, color: colors.neutral400, textAlign: 'justify' },
   divider: { height: 1, backgroundColor: colors.divider, marginVertical: 16 },
   fieldLabel: { fontSize: 12, color: colors.neutral500 },
-  wishButton: {
+  statusSeg: {
     minHeight: 42,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.divider,
     backgroundColor: colors.surface,
     flexDirection: 'row',
+    overflow: 'hidden'
+  },
+  statusSegOpt: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6
-  }
+  },
+  statusSegOptActive: { backgroundColor: colors.accent },
+  statusSegDivider: { width: 1, backgroundColor: colors.divider }
 })
