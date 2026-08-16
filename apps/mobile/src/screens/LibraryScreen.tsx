@@ -464,9 +464,9 @@ const styles = StyleSheet.create({
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
+    height: 30,
     gap: 5,
     paddingHorizontal: 12,
-    paddingVertical: 6,
     borderRadius: radius.md * 0.75,
     borderWidth: 1,
     borderColor: colors.divider
