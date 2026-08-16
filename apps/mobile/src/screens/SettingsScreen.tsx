@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ArrowLeft, BookOpen, FilmSlate, Layout, SignOut, Television } from 'phosphor-react-native'
+import { BookOpen, FilmSlate, Layout, SignOut, Television, X } from 'phosphor-react-native'
 import type { ContentType } from '@archiedia/schema'
 import { colors, radius } from '../theme'
 import { countByType } from '../features/content'
@@ -17,11 +16,10 @@ const ICONS = {
 } as const
 
 interface Props {
-  onBack: () => void
+  onClose: () => void
 }
 
-export function SettingsScreen({ onBack }: Props): React.JSX.Element {
-  const insets = useSafeAreaInsets()
+export function SettingsScreen({ onClose }: Props): React.JSX.Element {
   const [counts, setCounts] = useState<Partial<Record<ContentType, number>>>({})
   const [error, setError] = useState<string | null>(null)
 
@@ -32,11 +30,14 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
   }, [])
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 12 }]}>
-      <Pressable style={styles.backButton} onPress={onBack}>
-        <ArrowLeft size={16} color={colors.text} />
-        <Text style={{ color: colors.text, fontSize: 14 }}>설정</Text>
-      </Pressable>
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.topBar}>
+        <Text style={styles.title}>설정</Text>
+        <View style={{ flex: 1 }} />
+        <Pressable onPress={onClose} hitSlop={10}>
+          <X size={20} color={colors.text} />
+        </Pressable>
+      </View>
 
       <Text style={styles.sectionLabel}>보관 현황</Text>
       <View style={styles.card}>
@@ -66,15 +67,9 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 18, paddingBottom: 28 },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    marginBottom: 18,
-    alignSelf: 'flex-start'
-  },
+  container: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 28 },
+  topBar: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 18 },
+  title: { fontSize: 16, fontWeight: '500', color: colors.text },
   sectionLabel: { fontSize: 12, color: colors.neutral500, marginBottom: 8, paddingHorizontal: 2 },
   card: {
     borderWidth: 1,

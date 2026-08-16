@@ -25,7 +25,6 @@ export default function App(): React.JSX.Element {
 // statusBarTranslucent 모달의 marginTop/marginBottom을 safe area 기준으로 잡으려면
 // useSafeAreaInsets가 SafeAreaProvider 하위에서 호출돼야 해서 별도 컴포넌트로 뺐다.
 function AppContent(): React.JSX.Element {
-  const insets = useSafeAreaInsets()
   const { session, loading } = useSession()
 
   const [screen, setScreen] = useState<Screen>('library')
@@ -43,8 +42,6 @@ function AppContent(): React.JSX.Element {
     )
   } else if (!session) {
     body = <LoginScreen />
-  } else if (screen === 'settings') {
-    body = <SettingsScreen onBack={() => setScreen('library')} />
   } else if (screen === 'add') {
     body = (
       <AddScreen
@@ -67,9 +64,9 @@ function AppContent(): React.JSX.Element {
     )
   }
 
-  // 하단 탭은 설정 화면을 제외하고 계속 보인다. 상세는 이제 팝업이라 뒤에 깔린 라이브러리
-  // 화면과 탭이 배경으로 비쳐 보이는 게 자연스럽다.
-  const showTabs = Boolean(session) && screen !== 'settings'
+  // 상세/설정 모두 이제 팝업이라 뒤에 깔린 라이브러리 화면과 하단 탭이 배경으로 계속
+  // 비쳐 보이는 게 자연스럽다.
+  const showTabs = Boolean(session)
 
   return (
     <>
@@ -88,65 +85,87 @@ function AppContent(): React.JSX.Element {
           />
         ) : null}
       </View>
-      <Modal
+      <PopupModal
         visible={screen === 'detail' && Boolean(selectedId)}
-        animationType="slide"
-        transparent
-        statusBarTranslucent
-        onRequestClose={() => {
+        onClose={() => {
           setScreen('library')
           setRefreshKey((k) => k + 1)
         }}
       >
-        <View style={{ flex: 1 }}>
-          {/*
-            카드를 감싸는 Pressable 안에 ScrollView를 중첩시켰더니 터치 responder 협상이
-            꼬여서 스크롤 제스처가 가끔 씹혔다. 배경(탭하면 닫힘)과 카드를 형제로 분리해서
-            카드 쪽 터치 트리에 Pressable이 끼지 않게 한다.
-          */}
-          <Pressable
-            style={styles.modalBackdrop}
-            onPress={() => {
+        {selectedId ? (
+          <DetailScreen
+            id={selectedId}
+            onBack={() => {
+              setScreen('library')
+              setRefreshKey((k) => k + 1)
+            }}
+            onDeleted={() => {
+              setSelectedId(null)
               setScreen('library')
               setRefreshKey((k) => k + 1)
             }}
           />
-          <View
-            pointerEvents="box-none"
-            style={{
-              flex: 1,
-              marginTop: (insets.top + 24) * 1.5,
-              marginBottom: (insets.bottom + 24) * 1.5,
-              marginHorizontal: 18
-            }}
-          >
-            <View style={styles.modalCard}>
-              {selectedId ? (
-                <DetailScreen
-                  id={selectedId}
-                  onBack={() => {
-                    setScreen('library')
-                    setRefreshKey((k) => k + 1)
-                  }}
-                  onDeleted={() => {
-                    setSelectedId(null)
-                    setScreen('library')
-                    setRefreshKey((k) => k + 1)
-                  }}
-                />
-              ) : null}
-            </View>
+        ) : null}
+      </PopupModal>
+      <PopupModal visible={screen === 'settings'} onClose={() => setScreen('library')} fitContent>
+        <SettingsScreen onClose={() => setScreen('library')} />
+      </PopupModal>
+    </>
+  )
+}
+
+// 상세/설정 페이지가 공통으로 쓰는 팝업 카드 셸. 배경(탭하면 닫힘)과 카드를 형제로 분리해서
+// 카드 쪽 터치 트리에 Pressable이 끼지 않게 한다 — 감싸면 안에 있는 ScrollView와 터치
+// responder 협상이 꼬여서 스크롤 제스처가 가끔 씹히는 문제가 있었다.
+function PopupModal({
+  visible,
+  onClose,
+  children,
+  fitContent = false
+}: {
+  visible: boolean
+  onClose: () => void
+  children: React.ReactNode
+  // 설정처럼 내용이 짧은 팝업은 상세페이지 팝업과 같은 큰 고정 높이를 채우면 아래쪽에
+  // 빈 공간만 남는다. true면 카드가 내용 높이만큼만 커지고 세로 중앙에 놓인다.
+  fitContent?: boolean
+}): React.JSX.Element {
+  const insets = useSafeAreaInsets()
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      statusBarTranslucent
+      onRequestClose={onClose}
+    >
+      <View style={{ flex: 1 }}>
+        <Pressable style={styles.modalBackdrop} onPress={onClose} />
+        <View
+          pointerEvents="box-none"
+          style={{
+            flex: 1,
+            marginTop: (insets.top + 24) * 1.5,
+            marginBottom: (insets.bottom + 24) * 1.5,
+            marginHorizontal: 18,
+            justifyContent: fitContent ? 'center' : undefined
+          }}
+        >
+          <View style={[styles.modalCard, fitContent && { flex: undefined, maxHeight: '100%' }]}>
+            {children}
           </View>
         </View>
-      </Modal>
-    </>
+      </View>
+    </Modal>
   )
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  // 상세페이지를 화면 전체가 아니라 위아래로 배경이 비치는 떠 있는 카드로 띄워서 팝업처럼 보이게 한다.
+  // 상세/설정 페이지를 화면 전체가 아니라 위아래로 배경이 비치는 떠 있는 카드로 띄워서
+  // 팝업처럼 보이게 한다.
   // 카드와 형제로 분리된, 탭하면 닫히는 전체 화면 딤 레이어라 absoluteFill로 겹쳐 깐다.
   modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.55)' },
   modalCard: {
