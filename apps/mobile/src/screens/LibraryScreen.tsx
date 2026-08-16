@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { CaretDown, Eye, Gear, Heart, MagnifyingGlass } from 'phosphor-react-native'
 import type { ContentType } from '@archiedia/schema'
 import { colors, radius } from '../theme'
-import { Chip, Input, Poster, StarRating } from '../components/ui'
+import { Input, Poster, StarRating } from '../components/ui'
 import { PickerSheet } from '../components/PickerSheet'
 import { ContentListItem, listContent, updateUserRecord } from '../features/content'
 import { typeConfig } from '../features/types'
@@ -358,13 +358,7 @@ export function LibraryScreen({
                     entry.item.type === 'webtoon' ? entry.item.metadata.backgroundImageUrl : null
                   }
                   style={styles.cardPoster}
-                >
-                  {wish ? (
-                    <View style={styles.wishBadge}>
-                      <Chip label="보고 싶어요" variant="accent2" />
-                    </View>
-                  ) : null}
-                </Poster>
+                />
                 <Text style={styles.cardTitle} numberOfLines={1}>
                   {entry.item.title}
                 </Text>
@@ -497,7 +491,6 @@ const styles = StyleSheet.create({
   // 3열 그리드: 가로 여백(18*2)과 칸 사이 간격(10*2)을 뺀 나머지를 3등분
   card: { width: '31%', gap: 7 },
   cardPoster: { width: '100%', aspectRatio: 2 / 3 },
-  wishBadge: { position: 'absolute', top: 6, left: 6 },
   cardTitle: { fontSize: 12, fontWeight: '500', color: colors.text, lineHeight: 16 },
   cardSub: { fontSize: 10, color: colors.neutral500, marginTop: -4 },
   cardFooter: {

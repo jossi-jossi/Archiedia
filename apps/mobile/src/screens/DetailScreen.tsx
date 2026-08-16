@@ -138,7 +138,11 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.topBar}>
         <Pressable style={styles.backButton} onPress={onBack}>
           <ArrowLeft size={16} color={colors.text} />
@@ -287,8 +291,7 @@ export function DetailScreen({ id, onBack, onDeleted }: Props): React.JSX.Elemen
         <PickerSheet
           visible={seasonSheet}
           title="시즌"
-          columns={1}
-          showCheck
+          columns={2}
           options={item.metadata.seasons.map((s, i) => ({
             value: String(i),
             label: `시즌 ${s.seasonNumber}`

@@ -98,40 +98,46 @@ function AppContent(): React.JSX.Element {
           setRefreshKey((k) => k + 1)
         }}
       >
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => {
-            setScreen('library')
-            setRefreshKey((k) => k + 1)
-          }}
-        >
+        <View style={{ flex: 1 }}>
+          {/*
+            카드를 감싸는 Pressable 안에 ScrollView를 중첩시켰더니 터치 responder 협상이
+            꼬여서 스크롤 제스처가 가끔 씹혔다. 배경(탭하면 닫힘)과 카드를 형제로 분리해서
+            카드 쪽 터치 트리에 Pressable이 끼지 않게 한다.
+          */}
           <Pressable
-            style={[
-              styles.modalCard,
-              {
-                marginTop: (insets.top + 24) * 1.5,
-                marginBottom: (insets.bottom + 24) * 1.5,
-                marginHorizontal: 18
-              }
-            ]}
-            onPress={(e) => e.stopPropagation()}
+            style={styles.modalBackdrop}
+            onPress={() => {
+              setScreen('library')
+              setRefreshKey((k) => k + 1)
+            }}
+          />
+          <View
+            pointerEvents="box-none"
+            style={{
+              flex: 1,
+              marginTop: (insets.top + 24) * 1.5,
+              marginBottom: (insets.bottom + 24) * 1.5,
+              marginHorizontal: 18
+            }}
           >
-            {selectedId ? (
-              <DetailScreen
-                id={selectedId}
-                onBack={() => {
-                  setScreen('library')
-                  setRefreshKey((k) => k + 1)
-                }}
-                onDeleted={() => {
-                  setSelectedId(null)
-                  setScreen('library')
-                  setRefreshKey((k) => k + 1)
-                }}
-              />
-            ) : null}
-          </Pressable>
-        </Pressable>
+            <View style={styles.modalCard}>
+              {selectedId ? (
+                <DetailScreen
+                  id={selectedId}
+                  onBack={() => {
+                    setScreen('library')
+                    setRefreshKey((k) => k + 1)
+                  }}
+                  onDeleted={() => {
+                    setSelectedId(null)
+                    setScreen('library')
+                    setRefreshKey((k) => k + 1)
+                  }}
+                />
+              ) : null}
+            </View>
+          </View>
+        </View>
       </Modal>
     </>
   )
@@ -141,7 +147,8 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   // 상세페이지를 화면 전체가 아니라 위아래로 배경이 비치는 떠 있는 카드로 띄워서 팝업처럼 보이게 한다.
-  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
+  // 카드와 형제로 분리된, 탭하면 닫히는 전체 화면 딤 레이어라 absoluteFill로 겹쳐 깐다.
+  modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.55)' },
   modalCard: {
     flex: 1,
     borderRadius: radius.lg,
