@@ -22,7 +22,7 @@ export const TYPES: TypeConfig[] = [
     countLabel: '시청 횟수',
     mediumLabel: '시청 매체',
     dateLabel: '마지막 시청일',
-    mediumPlaceholder: '극장 / OTT / 블루레이 등',
+    mediumPlaceholder: '극장 / OTT 등',
     overviewLabel: '줄거리'
   },
   {
@@ -33,7 +33,7 @@ export const TYPES: TypeConfig[] = [
     countLabel: '시청 횟수',
     mediumLabel: '시청 매체',
     dateLabel: '마지막 시청일',
-    mediumPlaceholder: '극장 / OTT / 블루레이 등',
+    mediumPlaceholder: '극장 / OTT 등',
     overviewLabel: '줄거리'
   },
   {
@@ -44,7 +44,7 @@ export const TYPES: TypeConfig[] = [
     countLabel: '읽은 횟수',
     mediumLabel: '읽은 매체',
     dateLabel: '마지막 읽은 날',
-    mediumPlaceholder: '네이버웹툰 앱 / PC 등',
+    mediumPlaceholder: '앱 / 단행본 등',
     overviewLabel: '줄거리'
   },
   {

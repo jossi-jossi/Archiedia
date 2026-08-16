@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ActivityIndicator, Modal, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Modal, Pressable, StyleSheet, View } from 'react-native'
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import type { ContentType } from '@archiedia/schema'
@@ -98,8 +98,14 @@ function AppContent(): React.JSX.Element {
           setRefreshKey((k) => k + 1)
         }}
       >
-        <View style={styles.modalBackdrop}>
-          <View
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => {
+            setScreen('library')
+            setRefreshKey((k) => k + 1)
+          }}
+        >
+          <Pressable
             style={[
               styles.modalCard,
               {
@@ -108,6 +114,7 @@ function AppContent(): React.JSX.Element {
                 marginHorizontal: 18
               }
             ]}
+            onPress={(e) => e.stopPropagation()}
           >
             {selectedId ? (
               <DetailScreen
@@ -123,8 +130,8 @@ function AppContent(): React.JSX.Element {
                 }}
               />
             ) : null}
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </>
   )
