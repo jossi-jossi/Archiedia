@@ -8,9 +8,10 @@ import {
   Text,
   View
 } from 'react-native'
-import { EnvelopeSimple, FilmStrip } from 'phosphor-react-native'
+import { EnvelopeSimple } from 'phosphor-react-native'
 import { colors, radius } from '../theme'
 import { Field, Input } from '../components/ui'
+import { AppLogo } from '../components/AppLogo'
 import { supabase } from '../lib/supabase'
 import { errorMessage } from '../lib/errors'
 
@@ -59,8 +60,7 @@ export function LoginScreen(): React.JSX.Element {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={{ width: '100%', gap: 14 }}>
           <View style={{ alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <FilmStrip size={30} weight="fill" color={colors.accent} />
-            <Text style={styles.brand}>아키디아</Text>
+            <AppLogo height={108} />
             <Text style={styles.tagline}>영화 · 시리즈 · 웹툰 · 책 기록을 한곳에</Text>
           </View>
 
@@ -118,7 +118,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     backgroundColor: colors.bg
   },
-  brand: { fontSize: 20, fontWeight: '500', color: colors.text },
   tagline: { fontSize: 12.5, color: colors.neutral500, textAlign: 'center' },
   error: { fontSize: 13, color: colors.danger },
   notice: { fontSize: 13, color: colors.accent },

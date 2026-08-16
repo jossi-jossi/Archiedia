@@ -2,13 +2,13 @@ import {
   BookOpen,
   DownloadSimple,
   FilmSlate,
-  FilmStrip,
   Layout,
   MagnifyingGlass,
   SignOut,
   Television
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase'
+import archiediaLogo from '../assets/archiedia-logo.svg'
 
 export type Screen = 'library' | 'series' | 'webtoon' | 'book' | 'add' | 'import'
 
@@ -77,16 +77,13 @@ export function Sidebar({
         background: 'var(--color-surface)',
         display: 'flex',
         flexDirection: 'column',
-        padding: '20px 12px',
-        gap: 22,
+        padding: '15px 12px 20px',
+        gap: 13,
         borderRight: '1px solid var(--color-divider)'
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px' }}>
-        <FilmStrip size={20} weight="fill" color="var(--color-accent)" />
-        <div className="nav-brand" style={{ fontSize: 17 }}>
-          아키디아
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '0 8px' }}>
+        <img src={archiediaLogo} alt="아키디아" style={{ height: 86, width: 'auto' }} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <NavItem
