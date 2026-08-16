@@ -1,3 +1,4 @@
+import { EnvelopeSimple } from '@phosphor-icons/react'
 import { FormEvent, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import archiediaLogo from '../../assets/archiedia-logo.svg'
@@ -50,13 +51,13 @@ export function LoginScreen(): React.JSX.Element {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 5,
+            gap: 2,
             marginBottom: 3
           }}
         >
           <img src={archiediaLogo} alt="아키디아" style={{ height: 132, width: 'auto' }} />
-          <div style={{ fontSize: 13, color: 'var(--color-neutral-500)', textAlign: 'center' }}>
-            여러 플랫폼의 콘텐츠 기록을 한곳에
+          <div style={{ fontSize: 15, color: 'var(--color-text)', textAlign: 'center' }}>
+            영화 · 시리즈 · 웹툰 · 책 기록을 한곳에
           </div>
         </div>
 
@@ -69,6 +70,7 @@ export function LoginScreen(): React.JSX.Element {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
+            style={{ fontSize: 13 }}
           />
         </div>
         <div className="field">
@@ -81,6 +83,7 @@ export function LoginScreen(): React.JSX.Element {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            style={{ fontSize: 13 }}
           />
         </div>
 
@@ -95,7 +98,8 @@ export function LoginScreen(): React.JSX.Element {
             background: 'var(--color-accent)',
             borderColor: 'var(--color-accent)',
             color: 'var(--color-accent-900)',
-            fontWeight: 600
+            fontWeight: 600,
+            fontSize: 13
           }}
         >
           {submitting ? '처리 중...' : '로그인'}
@@ -108,7 +112,9 @@ export function LoginScreen(): React.JSX.Element {
           type="button"
           disabled={submitting}
           onClick={signUp}
+          style={{ fontSize: 13, marginTop: 0 }}
         >
+          <EnvelopeSimple size={15} />
           이메일로 회원가입
         </button>
       </form>

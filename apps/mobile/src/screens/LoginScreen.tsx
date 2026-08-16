@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     backgroundColor: colors.bg
   },
-  tagline: { fontSize: 12.5, color: colors.neutral500, textAlign: 'center' },
+  tagline: { fontSize: 14, color: colors.text, textAlign: 'center' },
   error: { fontSize: 13, color: colors.danger },
   notice: { fontSize: 13, color: colors.accent },
   primary: {
