@@ -108,14 +108,29 @@
 
 ## Phase 7 — 패키징
 
-- [ ] electron-builder 설정
-- [ ] Windows 빌드 확인
+- [x] electron-builder 설정 (`electron-builder.yml`)
+- [x] Windows 빌드 확인 (`npm run build:win` → `dist/archiedia-<version>-setup.exe`)
 - [ ] macOS 빌드 확인 (실 기기 없으면 최소 설정만 준비, 추후 검증)
+
+## Phase 13 — 모바일 앱 (Expo / React Native)
+
+`apps/mobile` — 데스크톱과 달리 콘텐츠 타입별로 화면을 나누지 않고, 로그인/라이브러리/추가/상세/설정 5개 화면에 4개 타입(영화·시리즈·웹툰·책)을 공용으로 태워서 구현.
+
+- [x] Expo 프로젝트 스캐폴딩, `packages/schema` 공유 (SDK 54, Expo Go로 구동)
+- [x] 로그인 화면 (`LoginScreen.tsx`, Supabase Auth) — 데스크톱과 태그라인 크기 등 맞춤
+- [x] 라이브러리 화면 (`LibraryScreen.tsx`) — 타입별 필터/정렬, 필터 칩, "보는 중" 상태 추가, 그리드 스크롤 위치 유지
+- [x] 검색·추가 화면 (`AddScreen.tsx`) — TMDB(영화/시리즈), 알라딘(책), 네이버/카카오웹툰 검색 통합, 보관 여부 표시
+- [x] 상세 화면 (`DetailScreen.tsx`) — 플로팅 팝업 카드형, 배경 탭으로 닫기, 인라인 편집(`EditFieldsModal.tsx`, 책 저자 필드 포함)
+- [x] 설정 화면 (`SettingsScreen.tsx`) — 팝업 형태, 콘텐츠 크기에 맞춰 표시, 로그아웃 시 팝업 정리
+- [x] 위시리스트/보관 상태 토글 (`lib/wishlist.ts`)
+- [x] 웹툰 출처 배지 (`SourceLogo.tsx`, 네이버/카카오), 강제 줄바꿈 문자 제거 등 텍스트 정리(`lib/text.ts`, `lib/htmlEntities.ts`)
+- [x] 브랜딩: film 아이콘 → 아키디아 로고/앱 아이콘 교체 (`AppLogo.tsx`), 앱 이름 변경
+- [x] iOS 사이드로드 절차 문서화 ([docs/ios-sideload.md](./docs/ios-sideload.md))
+- [ ] 왓챠 가져오기(Phase 9) 모바일 지원 — 아직 데스크톱 전용
 
 ---
 
 ## 2차 범위 (지금은 손대지 않음)
 
-- 책 등 타 콘텐츠 타입 확장
 - 원작-각색 콘텐츠 간 관계 모델링
-- 모바일 앱 (`apps/mobile`) 분리 및 `packages/schema` 공유
+- 모바일 왓챠 가져오기
